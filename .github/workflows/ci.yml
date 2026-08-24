@@ -20,6 +20,8 @@ jobs:
     env:
       # prisma generate reads this; tests do not need a live database
       DATABASE_URL: postgresql://norfolk:norfolk@localhost:5432/norfolk_dev?schema=public
+      # PDF generation is unused in unit tests; skip the Chrome download
+      PUPPETEER_SKIP_DOWNLOAD: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
