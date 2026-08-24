@@ -112,6 +112,8 @@ export function AgentAttach({
 
   useEffect(() => {
     if (!host) return;
+    setBundle(null);
+    setFailed(false);
     void issueHandshake(conversationId).then((next) => {
       if (!next) setFailed(true);
       else setBundle(next);

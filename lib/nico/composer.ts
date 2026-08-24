@@ -24,6 +24,7 @@ How you talk:
 - If they want numbers, then open the binder: table first, chart if comparing.
 - You use the same procedures the rest of the app uses (knowledge, model, artifacts, ticker, weather, markets, headlines — including Medellín-area and Cartagena walled-city housing). You are not a second, dumber product.
 - You are an AI. Say so when trust is at stake, then keep talking like a person.
+- A new conversation only clears the chat window. You keep what you learned. Notes under "Already known" are who you are now — use them, do not pretend this is a first meeting if they say otherwise.
 
 Facts:
 - Ground Tamarindo claims in the passages. Name the source title in prose.
@@ -45,6 +46,8 @@ export type ComposeContext = {
   artifactNote?: string;
   /** Set when Nico checked the live world (weather, markets, headlines, parlor horoscope). */
   worldNote?: string;
+  /** Durable notes from earlier conversations. A new window does not erase them. */
+  memoryNote?: string;
   /**
    * Caller's routing signal: true only for a turn with no knowledge passages,
    * no artifact note, and no model/variable action. Absent means the strong
@@ -128,10 +131,13 @@ function userContent(
   const world = context.worldNote
     ? `\n\nWorld check (share this naturally, no thesis dump):\n${context.worldNote}\n`
     : "";
+  const memory = context.memoryNote
+    ? `\n\n${context.memoryNote}\n`
+    : "";
   if (!sources) {
-    return `You are in conversation. No binder excerpt.${artifact}${world}\nTalk like Nico the person. Do not apologize for missing the knowledge base unless they asked a Tamarindo fact.\n\nUser:\n${message}`;
+    return `You are in conversation. No binder excerpt.${artifact}${world}${memory}\nTalk like Nico the person. Do not apologize for missing the knowledge base unless they asked a Tamarindo fact.\n\nUser:\n${message}`;
   }
-  return `Knowledge passages:\n\n${sources}${artifact}${world}\n\nUser:\n${message}`;
+  return `Knowledge passages:\n\n${sources}${artifact}${world}${memory}\n\nUser:\n${message}`;
 }
 
 async function* streamAnthropic(
@@ -175,12 +181,25 @@ async function* streamAnthropic(
       maxRetries: 0,
     });
 
-    for await (const token of result.textStream) {
-      if (firstTokenTimer !== undefined) {
-        clearTimeout(firstTokenTimer);
-        firstTokenTimer = undefined;
+    // textStream drops error/abort parts, so a failed provider call would
+    // look like an empty success. Read fullStream and surface those.
+    for await (const part of result.fullStream) {
+      if (part.type === "text-delta") {
+        if (firstTokenTimer !== undefined) {
+          clearTimeout(firstTokenTimer);
+          firstTokenTimer = undefined;
+        }
+        if (part.text) yield part.text;
+        continue;
       }
-      if (token) yield token;
+      if (part.type === "error") {
+        throw part.error instanceof Error
+          ? part.error
+          : new Error(String(part.error));
+      }
+      if (part.type === "abort") {
+        throw new Error("Anthropic aborted the stream");
+      }
     }
   } catch (err) {
     if (controller.signal.aborted) {
@@ -209,6 +228,9 @@ async function* devAnswer(
   }
   if (context.worldNote) {
     parts.push(`${context.worldNote}\n\n`);
+  }
+  if (context.memoryNote) {
+    parts.push(`${context.memoryNote}\n\n`);
   }
   if (passages.length === 0) {
     parts.push(

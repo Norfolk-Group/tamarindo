@@ -7,6 +7,7 @@ import {
   FolderLock,
   LogOut,
   MessageSquare,
+  MessageSquarePlus,
   Settings,
   SlidersHorizontal,
   Table2,
@@ -65,6 +66,7 @@ export function LeftRail({
   onAdminOpen,
   adminSection,
   onAdminSection,
+  onNewConversation,
 }: {
   capabilities: Capability[];
   isAdmin: boolean;
@@ -77,6 +79,7 @@ export function LeftRail({
   onAdminOpen: (open: boolean) => void;
   adminSection: AdminSection;
   onAdminSection: (section: AdminSection) => void;
+  onNewConversation: () => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [approvals, setApprovals] = useState<
@@ -231,6 +234,17 @@ export function LeftRail({
         </div>
 
         <nav className="flex flex-col gap-1 px-2" aria-label="Workspace">
+          <button
+            type="button"
+            onClick={onNewConversation}
+            className="transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+            aria-label="New conversation"
+          >
+            <MessageSquarePlus className="size-4 shrink-0" />
+            {!collapsed && (
+              <span className="flex-1 text-left">New conversation</span>
+            )}
+          </button>
           {PRIMARY_NAV.map((item) => (
             <button
               key={item.id}

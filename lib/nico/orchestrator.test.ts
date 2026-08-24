@@ -5,11 +5,14 @@ const composeAnswer = vi.hoisted(() => vi.fn());
 const profileIdFor = vi.hoisted(() => vi.fn());
 const ensureConversation = vi.hoisted(() => vi.fn());
 const appendMessage = vi.hoisted(() => vi.fn());
+const recallLearned = vi.hoisted(() => vi.fn());
+const learnFromTurn = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/nico/registry-tools", () => ({ invokeAgentTool }));
 vi.mock("@/lib/nico/composer", () => ({ composeAnswer }));
 vi.mock("@/lib/procedures/profile", () => ({ profileIdFor }));
 vi.mock("@/lib/nico/session", () => ({ ensureConversation, appendMessage }));
+vi.mock("@/lib/nico/memory", () => ({ recallLearned, learnFromTurn }));
 
 import { runTurn } from "@/lib/nico/orchestrator";
 
@@ -23,6 +26,8 @@ const actor = {
 describe("runTurn", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    recallLearned.mockResolvedValue("");
+    learnFromTurn.mockResolvedValue(undefined);
   });
   it("invokes knowledge.search as kind agent with the session authSubject", async () => {
     profileIdFor.mockResolvedValue("prof_1");
@@ -353,5 +358,39 @@ describe("runTurn", () => {
         artifactNote: expect.stringContaining("admin"),
       }),
     );
+  });
+
+  it("carries durable memory into a new window and learns after the turn", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    recallLearned.mockResolvedValue(
+      "Already known:\n- [fact] Intervest wants the first close in Q1",
+    );
+    composeAnswer.mockImplementation(async function* () {
+      yield "I remember.";
+    });
+
+    for await (const event of runTurn("hey, still with me?", actor, {
+      conversationId: "conv_new",
+    })) {
+      void event;
+    }
+
+    expect(recallLearned).toHaveBeenCalledWith("hey, still with me?");
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "hey, still with me?",
+      expect.anything(),
+      expect.objectContaining({
+        memoryNote: expect.stringContaining("first close in Q1"),
+        conversational: true,
+      }),
+    );
+    expect(learnFromTurn).toHaveBeenCalledWith({
+      userMessage: "hey, still with me?",
+      reply: "I remember.",
+      profileId: "prof_1",
+      conversationId: "conv_new",
+    });
   });
 });

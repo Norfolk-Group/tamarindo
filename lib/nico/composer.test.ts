@@ -25,10 +25,6 @@ async function collect(
   return out;
 }
 
-async function* tokens(...parts: string[]) {
-  for (const part of parts) yield part;
-}
-
 describe("composeAnswer", () => {
   const env = { ...process.env };
 
@@ -53,8 +49,8 @@ describe("composeAnswer", () => {
   it("falls back when the provider errors before the first token", async function () {
     process.env.ANTHROPIC_API_KEY = "sk-test";
     streamText.mockReturnValue({
-      textStream: (async function* () {
-        throw new Error("401 unauthorized");
+      fullStream: (async function* () {
+        yield { type: "error", error: new Error("401 unauthorized") };
       })(),
     });
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -68,9 +64,9 @@ describe("composeAnswer", () => {
   it("does not restart with fallback after a partial stream", async function () {
     process.env.ANTHROPIC_API_KEY = "sk-test";
     streamText.mockReturnValue({
-      textStream: (async function* () {
-        yield "Hello from ";
-        throw new Error("socket dropped");
+      fullStream: (async function* () {
+        yield { type: "text-delta", text: "Hello from " };
+        yield { type: "error", error: new Error("socket dropped") };
       })(),
     });
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -82,12 +78,39 @@ describe("composeAnswer", () => {
 
   it("streams model tokens when the key is set", async function () {
     process.env.ANTHROPIC_API_KEY = "sk-test";
-    streamText.mockReturnValue({ textStream: tokens("Hey.", " What's up?") });
+    streamText.mockReturnValue({
+      fullStream: (async function* () {
+        yield { type: "text-delta", text: "Hey." };
+        yield { type: "text-delta", text: " What's up?" };
+      })(),
+    });
     const text = await collect(composeAnswer("hey", [], { conversational: true }));
     expect(text).toBe("Hey. What's up?");
     expect(streamText).toHaveBeenCalledOnce();
-    const call = streamText.mock.calls[0][0] as { model: { id: string } };
+    const call = streamText.mock.calls[0][0] as {
+      model: { id: string };
+      messages: { content: string }[];
+    };
     expect(call.model.id).toBe("claude-haiku-4-5");
+  });
+
+  it("puts durable memory in the model prompt", async function () {
+    process.env.ANTHROPIC_API_KEY = "sk-test";
+    streamText.mockReturnValue({
+      fullStream: (async function* () {
+        yield { type: "text-delta", text: "Yes." };
+      })(),
+    });
+    await collect(
+      composeAnswer("hey", [], {
+        conversational: true,
+        memoryNote: "Already known:\n- [fact] First close is Q1",
+      }),
+    );
+    const call = streamText.mock.calls[0][0] as {
+      messages: { content: string }[];
+    };
+    expect(call.messages[0].content).toContain("First close is Q1");
   });
 });
 

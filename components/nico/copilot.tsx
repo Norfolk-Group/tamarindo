@@ -39,7 +39,9 @@ export function Copilot({
 }) {
   const [showIntake, setShowIntake] = useState(needsIntake);
   const [showNda, setShowNda] = useState(needsNda);
-  const [conversationId] = useState(() => loadConversationId(userId));
+  const [conversationId, setConversationId] = useState(() =>
+    loadConversationId(userId),
+  );
   const [presence, setPresence] = useState(emptyAppliedTurn);
   const [primary, setPrimary] = useState<PrimaryPanel>("conversation");
   const [adminOpen, setAdminOpen] = useState(false);
@@ -48,6 +50,13 @@ export function Copilot({
   );
   const agentHost = nicoAgentHost(agentUrl);
   const showChat = primary === "conversation" && !(adminOpen && adminSection === "variables");
+
+  function startNewConversation() {
+    setConversationId(mintConversationId(userId));
+    setPresence(emptyAppliedTurn());
+    setPrimary("conversation");
+    setAdminOpen(false);
+  }
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -63,6 +72,7 @@ export function Copilot({
         onAdminOpen={setAdminOpen}
         adminSection={adminSection}
         onAdminSection={setAdminSection}
+        onNewConversation={startNewConversation}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -98,6 +108,7 @@ export function Copilot({
               </div>
               {agentHost ? (
                 <AgentAttach
+                  key={conversationId}
                   conversationId={conversationId}
                   host={agentHost}
                   onPresence={setPresence}
@@ -121,12 +132,21 @@ export function Copilot({
   );
 }
 
+function conversationStorageKey(userId: string): string {
+  return `nico.conversationId.${userId}`;
+}
+
+function mintConversationId(userId: string): string {
+  const id = crypto.randomUUID();
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(conversationStorageKey(userId), id);
+  }
+  return id;
+}
+
 function loadConversationId(userId: string): string {
   if (typeof window === "undefined") return crypto.randomUUID();
-  const key = `nico.conversationId.${userId}`;
-  const existing = window.localStorage.getItem(key);
+  const existing = window.localStorage.getItem(conversationStorageKey(userId));
   if (existing) return existing;
-  const id = crypto.randomUUID();
-  window.localStorage.setItem(key, id);
-  return id;
+  return mintConversationId(userId);
 }

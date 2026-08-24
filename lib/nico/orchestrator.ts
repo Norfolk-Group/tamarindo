@@ -4,6 +4,7 @@ import { asAgent } from "@/lib/nico/agent-actor";
 import { invokeAgentTool } from "@/lib/nico/registry-tools";
 import { appendMessage, ensureConversation } from "@/lib/nico/session";
 import { composeAnswer } from "@/lib/nico/composer";
+import { learnFromTurn, recallLearned } from "@/lib/nico/memory";
 import { needsKnowledgeSearch } from "@/lib/nico/knowledge-intent";
 import {
   isCashflowModelRequest,
@@ -206,10 +207,19 @@ export async function* runTurn(
     }
   }
 
+  let memoryNote: string | undefined;
+  try {
+    const recalled = await recallLearned(message);
+    if (recalled) memoryNote = recalled;
+  } catch (err) {
+    console.warn("[nico] memory recall skipped", err);
+  }
+
   yield { type: "activity", state: "drafting", label: "Drafting a reply…" };
 
   // Routing signal for the composer's fast tier. A world check (weather,
   // markets) still counts as conversation; grounded or model work does not.
+  // Recalled memory is orientation, not analysis — it must not force Sonnet.
   const conversational = passages.length === 0 && !artifactNote && !modelAction;
 
   let reply = "";
@@ -217,6 +227,7 @@ export async function* runTurn(
     for await (const chunk of composeAnswer(message, passages, {
       artifactNote,
       worldNote,
+      memoryNote,
       conversational,
     })) {
       reply += chunk;
@@ -240,6 +251,16 @@ export async function* runTurn(
   await persistSafely(() =>
     appendMessage({ conversationId, role: "assistant", content: reply }),
   );
+
+  await persistSafely(async () => {
+    const profileId = await profileIdFor(actor.id);
+    await learnFromTurn({
+      userMessage: message,
+      reply,
+      profileId,
+      conversationId,
+    });
+  });
 
   yield { type: "activity", state: "idle", label: "Ready" };
   yield { type: "done" };
