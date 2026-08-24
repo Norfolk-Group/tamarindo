@@ -43,6 +43,14 @@ function asTsString(value) {
 }
 
 async function main() {
+  // GitHub Actions sets CI=true. Q&A markdown is gitignored, so a sync
+  // on the runner would rewrite the committed corpus without those docs
+  // and fail retrieval tests. Use the generated file from git instead.
+  if (process.env.CI === "true") {
+    console.log("CI: skipping corpus sync; using committed corpus.generated.ts");
+    return;
+  }
+
   const docs = [];
   for (const source of SOURCES) {
     const absRoot = path.join(ROOT, source.dir);
