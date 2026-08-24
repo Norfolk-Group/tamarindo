@@ -34,6 +34,10 @@ import {
   modelSetVariables,
 } from "@/lib/procedures/model";
 import { tickerList } from "@/lib/procedures/ticker";
+import { weatherGet } from "@/lib/procedures/weather";
+import { horoscopeGet } from "@/lib/procedures/horoscope";
+import { marketsGet } from "@/lib/procedures/markets";
+import { newsHeadlines } from "@/lib/procedures/news";
 
 const capabilitiesList = defineProcedure({
   name: "capabilities.list",
@@ -80,4 +84,8 @@ export const registry = new ProcedureRegistry()
   .register(modelExplain)
   .register(modelDiffScenarios)
   .register(tickerList)
+  .register(weatherGet)
+  .register(horoscopeGet)
+  .register(marketsGet)
+  .register(newsHeadlines)
   .register(capabilitiesList);

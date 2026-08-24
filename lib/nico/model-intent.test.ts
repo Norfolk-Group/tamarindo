@@ -15,4 +15,16 @@ describe("model intent", () => {
       lineStepUpPct: 0.15,
     });
   });
+
+  it("parses a balloon change", () => {
+    expect(parseVariableSet("change the balloon to 25%")).toEqual({
+      minResidualOfAssetPct: 0.25,
+    });
+  });
+
+  it("parses a spread change", () => {
+    expect(parseVariableSet("set the spread to 15%")).toEqual({
+      spreadSharePct: 0.15,
+    });
+  });
 });

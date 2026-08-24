@@ -1,68 +1,33 @@
 import { z } from "zod";
 import { defineProcedure } from "@/lib/procedures/registry";
-import type { StarSign } from "@/lib/nico/world-intent";
+import { STAR_SIGNS, type StarSign } from "@/lib/nico/world-intent";
 
-/**
- * Daily parlor horoscope. Entertainment, not astronomy.
- * Seeded by sign + UTC date so the same day is stable.
- */
+const LINES = [
+  "A labeled number beats a lucky feeling. Still: drink water.",
+  "Someone will want a stacked TAM. You do not have to give it to them.",
+  "The meeting is real. The cosmos is a parlor trick. Go if the box is clean.",
+  "You already know the ugly sentence. Say it before the coffee cools.",
+  "Do not confuse a green day in equities with a green light on the lease.",
+  "Take the walk. Leave the spreadsheet on the desk for twenty minutes.",
+  "If they cannot name the residual, they cannot name the deal.",
+  "Charm is allowed. Padding a rate is not.",
+  "The day is ordinary. That is not an insult. Ordinary is where closings happen.",
+  "Ask the second question. The first one was a courtesy.",
+  "A delay is not a omen. It is a calendar.",
+  "Text the person you owe a sentence to. Then we can talk LTV.",
+];
 
-const LINES: Record<StarSign, string[]> = {
-  aries: [
-    "Start the thing you have been circling. Do not start three things.",
-    "A blunt sentence today is cheaper than a week of hints.",
-  ],
-  taurus: [
-    "Keep the good chair. Change the bad process.",
-    "Money likes patience today. So does lunch.",
-  ],
-  gemini: [
-    "Two conversations, one decision. Write the decision down.",
-    "Your joke lands if you stop explaining it.",
-  ],
-  cancer: [
-    "Call the person you almost texted. Then get back to work.",
-    "Home base first. Then the heroic errand.",
-  ],
-  leo: [
-    "You do not need a bigger entrance. You need a cleaner ask.",
-    "Someone is waiting for you to go first. Go first.",
-  ],
-  virgo: [
-    "The spreadsheet can wait ten minutes. The honest sentence cannot.",
-    "Fix one messy name. Leave the rest of the mess for Friday.",
-  ],
-  libra: [
-    "Stop splitting the difference. Pick the kind option that still has teeth.",
-    "Aesthetics are a strategy today. Ugly slides lose money.",
-  ],
-  scorpio: [
-    "You already know. Act like you know.",
-    "Privacy is not secrecy. Share the number, keep the motive.",
-  ],
-  sagittarius: [
-    "A trip is not the only way out. A true sentence works too.",
-    "Aim further than the room. Then do the boring next step.",
-  ],
-  capricorn: [
-    "Status is a side effect. The deliverable is the point.",
-    "Say no once, clearly. You will get the afternoon back.",
-  ],
-  aquarius: [
-    "The weird idea is the good one. Prototype it before the committee.",
-    "People catch up if you leave a map. Leave a map.",
-  ],
-  pisces: [
-    "Feel it, then name it in one line, then file it.",
-    "Soft is not weak if the boundary is visible.",
-  ],
-};
+function utcDay(now = new Date()): string {
+  return now.toISOString().slice(0, 10);
+}
 
-function dayKey(sign: StarSign, isoDay: string): number {
-  let n = 0;
-  const s = `${sign}:${isoDay}`;
-  for (let i = 0; i < s.length; i++) n = (n * 33 + s.charCodeAt(i)) >>> 0;
-  return n;
+function pickLine(sign: string, day: string): string {
+  let hash = 0;
+  const seed = `${sign}:${day}`;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return LINES[hash % LINES.length]!;
 }
 
 export const horoscopeGet = defineProcedure({
@@ -70,39 +35,24 @@ export const horoscopeGet = defineProcedure({
   description:
     "A playful daily horoscope line. Entertainment only. Deterministic per sign and UTC day.",
   input: z.object({
-    sign: z.enum([
-      "aries",
-      "taurus",
-      "gemini",
-      "cancer",
-      "leo",
-      "virgo",
-      "libra",
-      "scorpio",
-      "sagittarius",
-      "capricorn",
-      "aquarius",
-      "pisces",
-    ]),
+    sign: z.enum(STAR_SIGNS),
   }),
   output: z.object({
     sign: z.string(),
-    day: z.string(),
     line: z.string(),
     disclaimer: z.string(),
+    day: z.string(),
   }),
-  minRole: "investor",
+  minRole: "guest",
   requiresApproval: false,
   handler: async ({ sign }) => {
-    const day = new Date().toISOString().slice(0, 10);
-    const lines = LINES[sign];
-    const line = lines[dayKey(sign, day) % lines.length]!;
+    const day = utcDay();
+    const typed = sign.toLowerCase() as StarSign;
     return {
-      sign,
+      sign: typed,
+      line: pickLine(typed, day),
+      disclaimer: "Parlor card, not astronomy. Not investment advice.",
       day,
-      line,
-      disclaimer:
-        "Parlor game. Not advice, not astronomy, not a Tamarindo forecast.",
     };
   },
 });

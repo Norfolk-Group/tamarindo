@@ -111,6 +111,155 @@ describe("runTurn", () => {
     );
   });
 
+  it("checks the tape without opening the thesis", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "markets.get") {
+        return {
+          asOf: "2026-08-23T12:00:00.000Z",
+          quotes: [
+            {
+              id: "nasdaq",
+              name: "NASDAQ Composite",
+              last: 17812,
+              changePct: -0.4,
+              unit: "pts",
+            },
+          ],
+          source: "Yahoo Finance",
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _m: string,
+      _p: unknown,
+      context?: { worldNote?: string },
+    ) {
+      yield context?.worldNote ?? "";
+    });
+
+    const events = [];
+    for await (const event of runTurn("How is the NASDAQ today?", actor, {
+      conversationId: "conv_nq",
+    })) {
+      events.push(event);
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "markets.get",
+      { focus: "indices" },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "knowledge.search",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it("scans hourly headlines without opening the thesis", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "news.headlines") {
+        return {
+          window: "hour",
+          region: "world",
+          asOf: "2026-08-23T12:00:00.000Z",
+          items: [
+            {
+              title: "A labeled number beats a rumor",
+              url: "https://example.com/1",
+              source: "BBC World",
+              publishedAt: "Sun, 23 Aug 2026 16:00:00 GMT",
+            },
+          ],
+          source: "BBC World",
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _m: string,
+      _p: unknown,
+      context?: { worldNote?: string },
+    ) {
+      yield context?.worldNote ?? "";
+    });
+
+    for await (const event of runTurn("top news of the hour", actor, {
+      conversationId: "conv_news",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "news.headlines",
+      { window: "hour", region: "world", limit: 5 },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+  });
+
+  it("pulls Medellín-area housing headlines without opening the thesis", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "news.headlines") {
+        return {
+          window: "day",
+          region: "medellin_re",
+          asOf: "2026-08-23T12:00:00.000Z",
+          items: [
+            {
+              title: "Poblado rents hold while Envigado listings slow",
+              url: "https://example.com/med",
+              source: "El Colombiano",
+              publishedAt: "Sun, 23 Aug 2026 15:00:00 GMT",
+            },
+          ],
+          source: "Google News (Aburrá housing, ES)",
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _m: string,
+      _p: unknown,
+      context?: { worldNote?: string },
+    ) {
+      yield context?.worldNote ?? "";
+    });
+
+    for await (const event of runTurn(
+      "real estate news around Medellín",
+      actor,
+      { conversationId: "conv_med_re" },
+    )) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "news.headlines",
+      { window: "day", region: "medellin_re", limit: 5 },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "knowledge.search",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
   it("queues a family workbook when the user asks for a whole-business worksheet", async () => {
     profileIdFor.mockResolvedValue("prof_1");
     ensureConversation.mockResolvedValue(undefined);
@@ -161,5 +310,48 @@ describe("runTurn", () => {
           e.label.includes("worksheet"),
       ),
     ).toBe(true);
+  });
+
+  it("tells a member an admin-only variable was not applied", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "model.setVariables") {
+        return {
+          applied: [],
+          model: { summary: { fy1ClosingCashUsd: 1, fy10ClosingCashUsd: 2 } },
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    for await (const event of runTurn("set the balloon to 25%", actor, {
+      conversationId: "conv_var",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.setVariables",
+      { values: { minResidualOfAssetPct: 0.25 } },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "set the balloon to 25%",
+      expect.anything(),
+      expect.objectContaining({
+        artifactNote: expect.stringContaining("admin"),
+      }),
+    );
   });
 });

@@ -25,11 +25,20 @@ describe("needsKnowledgeSearch", () => {
     );
   });
 
-  it("does not search the thesis for weather or horoscope", () => {
+  it("does not search the thesis for weather, tape, or headlines", () => {
     expect(needsKnowledgeSearch("What's the weather in Cartagena?")).toBe(
       false,
     );
     expect(needsKnowledgeSearch("scorpio horoscope today?")).toBe(false);
+    expect(needsKnowledgeSearch("How is the NASDAQ today?")).toBe(false);
+    expect(needsKnowledgeSearch("top news of the hour")).toBe(false);
+    expect(needsKnowledgeSearch("USD/COP?")).toBe(false);
+    expect(needsKnowledgeSearch("real estate news around Medellín")).toBe(
+      false,
+    );
+    expect(
+      needsKnowledgeSearch("Cartagena walled city real estate?"),
+    ).toBe(false);
   });
 
   it("searches when the user asks a Tamarindo fact", () => {

@@ -9,7 +9,12 @@ export function isCashflowModelRequest(message: string): boolean {
 }
 
 export function isVariableSetRequest(message: string): boolean {
-  return SET_RE.test(message) && /\b(x|step-?up|mandate|opex|activation|origination|down|january|closing|admin|seed|line)\b/i.test(message);
+  return (
+    SET_RE.test(message) &&
+    /\b(x|step-?up|mandate|opex|activation|origination|down|january|closing|admin|seed|line|balloon|residual|purchase option|spread)\b/i.test(
+      message,
+    )
+  );
 }
 
 const KEY_ALIASES: Array<{ re: RegExp; key: string; scale?: number }> = [
@@ -24,6 +29,12 @@ const KEY_ALIASES: Array<{ re: RegExp; key: string; scale?: number }> = [
   { re: /\bclosing fee\b/i, key: "coClosingFeeUsd" },
   { re: /\badmin\b/i, key: "coAdminPerLeaseUsd" },
   { re: /\bjanuary\b/i, key: "januaryCohortYear" },
+  {
+    re: /\b(balloon|residual|purchase option)\b/i,
+    key: "minResidualOfAssetPct",
+    scale: 0.01,
+  },
+  { re: /\bspread( share)?\b/i, key: "spreadSharePct", scale: 0.01 },
 ];
 
 export function parseVariableSet(

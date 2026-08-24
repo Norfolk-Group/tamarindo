@@ -13,12 +13,8 @@ import {
   entitiesForWorkbook,
   isWorkbookRequest,
 } from "@/lib/nico/workbook-intent";
-import {
-  isHoroscopeAsk,
-  isWeatherAsk,
-  starSignIn,
-  weatherPlace,
-} from "@/lib/nico/world-intent";
+import { parseWorldAsk } from "@/lib/nico/world-intent";
+import { runWorldAsk, worldActivityLabel } from "@/lib/nico/world-tools";
 import { profileIdFor } from "@/lib/procedures/profile";
 import { ProcedureError } from "@/lib/procedures/registry";
 import type { KnowledgePassage } from "@/lib/procedures/knowledge-search";
@@ -107,7 +103,20 @@ export async function* runTurn(
         applied: string[];
         model: { summary: { fy1ClosingCashUsd: number; fy10ClosingCashUsd: number } };
       };
-      artifactNote = `Updated ${updated.applied.join(", ") || "no allowed keys"}. Consolidated cash FY1 ${updated.model.summary.fy1ClosingCashUsd}, FY10 ${updated.model.summary.fy10ClosingCashUsd}. Open Model or Variables to see the rest.`;
+      const skipped = Object.keys(variableSet).filter(
+        (key) => !updated.applied.includes(key),
+      );
+      const adminOnlyNote = skipped.length
+        ? `The variable(s) ${skipped.join(", ")} are admin-only. Your role can change the published set; ask an admin to change these.`
+        : undefined;
+      if (updated.applied.length === 0) {
+        artifactNote = adminOnlyNote;
+      } else {
+        const successNote = `Updated ${updated.applied.join(", ")}. Consolidated cash FY1 ${updated.model.summary.fy1ClosingCashUsd}, FY10 ${updated.model.summary.fy10ClosingCashUsd}. Open Model or Variables to see the rest.`;
+        artifactNote = adminOnlyNote
+          ? `${successNote} ${adminOnlyNote}`
+          : successNote;
+      }
     } catch (err) {
       artifactNote = `I tried to change a variable and hit: ${
         err instanceof Error ? err.message : "unknown error"
@@ -172,46 +181,24 @@ export async function* runTurn(
   }
 
   let worldNote: string | undefined;
-  if (isWeatherAsk(message)) {
-    yield { type: "activity", state: "researching", label: "Checking the sky…" };
+  const worldAsk = parseWorldAsk(message);
+  if (worldAsk) {
+    yield {
+      type: "activity",
+      state: "researching",
+      label: worldActivityLabel(worldAsk),
+    };
     try {
-      const wx = (await invokeAgentTool(
-        "weather.get",
-        { place: weatherPlace(message) },
+      worldNote = await runWorldAsk(
+        worldAsk,
+        invokeAgentTool,
         toolActor,
         traceId,
-      )) as {
-        place: string;
-        country: string;
-        celsius: number;
-        summary: string;
-        windKmh: number;
-      };
-      worldNote = `Live weather in ${wx.place}${
-        wx.country ? `, ${wx.country}` : ""
-      }: ${wx.celsius}°C, ${wx.summary}, wind ${Math.round(wx.windKmh)} km/h (Open-Meteo).`;
+      );
     } catch (err) {
-      worldNote = `I tried to check the weather and hit: ${
+      worldNote = `I looked outside and hit: ${
         err instanceof Error ? err.message : "unknown error"
       }.`;
-    }
-  } else if (isHoroscopeAsk(message)) {
-    const sign = starSignIn(message);
-    if (sign) {
-      yield { type: "activity", state: "researching", label: "Reading the stars…" };
-      try {
-        const scope = (await invokeAgentTool(
-          "horoscope.get",
-          { sign },
-          toolActor,
-          traceId,
-        )) as { sign: string; line: string; disclaimer: string };
-        worldNote = `${scope.sign} today: ${scope.line} (${scope.disclaimer})`;
-      } catch (err) {
-        worldNote = `I tried to read the stars and hit: ${
-          err instanceof Error ? err.message : "unknown error"
-        }.`;
-      }
     }
   }
 

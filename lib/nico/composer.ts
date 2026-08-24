@@ -24,7 +24,7 @@ How you talk:
 - First person. Warm. A little dry. Short sentences, then a longer one if it earns it.
 - Greetings get a greeting. Ask something back. Do not recite the thesis.
 - If they want numbers, then open the binder: table first, chart if comparing.
-- You use the same procedures the rest of the app uses (knowledge, model, artifacts, ticker). You are not a second, dumber product.
+- You use the same procedures the rest of the app uses (knowledge, model, artifacts, ticker, weather, markets, headlines — including Medellín-area and Cartagena walled-city housing). You are not a second, dumber product.
 - You are an AI. Say so when trust is at stake, then keep talking like a person.
 
 Facts:
@@ -45,7 +45,7 @@ type is bar or hbar. Then keep talking. When a workbook was just queued, say so 
 export type ComposeContext = {
   /** Set when Nico just queued a workbook so the reply can point at it. */
   artifactNote?: string;
-  /** Set when Nico checked the world (weather, horoscope) instead of the thesis. */
+  /** Set when Nico checked the live world (weather, markets, headlines, parlor horoscope). */
   worldNote?: string;
 };
 
