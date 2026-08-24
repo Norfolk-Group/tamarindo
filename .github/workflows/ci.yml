@@ -18,22 +18,38 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      # prisma generate reads this; tests do not need a live database
       DATABASE_URL: postgresql://norfolk:norfolk@localhost:5432/norfolk_dev?schema=public
       # PDF generation is unused in unit tests; skip the Chrome download
       PUPPETEER_SKIP_DOWNLOAD: "true"
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: norfolk
+          POSTGRES_PASSWORD: norfolk
+          POSTGRES_DB: norfolk_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U norfolk -d norfolk_dev"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Install
         run: npm ci
+
+      - name: Migrate
+        run: npx prisma migrate deploy
 
       - name: Test
         run: npm test
