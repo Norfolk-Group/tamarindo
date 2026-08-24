@@ -1,0 +1,30 @@
+---
+description: Norfolk AI standards — kit and manual are living standards, not fossils
+alwaysApply: true
+---
+
+# Norfolk AI standards
+
+Norfolk AI has standards. They live in two private repos:
+
+- [norfolk-kit](https://github.com/Norfolk-Group/norfolk-kit) — stack, ADRs, shell, auth, design, equip payload
+- [norfolk-manual](https://github.com/Norfolk-Group/norfolk-manual) — handbook and governance; it **renders** the kit, it does not fork it
+
+New GitHub projects start from these two.
+
+## How to use them
+
+1. **Follow the standard by default.** Read the relevant kit ADR / manual CONTRACT before inventing a parallel pattern.
+2. **They are living, not law.** A better approach in a real project is a candidate to **raise the standard**, not a permanent local exception.
+3. **Deviate only on purpose.** If this repo must differ (example: Tamarindo is Cloudflare Workers + Prisma, not Railway + Drizzle), say so in the change and do not pretend the kit already says that.
+4. **Feed improvements back.** When you find a clearer UI, a safer default, a missing CONTRACT, or a kit rule that lost to reality — tell the user in the same turn and offer a kit/manual update. Do not silently keep the better way only here.
+
+## What “standard” means
+
+- Agent-native parity: UI and agents call the same procedures
+- Docs govern; a doc–code conflict is a finding
+- Design system is CONTRACT — shadcn/ui, tokens, no ad-hoc restyle
+- No secrets in git; outward actions need approval
+- Product copy over vendor copy (login says Tamarindo / Nico / Norfolk AI, not WorkOS)
+
+**This repo stays on Tamarindo’s choices.** Do not migrate it toward kit defaults (Railway, Drizzle, Clerk, Vercel). Canonical stack: `docs/nico/02-tech-stack.md` — Cloudflare Workers (OpenNext), Prisma → Neon via Hyperdrive, WorkOS AuthKit, R2, Agents SDK Durable Objects. If the kit should learn from that, propose a kit/manual update; do not change Tamarindo to match the old kit.

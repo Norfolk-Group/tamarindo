@@ -1,0 +1,4 @@
+# Copy to .dev.vars (gitignored). Wrangler does not inherit the parent shell.
+NICO_HANDSHAKE_SECRET=handshake-secret-at-least-16
+DATABASE_URL=postgresql://norfolk:norfolk@localhost:5432/norfolk_dev?schema=public
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000

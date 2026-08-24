@@ -1,0 +1,26 @@
+# Local Workers / wrangler secrets mirror. Copy to .dev.vars (gitignored).
+# Same keys as .env.example — keep them in sync by hand for now.
+NEXTJS_ENV=development
+
+# Local Docker, or the Hyperdrive connection string on Workers.
+DATABASE_URL=postgresql://norfolk:norfolk@localhost:5432/norfolk_dev?schema=public
+
+WORKOS_API_KEY=
+WORKOS_CLIENT_ID=
+WORKOS_COOKIE_PASSWORD=
+NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/callback
+NICO_HANDSHAKE_SECRET=
+NICO_AGENT_URL=http://127.0.0.1:8788
+# Wrangler-only. Next.js does not load this file into the browser bundle —
+# keep the same key in `.env` so the copilot can attach.
+NEXT_PUBLIC_NICO_AGENT_URL=http://127.0.0.1:8788
+# Sibling Worker also reads workers/nico-agent/.dev.vars — see that example.
+# EXA_API_KEY=
+
+CLOUDFLARE_ACCOUNT_ID=
+CLOUDFLARE_API_TOKEN=
+CF_AIG_GATEWAY_ID=
+
+# AI_GATEWAY_URL=
+# ANTHROPIC_API_KEY=
+# NICO_MODEL=anthropic/claude-sonnet-4-5

@@ -1,0 +1,788 @@
+import type { VariableDef, VariableValue } from "@/lib/model/types";
+import { EQUITY_VARIABLE_DEFS } from "@/lib/model/variables-equity";
+import { OPS_VARIABLE_DEFS } from "@/lib/model/variables-ops";
+
+export type { VariableValue };
+
+const THESIS_04 = "knowledge/thesis/04-icp-deals.md";
+const THESIS_05 = "knowledge/thesis/05-fee-engine.md";
+const THESIS_02 = "knowledge/thesis/02-entities.md";
+
+export const VARIABLE_DEFS: VariableDef[] = [
+  {
+    key: "lineTranche1Usd",
+    label: "Intervest first tranche",
+    group: "Capital",
+    type: "usd",
+    visibility: "user",
+    defaultValue: 10_000_000,
+    min: 0,
+    max: 100_000_000,
+    citation: {
+      label: "FACT",
+      path: THESIS_02,
+      note: "Intervest $10M Medellín line",
+    },
+  },
+  {
+    key: "lineTranche2Usd",
+    label: "Intervest second tranche",
+    group: "Capital",
+    type: "usd",
+    visibility: "user",
+    defaultValue: 10_000_000,
+    min: 0,
+    max: 100_000_000,
+    citation: {
+      label: "FACT",
+      path: THESIS_02,
+      note: "Second $10M on KPIs (Cartagena)",
+    },
+  },
+  {
+    key: "tranche2MonthIndex",
+    label: "Second tranche month (0 = Nov 2026)",
+    group: "Capital",
+    type: "integer",
+    visibility: "user",
+    defaultValue: 6,
+    min: 0,
+    max: 36,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "May 2027 — six months after first closings",
+    },
+  },
+  {
+    key: "lineStepUpPct",
+    label: "Line step-up every 6 months (X)",
+    group: "Capital",
+    type: "percent",
+    visibility: "user",
+    defaultValue: 0.2,
+    min: 0,
+    max: 1,
+    step: 0.01,
+    citation: {
+      label: "OPINION",
+      path: "lib/model/variables.ts",
+      note: "Legacy only — unused while useKpiCapitalCurve=1. KPI path is thesis 10.",
+    },
+  },
+  {
+    key: "lineStepUpEveryMonths",
+    label: "Months between step-ups",
+    group: "Capital",
+    type: "integer",
+    visibility: "admin",
+    defaultValue: 6,
+    min: 1,
+    max: 24,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Warehouse review cadence",
+    },
+  },
+  {
+    key: "targetUtilizationPct",
+    label: "Target line utilization",
+    group: "Capital",
+    type: "percent",
+    visibility: "admin",
+    defaultValue: 0.85,
+    min: 0.4,
+    max: 1,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Leave headroom on the commitment",
+    },
+  },
+  {
+    key: "downPaymentPct",
+    label: "Client down payment",
+    group: "Lease",
+    type: "percent",
+    visibility: "user",
+    defaultValue: 0.4,
+    min: 0.2,
+    max: 0.6,
+    citation: {
+      label: "FACT",
+      path: THESIS_04,
+      note: "40% down; complement of 60% max LTV",
+    },
+  },
+  {
+    key: "residualOfFundedPct",
+    label: "Residual of funded",
+    group: "Lease",
+    type: "percent",
+    visibility: "admin",
+    defaultValue: 0.15,
+    min: 0.05,
+    max: 0.4,
+    citation: {
+      label: "ASSUMPTION",
+      path: THESIS_04,
+      note: "15% of funded; floored at 10% of asset",
+    },
+  },
+  {
+    key: "minResidualOfAssetPct",
+    label: "Legal residual floor of asset",
+    group: "Lease",
+    type: "percent",
+    visibility: "admin",
+    defaultValue: 0.1,
+    min: 0.05,
+    max: 0.2,
+    citation: {
+      label: "FACT",
+      path: THESIS_04,
+      note: "Legal floor ≥10% of asset",
+    },
+  },
+  {
+    key: "activationFeePct",
+    label: "Activation fee of draw",
+    group: "Fees",
+    type: "percent",
+    visibility: "user",
+    defaultValue: 0.02,
+    min: 0,
+    max: 0.05,
+    citation: {
+      label: "FACT",
+      path: THESIS_05,
+      note: "2% of capital drawdown — US",
+    },
+  },
+  {
+    key: "originationFeePct",
+    label: "Origination fee of funded",
+    group: "Fees",
+    type: "percent",
+    visibility: "user",
+    defaultValue: 0.01,
+    min: 0,
+    max: 0.05,
+    citation: {
+      label: "ASSUMPTION",
+      path: THESIS_05,
+      note: "~1% of funded",
+    },
+  },
+  {
+    key: "servicingBps",
+    label: "Servicing of outstanding",
+    group: "Fees",
+    type: "percent",
+    visibility: "admin",
+    defaultValue: 0.0075,
+    min: 0,
+    max: 0.03,
+    citation: {
+      label: "ASSUMPTION",
+      path: THESIS_05,
+      note: "75 bps of outstanding / year",
+    },
+  },
+  {
+    key: "spreadSharePct",
+    label: "US share of interest",
+    group: "Fees",
+    type: "percent",
+    visibility: "admin",
+    defaultValue: 0.2,
+    min: 0,
+    max: 0.5,
+    citation: {
+      label: "FACT",
+      path: THESIS_05,
+      note: "~20% of interest billings stay at US",
+    },
+  },
+  {
+    key: "rentalMonthlyPctOfValue",
+    label: "Gross monthly rent as % of property value",
+    group: "Rental pricing",
+    type: "percent",
+    visibility: "user",
+    defaultValue: 0.0055,
+    min: 0.002,
+    max: 0.012,
+    step: 0.0005,
+    citation: {
+      label: "ASSUMPTION",
+      path: THESIS_04,
+      note: "0.55%/mo ≈ 6.6%/yr gross. Furnished, monthly-minimum stays (no nightly). Validate with comps before investor use.",
+    },
+  },
+  {
+    key: "rentalCostsPct",
+    label: "Rental operating costs of gross rent",
+    group: "Rental pricing",
+    type: "percent",
+    visibility: "admin",
+    defaultValue: 0.25,
+    min: 0,
+    max: 0.6,
+    step: 0.01,
+    citation: {
+      label: "ASSUMPTION",
+      path: THESIS_04,
+      note: "HOA, predial, utilities, cleaning, upkeep",
+    },
+  },
+  {
+    key: "rentalTamarindoSharePct",
+    label: "Tamarindo share of net rental remainder",
+    group: "Rental pricing",
+    type: "percent",
+    visibility: "user",
+    defaultValue: 0.2,
+    min: 0,
+    max: 0.5,
+    step: 0.01,
+    citation: {
+      label: "OPINION",
+      path: THESIS_04,
+      note: "20% of what is left after mgmt fee and costs; client keeps the rest",
+    },
+  },
+  {
+    key: "seedEquityUsd",
+    label: "US seed equity (month 0)",
+    group: "OpCo",
+    type: "usd",
+    visibility: "user",
+    defaultValue: 0,
+    min: 0,
+    max: 10_000_000,
+    citation: {
+      label: "OPINION",
+      path: THESIS_05,
+      note: "Unused in the base case — three priced $1M rounds replace the lump seed",
+    },
+  },
+  {
+    key: "usMonthlyOpexUsd",
+    label: "US monthly opex",
+    group: "OpCo",
+    type: "usd",
+    visibility: "user",
+    defaultValue: 130_000,
+    min: 0,
+    max: 500_000,
+    citation: {
+      label: "OPINION",
+      path: THESIS_05,
+      note: "US share of $165k midpoint burn — lump, not salaries",
+    },
+  },
+  {
+    key: "sucursalMonthlyOpexUsd",
+    label: "Colombia fixed monthly opex",
+    group: "Colombia",
+    type: "usd",
+    visibility: "user",
+    defaultValue: 35_000,
+    min: 0,
+    max: 300_000,
+    citation: {
+      label: "OPINION",
+      path: THESIS_05,
+      note: "Lean Colombia desk inside the $165k family burn — lump, not salaries. For-profit P&L; not a reimbursement wash.",
+    },
+  },
+  {
+    key: "sucursalPerContractUsd",
+    label: "Colombia variable opex per active lease",
+    group: "Colombia",
+    type: "usd",
+    visibility: "admin",
+    defaultValue: 150,
+    min: 0,
+    max: 5_000,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Local execution allocation",
+    },
+  },
+  {
+    key: "sucursalClosingFeeUsd",
+    label: "US mandate per close (intercompany)",
+    group: "Colombia",
+    type: "usd",
+    visibility: "admin",
+    defaultValue: 1_000,
+    min: 0,
+    max: 20_000,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "US pays Colombia for vehicle closing work. Not a full opex wash.",
+    },
+  },
+  {
+    key: "sucursalCostPlusPct",
+    label: "Mandate cost-plus",
+    group: "Colombia",
+    type: "percent",
+    visibility: "admin",
+    defaultValue: 0,
+    min: 0,
+    max: 0.5,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Markup only on the US mandate, not on Colombia opex",
+    },
+  },
+  {
+    key: "usMandateMonthlyUsd",
+    label: "US monthly mandate to Colombia",
+    group: "Colombia",
+    type: "usd",
+    visibility: "user",
+    defaultValue: 20_000,
+    min: 0,
+    max: 200_000,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Retainer for the Colombia desk. Does not reimburse full opex — Colombia must earn the rest.",
+    },
+  },
+  {
+    key: "coClosingFeeUsd",
+    label: "Colombia closing fee (client)",
+    group: "Colombia",
+    type: "usd",
+    visibility: "user",
+    defaultValue: 2_200,
+    min: 0,
+    max: 15_000,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Client-paid local closing / comodato coordination. Separate from $700–800 vendor title/appraisal.",
+    },
+  },
+  {
+    key: "coInspectionFeeUsd",
+    label: "Colombia diligence fee (client)",
+    group: "Colombia",
+    type: "usd",
+    visibility: "admin",
+    defaultValue: 400,
+    min: 0,
+    max: 5_000,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Client-paid inspection / diligence per close",
+    },
+  },
+  {
+    key: "coAdminPerLeaseUsd",
+    label: "Colombia admin per active lease / month",
+    group: "Colombia",
+    type: "usd",
+    visibility: "user",
+    defaultValue: 120,
+    min: 0,
+    max: 2_000,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Client-paid local administration (comodato, filings, liaison)",
+    },
+  },
+  {
+    key: "januaryCohortYear",
+    label: "January cohort year",
+    group: "Origination",
+    type: "integer",
+    visibility: "user",
+    defaultValue: 2027,
+    min: 2026,
+    max: 2028,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Treated as January 2027 after Nov/Dec 2026. Dial to 2026 only for a backdated vintage.",
+    },
+  },
+  {
+    key: "stubNovCount",
+    label: "Contracts in November 2026",
+    group: "Origination",
+    type: "integer",
+    visibility: "admin",
+    defaultValue: 2,
+    min: 0,
+    max: 20,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Pilot open",
+    },
+  },
+  {
+    key: "stubDecCount",
+    label: "Contracts in December 2026",
+    group: "Origination",
+    type: "integer",
+    visibility: "admin",
+    defaultValue: 2,
+    min: 0,
+    max: 20,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Pilot open",
+    },
+  },
+  {
+    key: "januaryCount",
+    label: "Contracts in January cohort",
+    group: "Origination",
+    type: "integer",
+    visibility: "admin",
+    defaultValue: 1,
+    min: 0,
+    max: 20,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Fifth contract",
+    },
+  },
+  {
+    key: "postPilotMonthlyBase",
+    label: "Monthly originations after Dec 2027",
+    group: "Origination",
+    type: "integer",
+    visibility: "admin",
+    defaultValue: 5,
+    min: 0,
+    max: 30,
+    citation: {
+      label: "OPINION",
+      path: "lib/model/variables.ts",
+      note: "Exit-2027 run-rate",
+    },
+  },
+  {
+    key: "postPilotAnnualGrowthPct",
+    label: "Post-pilot origination growth / year",
+    group: "Origination",
+    type: "percent",
+    visibility: "user",
+    defaultValue: 0.15,
+    min: 0,
+    max: 0.5,
+    citation: {
+      label: "OPINION",
+      path: "lib/model/variables.ts",
+      note: "After the 2027 ramp",
+    },
+  },
+  {
+    key: "maxOriginationsPerMonth",
+    label: "Cap on originations / month",
+    group: "Origination",
+    type: "integer",
+    visibility: "admin",
+    defaultValue: 10,
+    min: 1,
+    max: 40,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "Ops capacity",
+    },
+  },
+  {
+    key: "planStartYear",
+    label: "Plan start year",
+    group: "Horizon",
+    type: "integer",
+    visibility: "admin",
+    defaultValue: 2026,
+    min: 2025,
+    max: 2030,
+    citation: {
+      label: "FACT",
+      path: "lib/model/variables.ts",
+      note: "November 2026 open",
+    },
+  },
+  {
+    key: "planStartMonth",
+    label: "Plan start month (1–12)",
+    group: "Horizon",
+    type: "integer",
+    visibility: "admin",
+    defaultValue: 11,
+    min: 1,
+    max: 12,
+    citation: {
+      label: "FACT",
+      path: "lib/model/variables.ts",
+      note: "November",
+    },
+  },
+  {
+    key: "horizonMonths",
+    label: "Horizon (months)",
+    group: "Horizon",
+    type: "integer",
+    visibility: "admin",
+    defaultValue: 120,
+    min: 12,
+    max: 180,
+    citation: {
+      label: "ASSUMPTION",
+      path: "lib/model/variables.ts",
+      note: "10 fiscal years Nov–Oct",
+    },
+  },
+];
+
+const ICP_META: Array<{
+  id: string;
+  price: number;
+  term: number;
+  rate: number;
+  rentFactor: number;
+  weight: number;
+  label: string;
+  path: string;
+  cite: "FACT" | "OPINION" | "ASSUMPTION";
+  note: string;
+}> = [
+  {
+    id: "icp1",
+    price: 420_000,
+    term: 120,
+    rate: 0.11,
+    rentFactor: 1,
+    weight: 0.25,
+    label: "ICP-1 Poblado",
+    path: THESIS_04,
+    cite: "ASSUMPTION",
+    note: "Thesis ICP-1 anchors",
+  },
+  {
+    id: "icp2",
+    price: 650_000,
+    term: 120,
+    rate: 0.11,
+    rentFactor: 1,
+    weight: 0.18,
+    label: "ICP-2 Cartagena Heritage",
+    path: THESIS_04,
+    cite: "ASSUMPTION",
+    note: "Thesis ICP-2 anchors",
+  },
+  {
+    id: "icp3",
+    price: 750_000,
+    term: 144,
+    rate: 0.105,
+    rentFactor: 0.4,
+    weight: 0.12,
+    label: "ICP-3 Llanogrande",
+    path: THESIS_04,
+    cite: "ASSUMPTION",
+    note: "Longer 12-year retiree term",
+  },
+  {
+    id: "icp4",
+    price: 480_000,
+    term: 84,
+    rate: 0.12,
+    rentFactor: 1,
+    weight: 0.18,
+    label: "ICP-4 Bocagrande",
+    path: "lib/model/contracts.ts",
+    cite: "ASSUMPTION",
+    note: "7-year lifestyle term",
+  },
+  {
+    id: "icp5",
+    price: 310_000,
+    term: 96,
+    rate: 0.115,
+    rentFactor: 1,
+    weight: 0.17,
+    label: "ICP-5 Envigado",
+    path: "lib/model/contracts.ts",
+    cite: "ASSUMPTION",
+    note: "8-year smaller ticket",
+  },
+  {
+    id: "icp6",
+    price: 580_000,
+    term: 108,
+    rate: 0.11,
+    rentFactor: 1,
+    weight: 0.1,
+    label: "ICP-6 Castillo Grande",
+    path: "lib/model/contracts.ts",
+    cite: "ASSUMPTION",
+    note: "9-year coastal",
+  },
+];
+
+for (const icp of ICP_META) {
+  VARIABLE_DEFS.push(
+    {
+      key: `icp.${icp.id}.purchasePriceUsd`,
+      label: `${icp.label} purchase price`,
+      group: "ICP contracts",
+      type: "usd",
+      visibility: "admin",
+      defaultValue: icp.price,
+      min: 100_000,
+      max: 2_000_000,
+      citation: { label: icp.cite, path: icp.path, note: icp.note },
+    },
+    {
+      key: `icp.${icp.id}.termMonths`,
+      label: `${icp.label} term (months)`,
+      group: "ICP contracts",
+      type: "integer",
+      visibility: "admin",
+      defaultValue: icp.term,
+      min: 36,
+      max: 180,
+      citation: { label: icp.cite, path: icp.path, note: icp.note },
+    },
+    {
+      key: `icp.${icp.id}.clientRate`,
+      label: `${icp.label} client rate`,
+      group: "ICP contracts",
+      type: "percent",
+      visibility: "admin",
+      defaultValue: icp.rate,
+      min: 0.05,
+      max: 0.2,
+      citation: { label: icp.cite, path: icp.path, note: icp.note },
+    },
+    {
+      key: `icp.${icp.id}.rentedTimePct`,
+      label: `${icp.label} share of time rented`,
+      group: "ICP contracts",
+      type: "percent",
+      visibility: "user",
+      defaultValue: 0.3,
+      min: 0,
+      max: 1,
+      step: 0.05,
+      citation: {
+        label: "OPINION",
+        path: THESIS_04,
+        note: "Ricardo 2026-08-23 — people enjoy their homes; per-ICP what-if",
+      },
+    },
+    {
+      key: `icp.${icp.id}.rentFactor`,
+      label: `${icp.label} rental strength vs standard pricing`,
+      group: "ICP contracts",
+      type: "percent",
+      visibility: "admin",
+      defaultValue: icp.rentFactor,
+      min: 0,
+      max: 2,
+      step: 0.05,
+      citation: {
+        label: "ASSUMPTION",
+        path: icp.path,
+        note: "1 = standard %-of-value rule; ICP-3 rents weakly",
+      },
+    },
+    {
+      key: `icp.${icp.id}.mixWeight`,
+      label: `${icp.label} mix weight`,
+      group: "ICP contracts",
+      type: "percent",
+      visibility: "admin",
+      defaultValue: icp.weight,
+      min: 0,
+      max: 1,
+      citation: { label: "OPINION", path: THESIS_04, note: "Portfolio mix" },
+    },
+  );
+}
+
+const RAMP_2027: Array<[string, number]> = [
+  ["feb", 2],
+  ["mar", 2],
+  ["apr", 3],
+  ["may", 3],
+  ["jun", 3],
+  ["jul", 4],
+  ["aug", 4],
+  ["sep", 4],
+  ["oct", 5],
+  ["nov", 5],
+  ["dec", 5],
+];
+
+for (const [name, count] of RAMP_2027) {
+  VARIABLE_DEFS.push({
+    key: `ramp2027.${name}`,
+    label: `2027 ${name} originations`,
+    group: "2027 ramp",
+    type: "integer",
+    visibility: "admin",
+    defaultValue: count,
+    min: 0,
+    max: 20,
+    citation: {
+      label: "OPINION",
+      path: "lib/model/variables.ts",
+      note: "Grow through 2027 to ~45 homes — thesis pilot band",
+    },
+  });
+}
+
+VARIABLE_DEFS.push(...OPS_VARIABLE_DEFS, ...EQUITY_VARIABLE_DEFS);
+
+export const VARIABLE_KEYS = new Set(VARIABLE_DEFS.map((row) => row.key));
+
+export function defaultValues(): Record<string, VariableValue> {
+  return Object.fromEntries(
+    VARIABLE_DEFS.map((row) => [row.key, row.defaultValue]),
+  );
+}
+
+export function mergeValues(
+  overrides: Record<string, VariableValue> | null | undefined,
+): Record<string, VariableValue> {
+  const merged = defaultValues();
+  if (!overrides) return merged;
+  for (const [key, value] of Object.entries(overrides)) {
+    if (!VARIABLE_KEYS.has(key)) continue;
+    merged[key] = value;
+  }
+  return merged;
+}
+
+export function num(values: Record<string, VariableValue>, key: string): number {
+  const value = values[key];
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  const fallback = VARIABLE_DEFS.find((row) => row.key === key)?.defaultValue;
+  return typeof fallback === "number" ? fallback : 0;
+}

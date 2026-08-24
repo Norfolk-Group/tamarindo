@@ -1,0 +1,12 @@
+# Watch Workflow Worker. Do not export NicoAgent here (KTD1).
+
+name = "tamarindo-nico-watch"
+main = "src/index.ts"
+compatibility_date = "2026-08-22"
+compatibility_flags = [ "nodejs_compat" ]
+tsconfig = "./tsconfig.json"
+
+[[workflows]]
+name = "nico-watch"
+binding = "NICO_WATCH"
+class_name = "NicoWatchWorkflow"

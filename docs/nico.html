@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Nico — The Tamarindo Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #091414;
+    --bg-raise: #0d1b1b;
+    --bg-card: #0b1717;
+    --ink: #f2f7f6;
+    --ink-dim: #93a8a5;
+    --ink-faint: #5c7370;
+    --teal: #23a5b4;
+    --teal-deep: #20808d;
+    --teal-glow: rgba(35, 165, 180, 0.35);
+    --gold: #ffc94d;
+    --line: rgba(242, 247, 246, 0.08);
+    --line-strong: rgba(242, 247, 246, 0.14);
+    --radius: 14px;
+    --display: "Space Grotesk", sans-serif;
+    --body: "Inter", sans-serif;
+    --mono: "JetBrains Mono", monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  /* dot grid canvas texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(242,247,246,0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  main { position: relative; z-index: 1; }
+
+  ::selection { background: var(--teal-deep); color: var(--ink); }
+
+  /* ---------- nav ---------- */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 40px;
+    backdrop-filter: blur(14px);
+    background: rgba(9, 20, 20, 0.72);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--display);
+    font-weight: 600; font-size: 17px; letter-spacing: 0.02em;
+  }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 9px;
+    background: conic-gradient(from 210deg, var(--teal), #0e3f46 55%, var(--teal-deep));
+    display: grid; place-items: center;
+    font-family: var(--display); font-weight: 700; font-size: 15px;
+    color: #06201f;
+  }
+  nav .links { display: flex; gap: 28px; }
+  nav .links a {
+    color: var(--ink-dim); text-decoration: none;
+    font-size: 13.5px; font-weight: 500; letter-spacing: 0.04em;
+    transition: color 0.2s;
+  }
+  nav .links a:hover { color: var(--teal); }
+  .mono { font-family: var(--mono); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+    position: relative;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    width: 620px; height: 620px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--teal-glow) 0%, transparent 62%);
+    filter: blur(60px);
+    animation: ambient 9s ease-in-out infinite;
+    pointer-events: none;
+  }
+  @keyframes ambient {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.12); }
+  }
+
+  /* the orb */
+  .orb-wrap { position: relative; width: 132px; height: 132px; margin-bottom: 44px; z-index: 2; }
+  .orb {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55) 0%, transparent 24%),
+      radial-gradient(circle at 50% 55%, #2fc4d4 0%, var(--teal-deep) 48%, #0a2e33 100%);
+    box-shadow:
+      0 0 60px var(--teal-glow),
+      0 0 140px rgba(35,165,180,0.18),
+      inset 0 -14px 34px rgba(0,0,0,0.45);
+    animation: breathe 4.2s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.055); }
+  }
+  .orb-ring {
+    position: absolute; inset: -14px;
+    border-radius: 50%;
+    border: 1px solid rgba(35,165,180,0.45);
+    animation: ring 3s ease-out infinite;
+  }
+  .orb-ring.r2 { animation-delay: 1.5s; }
+  @keyframes ring {
+    0% { transform: scale(0.86); opacity: 0.9; }
+    100% { transform: scale(1.45); opacity: 0; }
+  }
+  .orb-status {
+    position: absolute;
+    bottom: -34px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--teal);
+    white-space: nowrap;
+  }
+  .orb-status::before {
+    content: "●"; margin-right: 8px; font-size: 8px;
+    animation: blink 1.6s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+  .hero h1 {
+    font-family: var(--display);
+    font-size: clamp(44px, 7vw, 82px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.04;
+    z-index: 2;
+    margin-top: 26px;
+  }
+  .hero h1 .accent { color: var(--teal); }
+  .hero .tagline {
+    margin-top: 22px; max-width: 620px;
+    color: var(--ink-dim); font-size: 18.5px; z-index: 2;
+  }
+  .typed-line {
+    margin-top: 34px;
+    font-family: var(--mono); font-size: 14.5px;
+    color: var(--ink-dim);
+    min-height: 24px; z-index: 2;
+  }
+  .typed-line .prompt { color: var(--teal); }
+  .cursor {
+    display: inline-block; width: 8px; height: 17px;
+    background: var(--teal); vertical-align: -2px; margin-left: 3px;
+    box-shadow: 0 0 12px var(--teal-glow);
+    animation: blink 1s step-end infinite;
+  }
+  .scroll-hint {
+    position: absolute; bottom: 34px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-faint);
+    animation: floaty 2.6s ease-in-out infinite;
+  }
+  @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
+
+  /* ---------- shared section ---------- */
+  section { max-width: 1080px; margin: 0 auto; padding: 110px 32px; }
+  .kicker {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 18px;
+  }
+  .kicker::before { content: "// "; color: var(--ink-faint); }
+  h2 {
+    font-family: var(--display);
+    font-size: clamp(30px, 4.4vw, 46px);
+    font-weight: 700; letter-spacing: -0.02em; line-height: 1.12;
+    max-width: 720px;
+  }
+  .lede { margin-top: 20px; color: var(--ink-dim); font-size: 17.5px; max-width: 660px; }
+
+  /* reveal on scroll */
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: none; }
+  .reveal.d1 { transition-delay: 0.08s; }
+  .reveal.d2 { transition-delay: 0.16s; }
+  .reveal.d3 { transition-delay: 0.24s; }
+
+  /* ---------- cards ---------- */
+  .grid { display: grid; gap: 18px; margin-top: 54px; }
+  .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 860px) { .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s, transform 0.25s;
+  }
+  .card:hover { border-color: rgba(35,165,180,0.4); transform: translateY(-3px); }
+  .card:hover .card-icon { color: var(--teal); }
+  .card-icon {
+    font-family: var(--mono); font-size: 20px;
+    color: var(--ink-faint);
+    margin-bottom: 18px;
+    transition: color 0.25s;
+  }
+  .card h3 { font-family: var(--display); font-size: 19px; font-weight: 600; margin-bottom: 10px; }
+  .card p { color: var(--ink-dim); font-size: 14.5px; }
+  .card .tag {
+    display: inline-block; margin-top: 16px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--teal);
+    border: 1px solid rgba(35,165,180,0.3);
+    padding: 4px 10px; border-radius: 100px;
+  }
+
+  /* ---------- chat demo ---------- */
+  .chat-demo {
+    margin-top: 54px;
+    background: var(--bg-raise);
+    border: 1px solid var(--line-strong);
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+  }
+  .chat-row { display: flex; gap: 14px; margin-bottom: 22px; align-items: flex-start; }
+  .chat-avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    display: grid; place-items: center;
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+  }
+  .chat-avatar.user { background: #1b2f2e; color: var(--ink-dim); }
+  .chat-avatar.nico {
+    background: radial-gradient(circle at 35% 30%, #2fc4d4, var(--teal-deep) 70%);
+    color: #06201f;
+    box-shadow: 0 0 18px var(--teal-glow);
+  }
+  .chat-bubble { font-size: 14.5px; color: var(--ink); max-width: 560px; }
+  .chat-bubble .meta {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 7px;
+  }
+  .activity {
+    font-family: var(--mono); font-size: 12.5px; color: var(--teal);
+    margin: 4px 0 14px 48px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .spinner {
+    width: 11px; height: 11px; border-radius: 50%;
+    border: 1.5px solid rgba(35,165,180,0.25);
+    border-top-color: var(--teal);
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .artifact-chip {
+    margin-top: 12px;
+    display: inline-flex; align-items: center; gap: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-family: var(--mono); font-size: 13px;
+  }
+  .artifact-chip .dot { color: var(--gold); }
+  .artifact-chip .size { color: var(--ink-faint); font-size: 11.5px; }
+
+  /* ---------- channels ---------- */
+  .channel-row {
+    display: flex; align-items: center; gap: 20px;
+    padding: 22px 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .channel-row:first-of-type { border-top: 1px solid var(--line); margin-top: 54px; }
+  .channel-num {
+    font-family: var(--mono); font-size: 12px; color: var(--ink-faint);
+    width: 34px; flex-shrink: 0;
+  }
+  .channel-name {
+    font-family: var(--display); font-weight: 600; font-size: 17px;
+    width: 220px; flex-shrink: 0;
+  }
+  .channel-desc { color: var(--ink-dim); font-size: 14px; flex: 1; }
+  .channel-via { font-family: var(--mono); font-size: 11.5px; color: var(--teal); text-align: right; }
+  @media (max-width: 860px) {
+    .channel-row { flex-wrap: wrap; }
+    .channel-name { width: auto; }
+    .channel-via { width: 100%; text-align: left; }
+  }
+
+  /* ---------- pipeline / onboarding ---------- */
+  .steps { margin-top: 54px; display: grid; gap: 0; }
+  .step {
+    display: flex; gap: 26px; padding: 26px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .step:first-child { border-top: 1px solid var(--line); }
+  .step-num {
+    font-family: var(--mono); font-size: 13px; color: var(--teal);
+    width: 44px; flex-shrink: 0; padding-top: 3px;
+  }
+  .step h4 { font-family: var(--display); font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+  .step p { color: var(--ink-dim); font-size: 14.5px; max-width: 640px; }
+  .step .lock { color: var(--gold); font-family: var(--mono); font-size: 12px; }
+
+  /* ---------- stack ---------- */
+  .stack-table { margin-top: 54px; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; }
+  .stack-row {
+    display: grid; grid-template-columns: 200px 1fr 220px;
+    padding: 18px 26px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+  .stack-row:last-child { border-bottom: none; }
+  .stack-row:hover { background: rgba(35,165,180,0.05); }
+  .stack-layer { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .stack-what { color: var(--ink); font-weight: 500; }
+  .stack-tech { font-family: var(--mono); font-size: 12.5px; color: var(--teal); text-align: right; }
+  @media (max-width: 780px) {
+    .stack-row { grid-template-columns: 1fr; gap: 4px; }
+    .stack-tech { text-align: left; }
+  }
+
+  /* ---------- guardrails ---------- */
+  .guard-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 54px; }
+  @media (max-width: 780px) { .guard-grid { grid-template-columns: 1fr; } }
+  .guard {
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--gold);
+    border-radius: 10px;
+    padding: 24px 26px;
+    background: var(--bg-card);
+  }
+  .guard h4 { font-family: var(--display); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .guard p { color: var(--ink-dim); font-size: 14px; }
+
+  /* ---------- numbers strip ---------- */
+  .num-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--line-strong); border-radius: var(--radius);
+    margin-top: 64px; overflow: hidden;
+  }
+  @media (max-width: 780px) { .num-strip { grid-template-columns: repeat(2, 1fr); } }
+  .num-cell {
+    padding: 30px 26px;
+    border-right: 1px solid var(--line);
+  }
+  .num-cell:last-child { border-right: none; }
+  .num-cell .big {
+    font-family: var(--mono); font-size: 34px; font-weight: 600;
+    color: var(--teal); letter-spacing: -0.02em;
+  }
+  .num-cell .big .unit { font-size: 16px; color: var(--ink-faint); }
+  .num-cell .label {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-faint); margin-top: 8px;
+  }
+
+  /* ---------- footer ---------- */
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 60px 40px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 20px;
+  }
+  footer .mono { font-size: 12px; color: var(--ink-faint); }
+  footer .sig { font-family: var(--display); font-weight: 600; }
+  footer .sig .accent { color: var(--teal); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">
+    <div class="brand-mark">N</div>
+    Nico <span class="mono" style="color: var(--ink-faint); font-size: 12px;">/ tamarindo</span>
+  </div>
+  <div class="links">
+    <a href="#work">What he does</a>
+    <a href="#channels">Where he lives</a>
+    <a href="#onboarding">Onboarding</a>
+    <a href="#stack">How he's built</a>
+    <a href="#trust">Trust</a>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ============ HERO ============ -->
+  <div class="hero">
+    <div class="orb-wrap">
+      <div class="orb-ring"></div>
+      <div class="orb-ring r2"></div>
+      <div class="orb"></div>
+      <div class="orb-status" id="orbStatus">idle</div>
+    </div>
+    <h1>Meet <span class="accent">Nico</span>.<br/>Tamarindo's resident mind.</h1>
+    <p class="tagline">
+      A McKinsey-grade consultant who never sleeps — building financial models,
+      pitch decks and podcasts, briefing investors, and joining your meetings.
+      All from one conversation.
+    </p>
+    <div class="typed-line"><span class="prompt">nico&gt;</span> <span id="typed"></span><span class="cursor"></span></div>
+    <div class="scroll-hint">scroll ↓</div>
+  </div>
+
+  <!-- ============ WHO ============ -->
+  <section id="who">
+    <div class="kicker reveal">Who is Nico</div>
+    <h2 class="reveal">One brain. Every surface.<br/>Real work product.</h2>
+    <p class="lede reveal d1">
+      Nico is not a chatbot bolted onto an app — the conversation <em>is</em> the app.
+      He ingests everything Tamarindo knows (PDFs, spreadsheets, recordings, meetings),
+      reasons over it with frontier models, and turns questions into finished,
+      downloadable artifacts. Whatever a person can do in the product, Nico can do
+      through the same governed procedures — full agent-native parity.
+    </p>
+
+    <div class="chat-demo reveal d2">
+      <div class="chat-row">
+        <div class="chat-avatar user">RC</div>
+        <div class="chat-bubble">
+          <div class="meta">You · 21:42</div>
+          Build a 5-year DCF for Tamarindo using the Q2 numbers, and draft the seed deck with the $2.5M ask.
+        </div>
+      </div>
+      <div class="activity"><div class="spinner"></div> reading Q2_financials.xlsx · pulling comparable multiples · computing WACC…</div>
+      <div class="chat-row">
+        <div class="chat-avatar nico">N</div>
+        <div class="chat-bubble">
+          <div class="meta">Nico · 21:44</div>
+          Done. Enterprise value lands at <span class="mono" style="color: var(--gold);">$14.2M</span> mid-case
+          (<span class="mono">11.8×</span> forward revenue). The model has live formulas — change any assumption
+          and everything recomputes. Deck draft is 14 slides; the ask and terms come straight from your Deal Terms record.
+          <br/>
+          <span class="artifact-chip"><span class="dot">▮</span> tamarindo-dcf-v3.xlsx <span class="size">148 KB · live formulas</span></span>
+          <span class="artifact-chip"><span class="dot">▮</span> seed-deck-draft.pptx <span class="size">14 slides · awaiting your review</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="num-strip reveal d3">
+      <div class="num-cell"><div class="big">6</div><div class="label">Channels he lives on</div></div>
+      <div class="num-cell"><div class="big">4</div><div class="label">Artifact types he ships</div></div>
+      <div class="num-cell"><div class="big">24<span class="unit">/7</span></div><div class="label">Availability</div></div>
+      <div class="num-cell"><div class="big">100<span class="unit">%</span></div><div class="label">Outbound human-approved</div></div>
+    </div>
+  </section>
+
+  <!-- ============ WHAT HE DOES ============ -->
+  <section id="work">
+    <div class="kicker reveal">What he does</div>
+    <h2 class="reveal">An artifact factory with a conversation on top.</h2>
+    <p class="lede reveal d1">
+      Ask in plain language. Receive finished work — not summaries of work.
+    </p>
+    <div class="grid cols-2">
+      <div class="card reveal">
+        <div class="card-icon">⌗</div>
+        <h3>Financial models that actually compute</h3>
+        <p>Income statements, cash flows, DCFs and scenario models built as real .xlsx files with
+        live formulas — not pasted values. Change a growth assumption in Excel and the valuation
+        recalculates. Every number traces to a source.</p>
+        <span class="tag">xlsx · live formulas</span>
+      </div>
+      <div class="card reveal d1">
+        <div class="card-icon">▤</div>
+        <h3>Investor decks, ask included</h3>
+        <p>Complete fundraising presentations — problem, market, traction, projections pulled live
+        from the model, use of funds, and the ask. Valuation and terms render only from your
+        admin-controlled Deal Terms record. Nothing is hallucinated into a term sheet.</p>
+        <span class="tag">pptx · branded template</span>
+      </div>
+      <div class="card reveal d2">
+        <div class="card-icon">◉</div>
+        <h3>Podcasts from any material</h3>
+        <p>NotebookLM-style two-host audio: Nico scripts a natural dialogue from a transcript, memo
+        or the quarter's numbers, then renders it with dual AI voices. An eight-minute briefing
+        investors can listen to in the car.</p>
+        <span class="tag">audio · two hosts</span>
+      </div>
+      <div class="card reveal d3">
+        <div class="card-icon">✎</div>
+        <h3>Memos, briefs & charts</h3>
+        <p>Pre-meeting investor briefs, post-meeting follow-ups drawn from transcripts, one-pagers,
+        and publication-quality charts — styled in the Tamarindo identity, ready to send.</p>
+        <span class="tag">pdf · email · charts</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CHANNELS ============ -->
+  <section id="channels">
+    <div class="kicker reveal">Where he lives</div>
+    <h2 class="reveal">Six channels. Same Nico.</h2>
+    <p class="lede reveal d1">
+      Every channel routes to one brain with one memory — Nico remembers the WhatsApp thread
+      when the investor calls, and the call when they meet on Zoom.
+    </p>
+    <div class="reveal d2">
+      <div class="channel-row">
+        <div class="channel-num">01</div>
+        <div class="channel-name">The Copilot</div>
+        <div class="channel-desc">Full-screen conversation canvas. Rich artifact cards, voice mode, and an avatar that visibly listens, thinks, researches and drafts — never a frozen screen.</div>
+        <div class="channel-via">web · realtime voice</div>
+      </div>
+      <div class="channel-row">
+        <div class="channel-num">02</div>
+        <div class="channel-name">Zoom & Google Meet</div>
+        <div class="channel-desc">Joins as a named participant with a live avatar tile. Hears every speaker, talks back in real time, presents charts mid-meeting, logs follow-ups.</div>
+        <div class="channel-via">meeting bot</div>
+      </div>
+      <div class="channel-row">
+        <div class="channel-num">03</div>
+        <div class="channel-name">WhatsApp</div>
+        <div class="channel-desc">His own business number. Investors chat with him directly; he replies with answers, documents and voice notes inside Meta's messaging rules.</div>
+        <div class="channel-via">business api</div>
+      </div>
+      <div class="channel-row">
+        <div class="channel-num">04</div>
+        <div class="channel-name">Phone</div>
+        <div class="channel-desc">A real phone number. Answers inbound calls with sub-second voice latency; places outbound calls — with your approval — to confirm meetings.</div>
+        <div class="channel-via">voice line</div>
+      </div>
+      <div class="channel-row">
+        <div class="channel-num">05</div>
+        <div class="channel-name">Email</div>
+        <div class="channel-desc">Sends briefs and follow-ups; receives mail on his own address and acts on it. Attachments flow straight into his knowledge base.</div>
+        <div class="channel-via">inbound + outbound</div>
+      </div>
+      <div class="channel-row">
+        <div class="channel-num">06</div>
+        <div class="channel-name">The Data Room</div>
+        <div class="channel-desc">A documents area investors see after signing the NDA. Nico publishes approved artifacts there, tracks every view and download, and tells you who's engaged.</div>
+        <div class="channel-via">gated · audited</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ONBOARDING ============ -->
+  <section id="onboarding">
+    <div class="kicker reveal">The front door</div>
+    <h2 class="reveal">Nico onboards people himself.</h2>
+    <p class="lede reveal d1">
+      New team members and investors don't fill out forms — they meet Nico.
+    </p>
+    <div class="steps reveal d2">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div>
+          <h4>Invite</h4>
+          <p>You (or Nico, with your approval) send a role-tagged invitation — team or investor. Sign-up is bot-protected and passwordless.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div>
+          <h4>Interview</h4>
+          <p>First login opens a conversation. Nico asks who they are, their organization, their context with Tamarindo — and quietly builds their profile from the answers. The interview is the form.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div>
+          <h4>Bio</h4>
+          <p>Nico drafts a clean two-paragraph bio from the interview. They approve or edit it in one click.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div>
+          <h4>NDA <span class="lock">· gate</span></h4>
+          <p>Nico fills the custom Tamarindo NDA with their details, renders the PDF, and collects a legally binding click-wrap signature — typed name, drawn signature, timestamp, IP and document hash on the audit trail. Signed copy delivered by email.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">05</div>
+        <div>
+          <h4>Access</h4>
+          <p>Only now does the data room unlock. Confidential documents, briefs and meeting materials all check the signature — enforced in the procedures themselves, for humans and agents alike.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STACK ============ -->
+  <section id="stack">
+    <div class="kicker reveal">How he's built</div>
+    <h2 class="reveal">Frontier models on rails.</h2>
+    <p class="lede reveal d1">
+      Nico orchestrates specialist engines — finance, research, meetings, presentation —
+      each running on the model best suited to the job, all swappable behind one gateway.
+    </p>
+    <div class="stack-table reveal d2">
+      <div class="stack-row">
+        <div class="stack-layer">Judgment</div>
+        <div class="stack-what">Nico's core reasoning, consulting voice, orchestration</div>
+        <div class="stack-tech">Claude</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-layer">Research</div>
+        <div class="stack-what">Deep web search, live market data, realtime voice</div>
+        <div class="stack-tech">Grok · xAI</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-layer">Voice</div>
+        <div class="stack-what">Speech-to-speech in meetings and the copilot; phone TTS</div>
+        <div class="stack-tech">Grok Voice · Twilio</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-layer">Podcast</div>
+        <div class="stack-what">Two-host dialogue rendering</div>
+        <div class="stack-tech">Gemini TTS</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-layer">Runtime</div>
+        <div class="stack-what">Stateful agent sessions, schedules, durable pipelines</div>
+        <div class="stack-tech">Cloudflare Agents SDK</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-layer">Memory</div>
+        <div class="stack-what">Relational data + vector recall, side by side</div>
+        <div class="stack-tech">Neon Postgres · pgvector</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-layer">Files</div>
+        <div class="stack-what">Data room, artifacts, signed NDAs — zero egress fees</div>
+        <div class="stack-tech">Cloudflare R2</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-layer">Identity</div>
+        <div class="stack-what">Sign-in, roles, invitations</div>
+        <div class="stack-tech">WorkOS AuthKit</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-layer">Meetings</div>
+        <div class="stack-what">Bot presence in Zoom, Meet, Teams</div>
+        <div class="stack-tech">Recall.ai</div>
+      </div>
+      <div class="stack-row">
+        <div class="stack-layer">Reach</div>
+        <div class="stack-what">Phone line, WhatsApp, transactional email</div>
+        <div class="stack-tech">Twilio · Resend</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TRUST ============ -->
+  <section id="trust">
+    <div class="kicker reveal">Trust</div>
+    <h2 class="reveal">Autonomous inward.<br/>Accountable outward.</h2>
+    <p class="lede reveal d1">
+      Nico works freely on analysis and drafts. The moment anything would leave the building,
+      a human decides.
+    </p>
+    <div class="guard-grid">
+      <div class="guard reveal">
+        <h4>The approval gate</h4>
+        <p>Every outbound touch — email, WhatsApp, call, calendar invite, data-room publish — flows
+        through one procedure with a human approval step. Nico shows you the draft, the recipient,
+        and his reasoning. You tap approve.</p>
+      </div>
+      <div class="guard reveal d1">
+        <h4>Terms from the record, never the model</h4>
+        <p>Valuations, raise amounts and conditions render exclusively from the admin-controlled
+        Deal Terms record. A language model never invents a number an investor sees.</p>
+      </div>
+      <div class="guard reveal d2">
+        <h4>Truthful presence</h4>
+        <p>The status line shows what Nico is actually doing — which document he's reading, which
+        search he's running. His animations are wired to real events, not theater. He always
+        discloses he's an AI.</p>
+      </div>
+      <div class="guard reveal d3">
+        <h4>Everything on the record</h4>
+        <p>Every procedure call, signature, view and download is logged. The NDA gate is enforced
+        in code paths shared by humans and agents — there is no side door.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="sig">Nico <span class="accent">·</span> Tamarindo</div>
+  <div class="mono">agent-native · human-approved · always on</div>
+</footer>
+
+<script>
+  // scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) e.target.classList.add("visible");
+  }, { threshold: 0.12 });
+  document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+
+  // orb status cycle — mirrors Nico's real presence states
+  const states = ["idle", "listening", "thinking", "researching", "drafting", "speaking"];
+  let si = 0;
+  setInterval(() => {
+    si = (si + 1) % states.length;
+    document.getElementById("orbStatus").textContent = states[si];
+  }, 2600);
+
+  // typed prompt loop
+  const phrases = [
+    "build a 5-year DCF from the Q2 numbers",
+    "draft the seed deck with the $2.5M ask",
+    "turn today's board call into a podcast",
+    "brief Rossi on WhatsApp before Thursday",
+    "join the 3pm investor Zoom and take the follow-ups",
+    "who downloaded the deck this week?"
+  ];
+  const typedEl = document.getElementById("typed");
+  let pi = 0, ci = 0, deleting = false;
+  function tick() {
+    const p = phrases[pi];
+    if (!deleting) {
+      ci++;
+      typedEl.textContent = p.slice(0, ci);
+      if (ci === p.length) { deleting = true; return setTimeout(tick, 2100); }
+      return setTimeout(tick, 34 + Math.random() * 46);
+    } else {
+      ci--;
+      typedEl.textContent = p.slice(0, ci);
+      if (ci === 0) { deleting = false; pi = (pi + 1) % phrases.length; return setTimeout(tick, 420); }
+      return setTimeout(tick, 14);
+    }
+  }
+  tick();
+</script>
+
+</body>
+</html>

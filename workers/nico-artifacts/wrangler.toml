@@ -1,0 +1,21 @@
+# Artifact Workflow Worker. Do not export NicoAgent here (KTD1).
+
+name = "tamarindo-nico-artifacts"
+main = "src/index.ts"
+compatibility_date = "2026-08-22"
+compatibility_flags = [ "nodejs_compat" ]
+tsconfig = "./tsconfig.json"
+
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "7e001c1819fa477aa93b67820f530e80"
+localConnectionString = "postgresql://norfolk:norfolk@localhost:5432/norfolk_dev?schema=public"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "tamarindo-files"
+
+[[workflows]]
+name = "nico-artifacts"
+binding = "NICO_ARTIFACTS"
+class_name = "NicoArtifactsWorkflow"

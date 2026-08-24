@@ -1,0 +1,27 @@
+# Nico session Worker. This is the only script that exports NicoAgent (KTD1).
+
+name = "tamarindo-nico-agent"
+main = "src/index.ts"
+compatibility_date = "2026-08-22"
+compatibility_flags = [ "nodejs_compat" ]
+tsconfig = "./tsconfig.json"
+
+# `agents` optionally imports MCP. Nico does not use it — stub so
+# wrangler can bundle without installing those peers.
+[alias]
+"@modelcontextprotocol/client" = "./mcp-client-stub.ts"
+"@modelcontextprotocol/client/validators/cf-worker" = "./mcp-cf-validator-stub.ts"
+
+[durable_objects]
+bindings = [
+  { name = "NicoAgent", class_name = "NicoAgent" },
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = [ "NicoAgent" ]
+
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "7e001c1819fa477aa93b67820f530e80"
+localConnectionString = "postgresql://norfolk:norfolk@localhost:5432/norfolk_dev?schema=public"

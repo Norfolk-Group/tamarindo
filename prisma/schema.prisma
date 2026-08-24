@@ -1,0 +1,333 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../lib/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
+}
+
+// ── Enums ────────────────────────────────────────────────────────────────
+
+enum Role {
+  admin
+  member
+  investor
+  guest
+}
+
+enum InvitationStatus {
+  pending
+  accepted
+  revoked
+  expired
+}
+
+enum ArtifactKind {
+  excel
+  deck
+  podcast
+  memo
+  chart
+}
+
+enum DealTermsStatus {
+  draft
+  published
+  superseded
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+  consumed
+}
+
+// ── Identity & intake ────────────────────────────────────────────────────
+
+model Profile {
+  id          String    @id @default(cuid())
+  authSubject String    @unique
+  displayName String
+  email       String?
+  role        Role      @default(guest)
+  org         String?
+  bio         String?   @db.Text
+  ndaSignedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  invitationsSent  Invitation[]
+  ndaSignatures    NdaSignature[]
+  artifacts        Artifact[]
+  requestedApprovals Approval[]     @relation("ApprovalRequester")
+  decidedApprovals   Approval[]     @relation("ApprovalDecider")
+  auditLogs        AuditLog[]
+  dataRoomViews    DataRoomView[]
+  conversations    Conversation[]
+  corrections      Correction[]
+  consents         ConsentRecord[]
+  modelScenarios   ModelScenario[]
+
+  @@index([role])
+  @@index([ndaSignedAt])
+}
+
+model Invitation {
+  id         String           @id @default(cuid())
+  email      String
+  role       Role
+  status     InvitationStatus @default(pending)
+  inviterId  String
+  inviter    Profile          @relation(fields: [inviterId], references: [id])
+  workosId   String?          @unique
+  expiresAt  DateTime?
+  acceptedAt DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([email])
+  @@index([status])
+}
+
+model NdaSignature {
+  id              String   @id @default(cuid())
+  profileId       String
+  profile         Profile  @relation(fields: [profileId], references: [id])
+  templateVersion String
+  documentHash    String
+  typedName       String
+  signatureRef    String
+  signedPdfRef    String
+  ipAddress       String
+  userAgent       String
+  signedAt        DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([profileId])
+}
+
+model ConsentRecord {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id])
+  document  String
+  accepted  Boolean
+  version   String
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([profileId, document])
+}
+
+// ── Artifacts & data room ────────────────────────────────────────────────
+
+model Artifact {
+  id          String       @id @default(cuid())
+  kind        ArtifactKind
+  title       String
+  createdById String
+  createdBy   Profile      @relation(fields: [createdById], references: [id])
+  storageRef  String?
+  mimeType    String?
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([kind])
+  @@index([createdById])
+}
+
+model DataRoomDocument {
+  id           String         @id @default(cuid())
+  title        String
+  storageRef   String
+  mimeType     String
+  confidential Boolean        @default(true)
+  published    Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  views        DataRoomView[]
+}
+
+model DataRoomView {
+  id         String           @id @default(cuid())
+  documentId String
+  document   DataRoomDocument @relation(fields: [documentId], references: [id])
+  profileId  String
+  profile    Profile          @relation(fields: [profileId], references: [id])
+  action     String
+  createdAt  DateTime         @default(now())
+
+  @@index([documentId, profileId])
+}
+
+// ── Deal terms (numbers come from this record, never the model) ──────────
+
+model DealTerms {
+  id        String          @id @default(cuid())
+  version   Int             @unique
+  status    DealTermsStatus @default(draft)
+  payload   Json
+  notes     String?         @db.Text
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+// ── Approvals & audit ────────────────────────────────────────────────────
+
+model Approval {
+  id             String         @id @default(cuid())
+  procedure      String
+  payload        Json
+  payloadHash    String
+  conversationId String?
+  reason         String         @db.Text
+  status         ApprovalStatus @default(pending)
+  requestedById  String
+  requestedBy    Profile        @relation("ApprovalRequester", fields: [requestedById], references: [id])
+  decidedById    String?
+  decidedBy      Profile?       @relation("ApprovalDecider", fields: [decidedById], references: [id])
+  decidedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([status])
+  @@index([procedure])
+  @@index([conversationId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  traceId    String
+  actorKind  String
+  actorId    String
+  profileId  String?
+  profile    Profile? @relation(fields: [profileId], references: [id])
+  procedure  String
+  ok         Boolean
+  durationMs Int
+  error      String?
+  createdAt  DateTime @default(now())
+
+  @@index([traceId])
+  @@index([procedure])
+  @@index([createdAt])
+}
+
+// ── Model cell graph (spreadsheet-grade storage of the cash-flow book) ───
+// The TS engine stays the calculator; each run materializes cells + deps
+// here so numbers carry provenance and scenarios are stored, not ephemeral.
+
+model ModelScenario {
+  id          String      @id @default(cuid())
+  name        String
+  description String?     @db.Text
+  /// Full variable set the run used (defaults + overrides).
+  variables   Json
+  isBase      Boolean     @default(false)
+  createdById String?
+  createdBy   Profile?    @relation(fields: [createdById], references: [id])
+  cells       ModelCell[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([isBase, createdAt])
+  @@index([createdById])
+}
+
+model ModelCell {
+  id         String        @id @default(cuid())
+  scenarioId String
+  scenario   ModelScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  /// Stable address, e.g. "us.spread.fy3" or "input.spreadSharePct".
+  key        String
+  /// us | sucursal | consolidated | summary | input
+  sheet      String
+  lineId     String
+  label      String
+  /// 1-based fiscal year; null for inputs and scalars.
+  fy         Int?
+  /// input | derived | memo
+  kind       String
+  value      Decimal       @db.Decimal(24, 8)
+  /// Human-readable formula, e.g. "Σ monthly interest × spreadSharePct".
+  formula    String?       @db.Text
+  createdAt  DateTime      @default(now())
+
+  inputs ModelCellDep[] @relation("CellInputs")
+  usedBy ModelCellDep[] @relation("CellUsedBy")
+
+  @@unique([scenarioId, key])
+  @@index([scenarioId, sheet])
+  @@index([scenarioId, lineId])
+}
+
+model ModelCellDep {
+  id      String    @id @default(cuid())
+  /// The derived cell.
+  cellId  String
+  cell    ModelCell @relation("CellInputs", fields: [cellId], references: [id], onDelete: Cascade)
+  /// A cell it reads from.
+  inputId String
+  input   ModelCell @relation("CellUsedBy", fields: [inputId], references: [id], onDelete: Cascade)
+
+  @@unique([cellId, inputId])
+  @@index([inputId])
+}
+
+// ── Memory ───────────────────────────────────────────────────────────────
+
+model Conversation {
+  id        String    @id @default(cuid())
+  profileId String
+  profile   Profile   @relation(fields: [profileId], references: [id])
+  title     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+
+  @@index([profileId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String       @db.Text
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model MemoryChunk {
+  id         String                       @id @default(cuid())
+  sourcePath String
+  title      String
+  content    String                       @db.Text
+  embedding  Unsupported("vector(1536)")?
+  metadata   Json?
+  createdAt  DateTime                     @default(now())
+  updatedAt  DateTime                     @updatedAt
+
+  @@index([sourcePath])
+}
+
+model Correction {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id])
+  original  String   @db.Text
+  corrected String   @db.Text
+  context   String?
+  createdAt DateTime @default(now())
+
+  @@index([profileId])
+}

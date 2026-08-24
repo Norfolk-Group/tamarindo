@@ -1,0 +1,44 @@
+# OpenNext Next shell. Do not declare NicoAgent here (KTD1).
+
+"$schema" = "./node_modules/wrangler/config-schema.json"
+name = "tamarindo-web"
+main = ".open-next/worker.js"
+compatibility_date = "2026-08-22"
+compatibility_flags = [ "nodejs_compat", "global_fetch_strictly_public" ]
+
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+[[services]]
+binding = "WORKER_SELF_REFERENCE"
+service = "tamarindo-web"
+
+# Replace the Hyperdrive id after the Cloudflare resource exists.
+# Local `wrangler dev` uses Docker Postgres via localConnectionString.
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "7e001c1819fa477aa93b67820f530e80"
+localConnectionString = "postgresql://norfolk:norfolk@localhost:5432/norfolk_dev?schema=public"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "tamarindo-files"
+
+# U7 workflow lives on workers/nico-artifacts (class NicoArtifactsWorkflow).
+# Binding name reserved: NICO_ARTIFACTS (workflow name: nico-artifacts).
+# Leave commented until that Worker is running next to this shell; local
+# artifacts.create completes in-process when the binding is absent.
+#
+# U11 watch Worker is live: tamarindo-nico-watch (EXA_API_KEY set).
+# Bind NICO_WATCH here on the next OpenNext deploy:
+# [[workflows]]
+# binding = "NICO_WATCH"
+# name = "nico-watch"
+# class_name = "NicoWatchWorkflow"
+# script_name = "tamarindo-nico-watch"
+
+# Sibling session Worker (U6). Route /agents/* there.
+[[services]]
+binding = "NICO_AGENT"
+service = "tamarindo-nico-agent"

@@ -1,0 +1,31 @@
+---
+description: Persist every chat-uploaded file to Cloudflare R2
+alwaysApply: true
+---
+
+# Chat uploads go to R2
+
+When the user attaches files in this chat (or says they uploaded files here), copy every file into the Cloudflare R2 bucket `tamarindo-files` in the same turn.
+
+## How
+
+1. Find the saved paths (often under `.cursor/projects/.../assets` or the message `<image_files>` / attachment list).
+2. Upload with Wrangler against **remote** storage:
+
+```bash
+npx wrangler r2 object put tamarindo-files/<key> --file <local-path> --remote --content-type <mime>
+```
+
+3. Key convention:
+   - Chat attachments: `uploads/chat/YYYY-MM-DD/<original-or-clean-filename>`
+   - Dropbox / source docs pulled for the model: `source/dropbox/<filename>`
+   - Generated artifacts stay under `artifacts/<id>/<filename>` (existing app path)
+
+4. Do not commit the binaries to git. Do not print temporary download URLs.
+5. After upload, tell the user the R2 keys. If a message claims files were uploaded but none are attached, say so and still persist any earlier chat attachments that are not yet in R2.
+
+## Do not
+
+- Skip this because the file was already copied into `public/` or a canvas
+- Put objects on `--local` R2
+- Publish a data-room row unless the user asked
