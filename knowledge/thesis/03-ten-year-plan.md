@@ -36,7 +36,8 @@ operation on the first pooled units — the rental-offset story must be
 2. Payment behavior: delinquency inside underwriting assumptions?
 3. Recovery: at least one full recovery path exercised or credibly
    fire-drilled end to end.
-4. Rental economics: does the pool actually offset 30–55% of payments?
+4. Rental economics: does the pool actually offset ~9% of payments averaged
+   (~30% in a month the unit is rented) at 30% time rented?
 5. Unit ops cost: can 5 people + platform service 50 homes?
 
 **End state:** ~$20M AUM, ~45 homes, fee income running ~$0.8–1.2M/yr

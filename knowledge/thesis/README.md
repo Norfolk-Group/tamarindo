@@ -17,10 +17,12 @@ should be pasted into an investor deck without its validation step.
 | [05-fee-engine.md](05-fee-engine.md) | Revenue lines, take rate, OpCo breakeven, the raise |
 | [06-numbers-explained.md](06-numbers-explained.md) | Every working number, graded, with US/Colombia CONTEXT |
 | [07-markets-legal-math.md](07-markets-legal-math.md) | Comodato, true lease, balloon math, Intervest, cities |
-| [08-nico-voice.md](08-nico-voice.md) | Nico as a person: voice, small talk, weather/horoscope tools, charts |
+| [08-nico-voice.md](08-nico-voice.md) | Nico as a person: voice, small talk, live-world kit (weather, markets, headlines), charts |
 | [09-ops-capital-assumptions.md](09-ops-capital-assumptions.md) | Named payroll, CS/WhatsApp, autos/aircraft, partner yields |
 | [10-capital-curve.md](10-capital-curve.md) | KPI path to $100M / $30M / $20M; Intervest 50% |
-| [11-equity.md](11-equity.md) | Three $1M rounds, five equal partners, half pay 8 months |
+| [11-equity.md](11-equity.md) | $6.5M across three rounds (smallest first), five equal partners, half pay 8 months |
+| [12-rate-benchmarks.md](12-rate-benchmarks.md) | Market rate research: Mexico cross-border USD, Colombian leasing, exotic car leases, FICO tier policy, full rate-vs-IRR scenario grid |
+| [13-deal-waterfall.md](13-deal-waterfall.md) | One typical deal start to finish — ICP-1 at 11.84%, $84k balloon, who makes what |
 | [../qa/README.md](../qa/README.md) | Simulated conversational Q&As (work + life) |
 
 ## The thesis in one paragraph

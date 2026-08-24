@@ -60,7 +60,11 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-const { PrismaClient } = await import("@prisma/client");
+// Client is generated to lib/generated/prisma (see tsconfig alias); the
+// default @prisma/client path is never initialized in this repo.
+const { PrismaClient } = await import(
+  new URL("../lib/generated/prisma/index.js", import.meta.url).href
+);
 const prisma = new PrismaClient();
 let upserts = 0;
 for (const file of files) {

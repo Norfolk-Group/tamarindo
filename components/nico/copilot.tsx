@@ -4,7 +4,10 @@ import { useState } from "react";
 import type { Capability } from "@/lib/contracts/procedure";
 import { AvatarOrb } from "@/components/nico/avatar-orb";
 import { LeftRail, type PrimaryPanel } from "@/components/nico/left-rail";
-import type { AdminSection } from "@/components/nico/admin-rail";
+import {
+  defaultSettingsSection,
+  type AdminSection,
+} from "@/components/nico/settings-rail";
 import { NewsTicker } from "@/components/nico/news-ticker";
 import { ModelWorkspace } from "@/components/nico/model-workspace";
 import { VariablesWorkspace } from "@/components/nico/variables-workspace";
@@ -19,7 +22,6 @@ export function Copilot({
   isAdmin,
   userName,
   userRole,
-  userEmail,
   userId,
   needsIntake,
   needsNda,
@@ -41,7 +43,9 @@ export function Copilot({
   const [presence, setPresence] = useState(emptyAppliedTurn);
   const [primary, setPrimary] = useState<PrimaryPanel>("conversation");
   const [adminOpen, setAdminOpen] = useState(false);
-  const [adminSection, setAdminSection] = useState<AdminSection>("approvals");
+  const [adminSection, setAdminSection] = useState<AdminSection>(() =>
+    defaultSettingsSection(isAdmin),
+  );
   const agentHost = nicoAgentHost(agentUrl);
   const showChat = primary === "conversation" && !(adminOpen && adminSection === "variables");
 
@@ -50,6 +54,9 @@ export function Copilot({
       <LeftRail
         capabilities={capabilities}
         isAdmin={isAdmin}
+        userName={userName}
+        userRole={userRole}
+        ndaExecuted={!showNda}
         primary={primary}
         onPrimary={setPrimary}
         adminOpen={adminOpen}
@@ -69,23 +76,6 @@ export function Copilot({
             >
               {presence.activityLabel}
             </p>
-          </div>
-          <div className="ml-auto flex min-w-0 items-center gap-3">
-            <div className="min-w-0 text-right">
-              <p className="truncate text-xs text-muted-foreground/90">
-                {userName}
-              </p>
-              <p className="truncate text-[11px] text-muted-foreground/70">
-                {userRole}
-                {userEmail ? ` · ${userEmail}` : ""}
-              </p>
-            </div>
-            <a
-              href="/logout?returnTo=/sign-in"
-              className="shrink-0 text-[11px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-            >
-              Sign out
-            </a>
           </div>
         </header>
         <NewsTicker />

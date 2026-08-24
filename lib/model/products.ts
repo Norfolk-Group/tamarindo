@@ -1,3 +1,4 @@
+import { blendedFicoSpread } from "@/lib/model/contracts";
 import { cents, d, monthlyRate, pmt } from "@/lib/model/money";
 import { num, type VariableValue } from "@/lib/model/variables";
 
@@ -23,12 +24,13 @@ export function productQuote(
     kind === "auto"
       ? Math.max(12, Math.round(num(values, "autoTermMonths")))
       : Math.max(12, Math.round(num(values, "aircraftTermMonths")));
-  const rate = kind === "auto" ? num(values, "autoClientRate") : num(values, "aircraftClientRate");
+  const baseRate = kind === "auto" ? num(values, "autoClientRate") : num(values, "aircraftClientRate");
+  const rate = d(baseRate).plus(blendedFicoSpread(values));
   const ltv = kind === "auto" ? 0.8 : 0.7;
   const residualPct = kind === "auto" ? 0.2 : 0.25;
   const funded = cents(d(ticket).times(ltv));
   const residual = cents(d(ticket).times(residualPct));
-  const payment = cents(pmt(monthlyRate(d(rate)), term, d(funded), d(residual)));
+  const payment = cents(pmt(monthlyRate(rate), term, d(funded), d(residual)));
   return {
     kind,
     ticketUsd: ticket,
@@ -36,7 +38,7 @@ export function productQuote(
     residualUsd: residual,
     monthlyLeaseUsd: payment,
     termMonths: term,
-    clientRate: rate,
+    clientRate: rate.toNumber(),
   };
 }
 

@@ -105,13 +105,16 @@ $750k Cartagena apartment; client puts ~$300k down (40%); vehicle funds
 1. **Closing:** client pays down payment; Tamarindo-Intervest draws $450k
    → Tamarindo US earns 2% activation (~$9k) + origination fee (level
    TBD — undecided in sources).
-2. **Monthly:** client pays the US-law lease (~$4.5–5.5k/mo at 10–12%
-   over 10y with a 10–20% residual — see 04). Tamarindo US services and
+2. **Monthly:** client pays the US-law lease (≈$5.8k/mo at **11.84%
+   effective** over 10y with a **20%-of-asset residual**, $150k on this
+   $750k shape — see 04). Tamarindo US services and
    bills, retains its servicing fee + ~20% of the interest component,
    remits the rest to the vehicle.
-3. **When unoccupied:** Ashoka rents the unit; gross rent splits into
-   Ashoka's management fee, operating costs, ~20% Tamarindo share, and
-   the remainder credited to the client — offsetting their lease payment.
+3. **When rented** (default **30% of the time** — clients want to use their
+   homes; see 04): Ashoka rents the unit; gross rent splits into Ashoka's
+   management fee (20%), operating costs (25%), ~20% Tamarindo share of the
+   remainder, and the rest credited to the client — offsetting their lease
+   payment.
 4. **Maintenance:** Ashoka performs, charges through with markup.
 5. **Exit:** client exercises the purchase option (residual balloon);
    title transfers from the sucursal; the vehicle recycles capital into

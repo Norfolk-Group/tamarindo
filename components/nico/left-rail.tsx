@@ -1,17 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ChevronLeft,
   FileSpreadsheet,
   FolderLock,
+  LogOut,
   MessageSquare,
   Settings,
   SlidersHorizontal,
   Table2,
 } from "lucide-react";
 import type { Capability } from "@/lib/contracts/procedure";
-import { AdminRail, type AdminSection } from "@/components/nico/admin-rail";
+import {
+  SettingsRail,
+  defaultSettingsSection,
+  type AdminSection,
+} from "@/components/nico/settings-rail";
 import {
   ArtifactsPanel,
   DataRoomPanel,
@@ -37,9 +42,23 @@ const PRIMARY_NAV: {
   { id: "dataroom", label: "Data Room", icon: FolderLock },
 ];
 
+const SIGN_OUT_HREF = "/logout?returnTo=/sign-in";
+
+function initialsFor(userName: string): string {
+  const words = userName.trim().split(/\s+/).filter(Boolean);
+  const initials = words
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("");
+  return initials || "?";
+}
+
 export function LeftRail({
   capabilities,
   isAdmin,
+  userName,
+  userRole,
+  ndaExecuted,
   primary,
   onPrimary,
   adminOpen,
@@ -49,6 +68,9 @@ export function LeftRail({
 }: {
   capabilities: Capability[];
   isAdmin: boolean;
+  userName: string;
+  userRole: string;
+  ndaExecuted: boolean;
   primary: PrimaryPanel;
   onPrimary: (panel: PrimaryPanel) => void;
   adminOpen: boolean;
@@ -76,7 +98,8 @@ export function LeftRail({
   >([]);
   const [dataroomError, setDataroomError] = useState<string | null>(null);
 
-  async function loadApprovals() {
+  const loadApprovals = useCallback(async () => {
+    if (!isAdmin) return;
     const res = await fetch("/api/nico/approvals");
     const json = (await res.json()) as {
       ok?: boolean;
@@ -89,7 +112,7 @@ export function LeftRail({
     }
     setApprovalError(null);
     setApprovals(json.data?.approvals ?? []);
-  }
+  }, [isAdmin]);
 
   async function loadArtifacts() {
     const res = await fetch("/api/nico/artifacts");
@@ -137,11 +160,12 @@ export function LeftRail({
   }, [primary]);
 
   useEffect(() => {
-    if (!adminOpen || adminSection !== "approvals") return;
+    if (!isAdmin || !adminOpen || adminSection !== "approvals") return;
     void loadApprovals();
-  }, [adminOpen, adminSection]);
+  }, [isAdmin, adminOpen, adminSection, loadApprovals]);
 
   async function decide(approvalId: string, decision: "approved" | "rejected") {
+    if (!isAdmin) return;
     const res = await fetch("/api/nico/approvals", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -164,12 +188,21 @@ export function LeftRail({
     const next = !adminOpen;
     onAdminOpen(next);
     if (next) {
-      onAdminSection("approvals");
+      onAdminSection(defaultSettingsSection(isAdmin));
       if (typeof window !== "undefined" && window.innerWidth < 768) {
         setCollapsed(true);
       }
     }
   }
+
+  const settingsLabel = isAdmin ? "Admin" : "Preferences";
+  const initials = initialsFor(userName);
+  // Non-admins are identified by NDA standing rather than by their raw role.
+  const userSubtitle = isAdmin
+    ? userRole
+    : ndaExecuted
+      ? "NDA executed"
+      : "NDA pending";
 
   return (
     <>
@@ -215,23 +248,6 @@ export function LeftRail({
               {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
             </button>
           ))}
-          {isAdmin && (
-            <button
-              type="button"
-              onClick={toggleAdmin}
-              className={cn(
-                "transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm",
-                adminOpen
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
-              )}
-              aria-expanded={adminOpen}
-              aria-controls="nico-admin-rail"
-            >
-              <Settings className="size-4 shrink-0" />
-              {!collapsed && <span className="flex-1 text-left">Admin</span>}
-            </button>
-          )}
         </nav>
 
         {!collapsed && primary === "artifacts" && (
@@ -253,10 +269,69 @@ export function LeftRail({
             />
           </div>
         )}
+
+        <div className="mt-auto flex flex-col gap-1 border-t border-border px-2 py-2">
+          <button
+            type="button"
+            onClick={toggleAdmin}
+            className={cn(
+              "transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm",
+              adminOpen
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+            )}
+            aria-expanded={adminOpen}
+            aria-controls="nico-admin-rail"
+          >
+            <Settings className="size-4 shrink-0" />
+            {!collapsed && (
+              <span className="flex-1 text-left">{settingsLabel}</span>
+            )}
+          </button>
+          <a
+            href={SIGN_OUT_HREF}
+            className="transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+            aria-label="Sign out"
+          >
+            <LogOut className="size-4 shrink-0" />
+            {!collapsed && <span className="flex-1 text-left">Sign out</span>}
+          </a>
+        </div>
+
+        <div
+          className={cn(
+            "flex shrink-0 items-center border-t border-border px-2 py-3",
+            collapsed ? "justify-center" : "gap-2.5",
+          )}
+        >
+          <span
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary"
+            title={userName}
+            aria-label={userName}
+          >
+            {initials}
+          </span>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-xs font-medium text-foreground">
+                {userName}
+              </p>
+              <p
+                className={cn(
+                  "truncate text-[11px] text-muted-foreground",
+                  isAdmin && "capitalize",
+                )}
+              >
+                {userSubtitle}
+              </p>
+            </div>
+          )}
+        </div>
       </aside>
 
-      {isAdmin && adminOpen && (
-        <AdminRail
+      {adminOpen && (
+        <SettingsRail
+          isAdmin={isAdmin}
           section={adminSection}
           onSection={onAdminSection}
           onClose={() => onAdminOpen(false)}

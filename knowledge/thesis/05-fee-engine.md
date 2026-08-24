@@ -18,18 +18,18 @@ the raise math are OPINION/ASSUMPTION for the financial model to confirm
 
 ## Take rate: what $1 of AUM produces annually (OPINION)
 
-On funded AUM at a ~11% client rate:
+On funded AUM at a ~11.84% blended client rate:
 
-- Spread share: 20% × ~11% ≈ **220 bps**
+- Spread share: 20% × ~11.84% ≈ **237 bps**
 - Servicing: ≈ **75 bps**
 - Rental share + mgmt economics (blended across ICPs, ~55% of units
   pooled): ≈ **40–60 bps**
-- **Recurring take ≈ 3.3–3.5% of funded AUM**, plus ~3% one-time
+- **Recurring take ≈ 3.5–3.7% of funded AUM**, plus ~3% one-time
   (activation + origination) in the year a dollar is deployed.
 
 Sanity check against sources: Dov's Aug 19 sketch of ~$30k/mo on the $20M
-pilot (~$360k/yr) matches the spread-share line alone (220 bps × $15M
-funded ≈ $330k). The full stack roughly triples that — the difference is
+pilot (~$360k/yr) matches the spread-share line alone (237 bps × $15M
+funded ≈ $355k). The full stack roughly triples that — the difference is
 the servicing fee and the service layer, which is the thesis's margin
 story.
 
@@ -40,7 +40,7 @@ platform budget:
 
 - Year-1 OpCo burn ≈ **$150–180k/mo** (~$1.8–2.2M/yr): team, platform
   build (Nico + servicing/billing), legal templates, compliance.
-- Breakeven at a ~3.4% recurring take ⇒ **~$55–65M funded AUM** — the
+- Breakeven at a ~3.6% recurring take ⇒ **~$50–60M funded AUM** — the
   Phase-2 target zone (Year 3). Before that, one-time fees on each new
   vehicle's deployment shorten the gap in deployment years.
 

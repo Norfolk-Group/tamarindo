@@ -334,7 +334,10 @@
   }
 }
 .nico-ticker-track {
-  animation: nico-ticker 55s linear infinite;
+  animation: nico-ticker 180s linear infinite;
+}
+.nico-ticker-track:hover {
+  animation-play-state: paused;
 }
 @media (prefers-reduced-motion: reduce) {
   .nico-ticker-track {

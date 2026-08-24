@@ -56,6 +56,8 @@ export type IcpTemplate = {
 };
 
 export type IcpComputed = IcpTemplate & {
+  /** Raw per-ICP client rate before the blended FICO-tier spread. `clientRate` holds the effective rate. */
+  baseClientRate: number;
   downPaymentUsd: number;
   fundedUsd: number;
   residualUsd: number;

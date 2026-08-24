@@ -15,7 +15,7 @@ to answer “does this number even make sense?”
 |---|---|---|
 | Vehicle capital | Intervest buying apartments | $10M + $10M |
 | OpCo equity | Cash to run Tamarindo US | ~$2.5–3.5M seed (OPINION) |
-| Client cash | Down payment + lease + residual | 40% + ~11% + 10–20% balloon |
+| Client cash | Down payment + lease + residual | 40% + ~11.84% + 20%-of-asset balloon |
 
 Intervest **2+20** is their fund vs their LPs. Tamarindo **2% activation**
 is a one-time fee on drawdown. Tamarindo **~20% of interest billings** is
@@ -53,8 +53,8 @@ take.
 | Max LTV | 60% | FACT | Early overview said 50–65%; Aug 20 box is 60%. |
 | FICO | 750+ / Tier 1, SSN, individuals at launch | FACT | CONTEXT: 800+ is a thin tail of US scores; 750+ is already “very good.” Pilot is cream, not mass. |
 | Term | ~10 years | FACT | Closer to a finance lease than a 30-year mortgage. |
-| Client rate | 10–12% WTP; model ~11%; tests 9/11/13% | MIXED | See rates. |
-| Residual | Floor ≥10% of asset; meetings ~20%; ICP 15% of funded | MIXED | See true lease. |
+| Client rate | 10–12% WTP; model **11.84% effective** (11–12.5% base by ICP + FICO blend); tests 9/11/13% | MIXED | See rates. |
+| Residual | Floor **20% of asset** (= 33% of funded at 60% LTV) | FACT as policy | See true lease. |
 | Prepay | Allowed, no penalty | FACT | |
 | Lease default | 2 months → repossess; deposit forfeited | FACT | Unlitigated. |
 | Comodato default | 1 month eviction vs rental desahucio | FACT as described | Counsel must confirm procedure. |
@@ -93,15 +93,17 @@ Conversion at that rate is unproven. That is the kill criterion.
 ## Balloon, residual, true lease
 
 Meetings: balloon must be **material** so the contract stays a lease, not
-a loan, and Tamarindo is not a bank. Floor **≥10% of asset**; likely
-**~20%** given 40% deposit; ICP sheets **15% of funded**.
+a loan, and Tamarindo is not a bank. **MODEL UPDATE (Ricardo, 2026-08-23):**
+the floor is now **20% of asset** (`minResidualOfAssetPct`), up from the old
+10% meeting number — at 60% LTV that is **33% of the funded amount**. ICP
+sheets carry it: ICP-1 $84k on $420k, ICP-2 $130k on $650k (thesis 04, 07).
 
 **CONTEXT — IRS equipment true-lease (Rev. Proc. 2001-28).** Common
 lessor reading: residual **≥20% of cost**, remaining life **≥20%**, no
-bargain purchase option, lessor equity/profit tests. **A 10% residual is
-below that equipment safe harbor.** Real estate ≠ equipment. Nico must
-not say “10% residual makes this a true lease under IRS rules.” Counsel
-owns characterization.
+bargain purchase option, lessor equity/profit tests. Our **20% floor is now
+level with that guideline** — the old 10% number sat below it, which is why
+it moved. But real estate ≠ equipment. Nico must **not** say “20% residual
+makes this a true lease under IRS rules.” Counsel owns characterization.
 
 **CONTEXT — ASC 842** uses a different finance vs operating test. Residual
 size alone does not decide it.
@@ -116,10 +118,11 @@ product: title in a sucursal, US-law payment, comodato for use.
 
 with `r = i/12`, `n` months. Excel `=PMT(i/12, n, -PV, FV)`.
 
-Worked **ICP-1 (ASSUMPTION):** PV $252k, i 11%, n 120, FV $37.8k.
-`(1.009167)^120 ≈ 3.00`, PV of balloon ≈ $12.6k, amortize ≈ $239k,
-**PMT ≈ $3,300/mo**. Month-1 interest ≈ $2,310; Tamarindo’s 20% of
-interest ≈ **$462** that month, declining. That is why Dov’s ~$30k/mo on
+Worked **ICP-1 (model output):** PV $252k, i **11.8375%** (11.5% base +
+FICO blend), n 120, FV **$84k** (20% of the $420k asset).
+`(1.0098646)^120 ≈ 3.25`, PV of balloon ≈ $25.9k, amortize ≈ $226.1k,
+**PMT ≈ $3,223/mo**. Month-1 interest ≈ $2,486; Tamarindo’s 20% of
+interest ≈ **$497** that month, declining. That is why Dov’s ~$30k/mo on
 the whole pilot matches **spread share**, not the full stack.
 
 ## Six fees
@@ -129,18 +132,19 @@ the whole pilot matches **spread share**, not the full stack.
 | 1 | Origination | ~1% of funded; payer TBD | ASSUMPTION | US brokers often 0–2% of amount. |
 | 2 | Activation | **2% of drawdown** | FACT | $450k draw → $9k. |
 | 3 | Servicing | ~75 bps outstanding | ASSUMPTION | US residential servicing often 25–50+ bps; 75 is a placeholder. |
-| 4 | Spread share | **~20% of interest billings** | FACT | 11% client rate → ~220 bps of outstanding to Tamarindo on this line. |
+| 4 | Spread share | **~20% of interest billings** | FACT | 11.84% client rate → ~237 bps of outstanding to Tamarindo on this line. |
 | 5 | PM | market + possible markup | MIXED | STR PM often 15–25% of gross; mid-term 8–12%. |
 | 6 | Rental share | **~20% of net** if pooled | FACT | After PM and opex. |
 
-**Take on $1 funded AUM at ~11% (OPINION):** 220 + 75 + 40–60 bps ≈
-**3.3–3.5% recurring**, plus ~3% one-time in the deploy year.
+**Take on $1 funded AUM at ~11.84% (OPINION):** 237 + 75 + 40–60 bps ≈
+**3.5–3.7% recurring**, plus ~3% one-time in the deploy year.
 
-**Dov sketch (FACT as sketch):** ~$30k/mo on $20M ≈ 220 bps × $15M funded.
+**Dov sketch (FACT as sketch):** ~$30k/mo on $20M ≈ 237 bps × $15M funded.
 Full stack modeled ~3×.
 
-**Y1 burn $150–180k/mo (OPINION).** Breakeven **$55–65M** funded AUM
-(OPINION). Seed **$2.5–3.5M / 24 months** (OPINION). Salaries unset.
+**Y1 burn $150–180k/mo (OPINION).** Breakeven **$50–60M** funded AUM
+(OPINION — the higher spread pulled it in from $55–65M). Seed
+**$2.5–3.5M / 24 months** (OPINION). Salaries unset.
 
 ## ICPs and $20M mix
 
@@ -149,16 +153,18 @@ CONTEXT: 2026 luxury sketches put El Poblado apartments roughly
 **$1M+**. Tamarindo $350–900k is the international-buyer slice, not the
 Medellín median.
 
-| ICP | Anchor | Funded @60% | Homes (OPINION) | Funded $ | Lease/mo (ASSUMPTION) | Rent (ASSUMPTION) |
+| ICP | Anchor | Funded @60% | Homes (OPINION) | Funded $ | Lease/mo (model) | Rent (ASSUMPTION) |
 |---|---|---|---|---|---|---|
-| 1 Poblado | $420k ($350–500k) | $252k | ~20 | ~$5.0M | ~$3,300 | $2,200 × ~85% occ → ~$22.4k/yr; net ~$1,170 (~35% of lease) |
-| 2 Cartagena | $650k ($500–800k) | $390k | ~15 | ~$5.9M | ~$5,100 | ADR ~$210 × ~62% → ~$47.5k/yr; net ~$1,580 (~31%, ~45% high season) |
-| 3 Llanogrande | $750k ($600–900k) | $450k | ~9 | ~$4.1M | ~$5,900 | ~$18k/yr occasional; net ~$700 (~12%) |
+| 1 Poblado | $420k ($350–500k) | $252k | ~20 | ~$5.0M | **$3,223** | $2,310/mo when occupied × 30% rented → ~$8.3k/yr; net ~$1,016 occupied ≈ ~$305 averaged (~9% of lease) |
+| 2 Cartagena | $650k ($500–800k) | $390k | ~15 | ~$5.9M | **$4,988** | $3,575/mo when occupied × 30% rented → ~$12.9k/yr; net ~$1,573 occupied ≈ ~$472 averaged (~9%) |
+| 3 Llanogrande | $750k ($600–900k) | $450k | ~9 | ~$4.1M | **$5,238** (12y) | rental-strength factor 0.4 → $1,650/mo when occupied × 30% → ~$5.9k/yr; net ~$726 occupied ≈ ~$218 averaged (~4%) |
 | **Pilot** | | | **~44** | **~$15M / ~$25M assets** | | $20M includes fees, reserves, furnishing |
 
 Caps (OPINION): Cartagena ≤40% of a vehicle; Llanogrande ≤25%.
 
-**ICP-2 10-year family take ~$190–210k (ASSUMPTION).** Entities file also
+**ICP-2 10-year family take ~$140–145k (ASSUMPTION; itemized in 04).** The
+old ~$190–210k figure assumed the retired high-occupancy rental model —
+30% time rented cuts the rental and mgmt lines hard. Entities file also
 walks a **$750k** Cartagena round number ($9k activation). Not the $650k
 ICP-2 sheet.
 
@@ -172,7 +178,9 @@ ICP-2 sheet.
 | 4 Rails | 7–10 | $0.7–1B | 1,500+ | 8–10 | $20–30M |
 
 Kill tests: conversion at 10–12% fails; recovery unenforceable; rental
-offset not 30–55%; 5 people cannot run ~50 homes.
+offset materially below **~9% of the payment averaged** (~30% in a month
+the unit is actually rented — the old 30–55% band assumed near-full
+occupancy); 5 people cannot run ~50 homes.
 
 ## Market size — do not stack
 

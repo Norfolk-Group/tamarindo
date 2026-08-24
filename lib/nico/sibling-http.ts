@@ -31,6 +31,9 @@ const LLM_ENV_KEYS = [
   "AI_GATEWAY_URL",
   "ANTHROPIC_API_KEY",
   "NICO_MODEL",
+  "NICO_FAST_MODEL",
+  "NICO_FIRST_TOKEN_TIMEOUT_MS",
+  "NICO_STREAM_TIMEOUT_MS",
 ] as const;
 
 /** Copy AI Gateway keys onto process.env so composeAnswer can reach Sonnet. */

@@ -1,8 +1,17 @@
 import { describe, expect, it } from "vitest";
+import { computeContracts } from "@/lib/model/contracts";
 import { assertConsolidatedIdentity, runCashflowModel } from "@/lib/model/engine";
 import { defaultValues } from "@/lib/model/variables";
 
 describe("cashflow engine", () => {
+  it("prices ICP-1 at the base rate plus the blended FICO spread", () => {
+    const contracts = computeContracts(defaultValues());
+    const icp1 = contracts.find((row) => row.id === "icp1")!;
+    expect(icp1.baseClientRate).toBe(0.115);
+    // Blended spread with defaults: 0.50×0.0075 + 0.35×0 + 0.15×(−0.0025) = 0.003375
+    expect(icp1.clientRate).toBeCloseTo(0.115 + 0.003375, 6);
+  });
+
   it("originates the Nov / Dec / January stub and stays consolidated", () => {
     const model = runCashflowModel(defaultValues());
     assertConsolidatedIdentity(model);

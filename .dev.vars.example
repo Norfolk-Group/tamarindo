@@ -21,6 +21,13 @@ CLOUDFLARE_ACCOUNT_ID=
 CLOUDFLARE_API_TOKEN=
 CF_AIG_GATEWAY_ID=
 
-# AI_GATEWAY_URL=
 # ANTHROPIC_API_KEY=
-# NICO_MODEL=anthropic/claude-sonnet-4-5
+# AI_GATEWAY_URL=
+# Strong/analytical tier. Default claude-sonnet-4-5
+# NICO_MODEL=
+# Fast tier for conversational turns. Default claude-haiku-4-5
+# NICO_FAST_MODEL=
+# Abort if the gateway sends no first token in this many ms (default 6000)
+# NICO_FIRST_TOKEN_TIMEOUT_MS=
+# Abort a stream that runs past this many ms in total (default 90000)
+# NICO_STREAM_TIMEOUT_MS=

@@ -49,13 +49,16 @@ disappoints or its market saturates; promote a candidate ICP in its place.
 - **Location:** El Poblado (Provenza, Los Balsos), Envigado (Zúñiga).
 - **Persona:** Colombian-American professional, 35–55, buying a family
   base / eventual retirement home; visits 6–10 weeks/yr now.
-- **Financing:** 40% down ($168k) → funded $252k; 10y at ~11%, 15%
-  residual → lease ≈ **$3,300/mo** (ASSUMPTION, model to confirm).
-- **Rental:** furnished mid-term (1–6 mo executives/nomads) ≈ $2,200/mo
-  gross at ~85% occupancy → ~$22.4k/yr gross (~5.3% gross yield).
-- **Rental waterfall (ASSUMPTION):** −10% Ashoka mgmt −25% costs
-  (HOA, predial, utilities, upkeep) −20% Tamarindo share of remainder →
-  **net to client ≈ $1,170/mo → offsets ~35% of the lease payment.**
+- **Financing:** 40% down ($168k) → funded $252k; 10y at **11.84%
+  effective** (11.5% base + FICO blend), balloon $84k (20% of asset) →
+  lease ≈ **$3,223/mo** (model output).
+- **Rental:** furnished mid-term, one-month minimum, rented **30% of the
+  time** → gross **$2,310/mo when occupied** (0.55% of value) ≈ $8.3k/yr
+  actual gross ($27.7k/yr if it never sat empty).
+- **Rental waterfall (model):** −20% Ashoka mgmt ($462) −25% costs
+  ($578, HOA/predial/utilities/upkeep) → $1,270 remainder; −20% Tamarindo
+  share ($254) → **net to client $1,016/mo when occupied ≈ $305/mo
+  averaged over the year → offsets ~9% of the lease payment.**
 - **Liquidity:** deepest resale market of the three; est. 90–150 days.
 
 ## ICP-2 — "Cartagena Heritage" (Cartagena)
@@ -65,13 +68,17 @@ disappoints or its market saturates; promote a candidate ICP in its place.
   **Price:** $500–800k (anchor $650k).
 - **Persona:** US investor-lifestyle buyer, 45–65; uses it 4–8 weeks/yr;
   explicitly wants the rental engine running the rest of the time.
-- **Financing:** 40% down ($260k) → funded $390k; 10y at ~11%, 15%
-  residual → lease ≈ **$5,100/mo** (ASSUMPTION).
-- **Rental:** short-term, ADR ~$210 at ~62% occupancy → ~$47.5k/yr gross
-  (~7.3% gross yield) — strong but seasonal and ops-heavy.
-- **Waterfall (ASSUMPTION):** −20% Ashoka STR mgmt −30% costs (cleaning,
-  utilities, HOA, predial, wear) −20% Tamarindo share → **net to client
-  ≈ $1,580/mo → offsets ~31% of payment; up to ~45% in high season.**
+- **Financing:** 40% down ($260k) → funded $390k; 10y at **11.84%
+  effective** (11.5% base + FICO blend), balloon $130k (20% of asset) →
+  lease ≈ **$4,988/mo** (model output).
+- **Rental:** short-term with a one-month minimum, rented **30% of the
+  time** → gross **$3,575/mo when occupied** ≈ $12.9k/yr actual gross
+  ($42.9k/yr at full occupancy) — the strongest of the three, but
+  seasonal and ops-heavy.
+- **Waterfall (model):** −20% Ashoka mgmt ($715) −25% costs ($894,
+  cleaning/utilities/HOA/predial/wear) → $1,966 remainder; −20% Tamarindo
+  share ($393) → **net to client $1,573/mo when occupied ≈ $472/mo
+  averaged → offsets ~9% of payment; more in high season.**
 - **Liquidity:** thinner, tourism-correlated; est. 150–270 days. Cap this
   ICP's portfolio share (OPINION: ≤40% of any vehicle).
 
@@ -82,12 +89,17 @@ disappoints or its market saturates; promote a candidate ICP in its place.
   (anchor $750k).
 - **Persona:** retiree or remote-work family, 50–70; primary or
   near-primary residence; lifestyle-first, rental secondary.
-- **Financing:** 40% down ($300k) → funded $450k; 10y at ~11%, 15%
-  residual → lease ≈ **$5,900/mo** (ASSUMPTION).
-- **Rental:** occasional — weekend/event/seasonal lets ≈ $18k/yr gross
-  (~2.4% gross yield); many clients won't pool at all.
-- **Waterfall:** net to client ≈ $700/mo when pooled → **offsets ~12% of
-  payment.** This ICP is underwritten on client income, not rental.
+- **Financing:** 40% down ($300k) → funded $450k; 12y at **11.34%
+  effective** (11% base + FICO blend), balloon $150k (20% of asset) →
+  lease ≈ **$5,238/mo** (model output).
+- **Rental:** occasional — the rental-strength factor is **0.4** (this
+  market rents at 40% of the standard rule), so gross **$1,650/mo when
+  occupied**, rented 30% of the time ≈ $5.9k/yr actual gross. Many
+  clients won't pool at all.
+- **Waterfall (model):** −20% mgmt −25% costs → $908 remainder; −20%
+  Tamarindo ($182) → **net to client $726/mo when occupied ≈ $218/mo
+  averaged → offsets ~4% of payment.** This ICP is underwritten on client
+  income, not rental.
 - **Liquidity:** growing market (airport proximity) but slower;
   est. 180–300 days. OPINION: ≤25% of any vehicle.
 
@@ -108,20 +120,31 @@ exact split is a financial-model output, not an input.)
 Illustrative 10-year value to the Tamarindo family per ICP-2 deal
 (ASSUMPTION-heavy; the financial model owns the real version):
 
-- Activation 2% of $390k ≈ $7.8k + origination (TBD, assume 1% ≈ $3.9k)
-- Servicing + 20% interest share ≈ $9–11k/yr early, declining ≈ $70k/10y
-- Rental share (20%) + Ashoka mgmt (20% of gross) ≈ $14–17k/yr pooled
-  ≈ $120k/10y when pooled most of the term
-- **Total family take ≈ $190–210k per deal over 10 years — roughly half
-  of it from the service layer, which is why Ashoka matters and why the
-  rental pool is strategic, not incidental.**
+- Activation 2% of $390k ≈ $7.8k + origination 1% ≈ $3.9k + insurance
+  commission ≈ $1.6k
+- Lifetime interest on the lease ≈ $338.6k; **Tamarindo's 20% strip ≈
+  $67.7k**, plus servicing 75 bps/yr on the declining balance ≈ $21.5k
+- Rental at 30% time rented: Tamarindo's 20% share ≈ $14.2k/10y and
+  Ashoka's 20% mgmt fee ≈ $25.7k/10y
+- **Total family take ≈ $140–145k per deal over 10 years — about 45% of
+  it from the service layer (servicing, rental share, Ashoka mgmt,
+  insurance), which is why Ashoka matters and why the rental pool is
+  strategic, not incidental.**
 
 ## Client ROI story (the sales math to validate)
 
-For ICP-2: client puts $260k down, pays ~$5,100/mo, receives ~$1,580/mo
-rental credit → effective ~$3,520/mo for a $650k Old City apartment they
-own the upside on, with an option to buy out the ~$58k residual at year
-10. If Cartagena appreciates even modestly (ASSUMPTION: 3–4%/yr USD), the
-client's equity outcome beats renting and beats waiting to save cash —
-*that comparison table is the single most important sales artifact to
-build and validate.*
+For ICP-2: client puts $260k down and pays **$4,988/mo** (model output).
+The rental credit is **$1,573/mo in a month the unit is actually rented** —
+but at 30% time rented that averages **~$472/mo**, so the honest effective
+cost is **~$4,516/mo averaged** (~$3,415/mo in a rented month) for a $650k
+Old City apartment they own the upside on. At year 10 the purchase option
+is **$130,000** — 20% of the asset, the true-lease floor (thesis 07), not a
+token buyout; the client must plan to fund or refinance it. If Cartagena
+appreciates even modestly (ASSUMPTION: 3–4%/yr USD), the client's equity
+outcome beats renting and beats waiting to save cash — *that comparison
+table is the single most important sales artifact to build and validate.*
+
+**Sell the averaged number, not the occupied one (OPINION).** Quoting
+"$3,415/mo" without saying the unit rents 30% of the time is the fastest
+way to lose a client in year two. Lead with $4,516 and let the rental
+credit be upside.

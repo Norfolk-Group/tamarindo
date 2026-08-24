@@ -1,13 +1,17 @@
 import { z } from "zod";
 import { canReadConfidential } from "@/lib/domain/access";
 import { getCorpus, type CorpusDocument } from "@/lib/knowledge/corpus";
+import { vectorPassages } from "@/lib/knowledge/vector-search";
 import { defineProcedure } from "@/lib/procedures/registry";
 
 /**
- * knowledge.search — retrieval over the bundled knowledge corpus.
+ * knowledge.search — hybrid retrieval over the bundled knowledge corpus.
  *
- * Internals are an injectable in-memory corpus (see lib/knowledge/corpus.ts).
- * Later: R2 + pgvector behind this same name and Zod I/O.
+ * Keyword ranking runs against an injectable in-memory corpus (see
+ * lib/knowledge/corpus.ts) and is the baseline: it wins exact-token lookups
+ * like "ICP-3" or "Hyperdrive". Semantic recall over pgvector runs alongside
+ * it (see lib/knowledge/vector-search.ts) and degrades to nothing when
+ * Workers AI or the database is unavailable.
  * Confidential passages require ndaSignedAt plus a current-template
  * NdaSignature (R5 / KTD3), except for admins. Untagged documents are
  * confidential.
@@ -96,16 +100,76 @@ export const knowledgeSearch = defineProcedure({
     if (docs.length === 0) return { passages: [] };
 
     const terms = tokenize(query);
-    const passages =
+    const keyword =
       terms.length === 0
         ? overviewPassages(docs, limit)
         : rankPassages(docs, terms, limit);
+    const vector = await vectorPassages({
+      query,
+      limit,
+      allowConfidential: confidential,
+    });
+    const passages = mergeRankedPassages(keyword, vector, limit);
 
     return {
       passages: passages.length > 0 ? passages : overviewPassages(docs, limit),
     };
   },
 });
+
+/**
+ * Keyword scores (term hits plus title and path bias) and vector scores
+ * (cosine similarity) live on unrelated scales, so each channel is divided
+ * by its own best score to get a relative strength in (0, 1]. Keyword keeps
+ * the full band and vector is capped just below it: the tuned keyword top
+ * hit always stays first, while vector hits still outrank weaker keyword
+ * hits and fill the remaining slots — recall without regressing precision.
+ */
+const VECTOR_WEIGHT = 0.9;
+
+/** Same document plus the same opening text is the same passage, even when
+ *  one side was truncated at the excerpt limit. */
+const DEDUPE_PREFIX = 120;
+
+function mergeRankedPassages(
+  keyword: readonly KnowledgePassage[],
+  vector: readonly KnowledgePassage[],
+  limit: number,
+): KnowledgePassage[] {
+  const ranked = [
+    ...normalizeScores(keyword, 1),
+    ...normalizeScores(vector, VECTOR_WEIGHT),
+  ].sort((a, b) => b.score - a.score);
+
+  const seen = new Set<string>();
+  const merged: KnowledgePassage[] = [];
+  for (const passage of ranked) {
+    const key = dedupeKey(passage);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    merged.push(passage);
+    if (merged.length === limit) break;
+  }
+  return merged;
+}
+
+function normalizeScores(
+  passages: readonly KnowledgePassage[],
+  weight: number,
+): KnowledgePassage[] {
+  const top = Math.max(0, ...passages.map((p) => p.score));
+  if (top === 0) return passages.map((p) => ({ ...p, score: 0 }));
+  return passages.map((p) => ({ ...p, score: (p.score / top) * weight }));
+}
+
+function dedupeKey(passage: KnowledgePassage): string {
+  const normalized = passage.excerpt
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/…+$/, "")
+    .trim();
+  return `${passage.path}::${normalized.slice(0, DEDUPE_PREFIX)}`;
+}
 
 function rankPassages(
   docs: readonly CorpusDocument[],

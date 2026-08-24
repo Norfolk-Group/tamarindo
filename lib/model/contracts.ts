@@ -15,7 +15,7 @@ export const ICP_TEMPLATES: IcpTemplate[] = [
     persona: "Colombian-American professional, 35–55, family base",
     purchasePriceUsd: 420_000,
     termMonths: 120,
-    clientRate: 0.11,
+    clientRate: 0.115,
     rentFactor: 1,
     mixWeight: 0.25,
     citation: {
@@ -34,7 +34,7 @@ export const ICP_TEMPLATES: IcpTemplate[] = [
     persona: "US investor-lifestyle buyer, 45–65, rental-first",
     purchasePriceUsd: 650_000,
     termMonths: 120,
-    clientRate: 0.11,
+    clientRate: 0.115,
     rentFactor: 1,
     mixWeight: 0.18,
     citation: {
@@ -53,7 +53,7 @@ export const ICP_TEMPLATES: IcpTemplate[] = [
     persona: "Retiree or remote-work family, 50–70",
     purchasePriceUsd: 750_000,
     termMonths: 144,
-    clientRate: 0.105,
+    clientRate: 0.11,
     rentFactor: 0.4,
     mixWeight: 0.12,
     citation: {
@@ -72,7 +72,7 @@ export const ICP_TEMPLATES: IcpTemplate[] = [
     persona: "US professional, 40–60, shorter path to title",
     purchasePriceUsd: 480_000,
     termMonths: 84,
-    clientRate: 0.12,
+    clientRate: 0.125,
     rentFactor: 1,
     mixWeight: 0.18,
     citation: {
@@ -91,7 +91,7 @@ export const ICP_TEMPLATES: IcpTemplate[] = [
     persona: "Diaspora family, 30–50, first Colombia home",
     purchasePriceUsd: 310_000,
     termMonths: 96,
-    clientRate: 0.115,
+    clientRate: 0.12,
     rentFactor: 1,
     mixWeight: 0.17,
     citation: {
@@ -110,7 +110,7 @@ export const ICP_TEMPLATES: IcpTemplate[] = [
     persona: "Couple 45–65, mixed use and rental",
     purchasePriceUsd: 580_000,
     termMonths: 108,
-    clientRate: 0.11,
+    clientRate: 0.115,
     rentFactor: 1,
     mixWeight: 0.1,
     citation: {
@@ -120,6 +120,17 @@ export const ICP_TEMPLATES: IcpTemplate[] = [
     },
   },
 ];
+
+/**
+ * Portfolio-blended FICO-tier rate spread: share-weighted sum of the three
+ * tier spreads. With defaults this lands ≈ +34 bps on top of the base rate.
+ */
+export function blendedFicoSpread(values: Record<string, VariableValue>) {
+  return d(num(values, "ficoTier1SharePct"))
+    .times(num(values, "ficoTier1SpreadPct"))
+    .plus(d(num(values, "ficoTier2SharePct")).times(num(values, "ficoTier2SpreadPct")))
+    .plus(d(num(values, "ficoTier3SharePct")).times(num(values, "ficoTier3SpreadPct")));
+}
 
 export function computeContracts(
   values: Record<string, VariableValue>,
@@ -131,12 +142,14 @@ export function computeContracts(
   const mgmtFee = d(num(values, "ashokaMgmtFeePct"));
   const rentalCosts = d(num(values, "rentalCostsPct"));
   const tamarindoShare = d(num(values, "rentalTamarindoSharePct"));
+  const ficoSpread = blendedFicoSpread(values);
 
   return ICP_TEMPLATES.map((template) => {
     const id = template.id;
     const purchase = d(num(values, `icp.${id}.purchasePriceUsd`));
     const termMonths = Math.round(num(values, `icp.${id}.termMonths`));
-    const clientRate = d(num(values, `icp.${id}.clientRate`));
+    const baseClientRate = d(num(values, `icp.${id}.clientRate`));
+    const clientRate = baseClientRate.plus(ficoSpread);
     const rentFactor = d(num(values, `icp.${id}.rentFactor`));
     const grossRent = purchase.times(rentPctOfValue).times(rentFactor);
     const rentalShareUsdPerMonth = cents(
@@ -159,6 +172,7 @@ export function computeContracts(
       purchasePriceUsd: cents(purchase),
       termMonths,
       clientRate: clientRate.toNumber(),
+      baseClientRate: baseClientRate.toNumber(),
       rentFactor: rentFactor.toNumber(),
       grossRentUsdPerMonth: cents(grossRent),
       rentalShareUsdPerMonth,

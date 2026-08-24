@@ -63,14 +63,22 @@ benefits and burdens of ownership. IRS equipment true-lease guidelines
    asset.
 4. Lessor profit, cash-flow, and minimum equity tests.
 
-Tamarindo’s meeting floor of **10% of asset** is **below** that equipment
-safe harbor. Real property is not equipment. **Do not tell a prospect the
-IRS has blessed 10%.** Tell them counsel is writing the characterization
-memo, and the balloon is large **on purpose**.
+**MODEL UPDATE (Ricardo, 2026-08-23):** the purchase option floor is now
+**20% of asset cost** (`minResidualOfAssetPct`), up from the old 10%
+meeting number, precisely so the deal is never read next to a mortgage.
+At 60% LTV that is **33% of the funded amount** — a plainly non-nominal
+option under UCC 1-203, and level with the Rev. Proc. 2001-28 residual
+guideline. Framing that goes with it: **the client is buying money in the
+US from Intervest's vehicle; Intervest buys the asset in Colombia. It is
+a US deal until the purchase option is exercised.** Caveats stand: real
+property is not equipment; *In re Super Feeders* shows a % alone does not
+save a nominal-in-substance option — the balloon should approximate a
+conservative FMV estimate. Counsel still writes the characterization
+memo; **do not tell a prospect the IRS has blessed any number.**
 
 **Accounting (ASC 842).** Finance vs operating is a different test
 (ownership transfer, reasonably certain purchase option, term majority of
-life, PV substantially all of FMV, specialized asset). A 15% balloon does
+life, PV substantially all of FMV, specialized asset). A 20% balloon does
 not automatically make an operating lease.
 
 **Consumer / usury / licensing.** A US-law consumer lease can still be a
@@ -115,18 +123,24 @@ Tamarindo keeps **20% of interest billings**, month k Tamarindo spread
 
 **Origination (ASSUMPTION).** `0.01 * funded` once.
 
-**Rental offset (ASSUMPTION).** Gross rent × occupancy − PM − opex − 20%
-Tamarindo share of remainder = net credit against the lease. ICP-1 uses
-10% PM + 25% costs + 20% of remainder. That is a **model**, not a lease
-clause until it is in the docs.
+**Rental offset (ASSUMPTION).** Gross rent is priced as **0.55% of
+property value per month** (`rentalMonthlyPctOfValue`), scaled by a per-ICP
+rental-strength factor, and earned only in the share of the year the unit
+is rented (`icp.<id>.rentedTimePct`, default **30%**). The waterfall on
+gross: **−20% Ashoka mgmt −25% operating costs → 20% of the remainder to
+Tamarindo → the rest credits the client.** Net to client is therefore
+**44% of gross rent** when occupied, and Tamarindo keeps **11% of gross**.
+That is a **model**, not a lease clause until it is in the docs.
 
-**Worked ICP-1.** Price $420k, 40% down $168k, funded $252k, 11%, 10
-years, 15% of funded balloon $37,800 → **PMT ≈ $3,300**. Gross rent
-$2,200 × 85% occ ≈ $22.4k/yr. Cited net credit **$1,170/mo** (~35% of
-PMT). Effective cash **~$2,130/mo**.
+**Worked ICP-1.** Price $420k, 40% down $168k, funded $252k, **11.8375%**,
+10 years, balloon **20% of asset = $84,000** → **PMT ≈ $3,223**. Gross rent
+**$2,310/mo when occupied**, rented 30% of the time ≈ $8.3k/yr actual gross.
+Net credit **$1,016/mo occupied ≈ $305/mo averaged** (~9% of PMT).
+Effective cash **~$2,207/mo in a rented month, ~$2,918/mo averaged**.
 
-**Worked ICP-2.** $650k, down $260k, funded $390k, PMT ≈ $5,100, net
-credit ≈ $1,580, effective ≈ $3,520, balloon ≈ $58–59k.
+**Worked ICP-2.** $650k, down $260k, funded $390k, **PMT ≈ $4,988**, net
+credit ≈ **$1,573 occupied / ~$472 averaged**, effective ≈ **$4,516/mo
+averaged**, balloon **$130,000** (20% of asset).
 
 **Do not quote PMT as “rent.”** It is debt service on the funded slice.
 
@@ -162,20 +176,26 @@ Launch neighborhood: **El Poblado** (Provenza, Los Balsos), **Envigado**.
 ICP-1: 2–3BR, 100–160 m², estrato 6, $350–500k, mid-term rental for
 executives/nomads. CONTEXT 2026 luxury sketches: El Poblado units often
 **$217k–$761k**; city median much lower. Liquidity 90–150 days is an
-**ASSUMPTION**. Occupancy 85% is an **ASSUMPTION**. Estrato 6 is the
-admin/tax band, not a quality rating.
+**ASSUMPTION**. Share of time rented **30%** is an **ASSUMPTION**
+(`icp.icp-1.rentedTimePct`); the old 85%-occupancy assumption is
+superseded. Estrato 6 is the admin/tax band, not a quality rating.
 
 ## Cartagena
 
 Old City, Bocagrande, Castillo Grande. ICP-2: 1–2BR, 60–110 m²,
-$500–800k, short-term, ADR ~$210, occ ~62%. Seasonal. Cap **≤40%** of a
+$500–800k, short-term **with a one-month minimum** — no nightly stays —
+at **$3,575/mo when occupied** (0.55% of value), rented **~30% of the
+time**. The old ADR ~$210 × ~62% occupancy framing is superseded by
+monthly-minimum pricing. Seasonal. Cap **≤40%** of a
 vehicle (OPINION). Liquidity 150–270 days ASSUMPTION. Tourism and HOA
 rules can kill STR — ops risk lives here, which is why Ashoka exists.
 
 ## Llanogrande / Rionegro
 
 Airport corridor, houses on large lots, $600–900k. Weak rental by
-design. Underwrite **income**, not occupancy. Cap **≤25%**.
+design — rental-strength factor **0.4** ($1,650/mo when occupied on the
+$750k anchor, rented ~30% of the time). Underwrite **income**, not
+rental. Cap **≤25%**.
 
 ## Intervest, in one breath
 
@@ -191,5 +211,5 @@ business is a **separate** Intervest relationship.
 When someone asks about a number, answer in three beats: (1) the
 Tamarindo figure and its grade, (2) the outside CONTEXT if it exists,
 (3) a table and, if comparing, a chart block. Never stack TAM figures.
-Never treat 10% residual as an IRS blessing. Never treat 800k prospects
+Never treat the 20% residual as an IRS blessing. Never treat 800k prospects
 as a census product.

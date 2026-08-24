@@ -27,6 +27,7 @@
     "db:seed": "dotenv -e .env -- prisma db seed"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.41",
     "@ai-sdk/react": "^4.0.80",
     "@cloudflare/ai-chat": "^0.10.2",
     "@hookform/resolvers": "^5.2.2",

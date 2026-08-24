@@ -1,18 +1,16 @@
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { streamText } from "ai";
 import type { KnowledgePassage } from "@/lib/procedures/knowledge-search";
 
 /**
  * The model seam. Everything above this file is model-agnostic.
  *
- * Production path (Cloudflare AI Gateway REST API, Aug 2026 docs):
- *   POST https://api.cloudflare.com/client/v4/accounts/{id}/ai/v1/messages
- *   Authorization: Bearer CLOUDFLARE_API_TOKEN
- *   optional header cf-aig-gateway-id
+ * Production: Anthropic via the Vercel AI SDK (`@ai-sdk/anthropic` +
+ * `streamText`). ANTHROPIC_API_KEY is enough. Optional AI_GATEWAY_URL
+ * overrides the provider base URL so the same key can route through
+ * Cloudflare AI Gateway.
  *
- * BYOK fallback (classic gateway + Anthropic key):
- *   POST {AI_GATEWAY_URL}/v1/messages
- *   x-api-key: ANTHROPIC_API_KEY
- *
- * Dev mode (no keys): grounded retrieval, clearly labeled.
+ * Dev / failure: grounded retrieval (`devAnswer`), never an empty bubble.
  */
 
 const NICO_SYSTEM = `You are Nico. Not a help desk. Not a search box with a smile.
@@ -47,32 +45,70 @@ export type ComposeContext = {
   artifactNote?: string;
   /** Set when Nico checked the live world (weather, markets, headlines, parlor horoscope). */
   worldNote?: string;
+  /**
+   * Caller's routing signal: true only for a turn with no knowledge passages,
+   * no artifact note, and no model/variable action. Absent means the strong
+   * model, so an analytical answer is never silently downgraded.
+   */
+  conversational?: boolean;
 };
+
+/** A provider that never writes leaves the user staring at an empty bubble. */
+const FIRST_TOKEN_TIMEOUT_MS = 6_000;
+/** A long analytical answer may legitimately stream for a while. */
+const STREAM_TIMEOUT_MS = 90_000;
+
+const STRONG_MODEL = "claude-sonnet-4-5";
+const FAST_MODEL = "claude-haiku-4-5";
 
 export async function* composeAnswer(
   message: string,
   passages: KnowledgePassage[],
   context: ComposeContext = {},
 ): AsyncGenerator<string> {
-  if (cloudflareGatewayConfigured()) {
-    yield* streamAnthropicViaCloudflare(message, passages, context);
+  if (!process.env.ANTHROPIC_API_KEY) {
+    yield* devAnswer(message, passages, context);
     return;
   }
-  if (byokGatewayConfigured()) {
-    yield* streamAnthropicViaByok(message, passages, context);
+
+  let streamed = false;
+  try {
+    for await (const token of streamAnthropic(message, passages, context)) {
+      streamed = true;
+      yield token;
+    }
+  } catch (err) {
+    console.warn("[nico] model stream failed; using grounded retrieval", err);
+    // Tokens already on screen cannot be recalled, so restarting with
+    // fallback text here would duplicate content mid-sentence.
+    if (streamed) return;
+    yield* devAnswer(message, passages, context);
     return;
   }
-  yield* devAnswer(message, passages, context);
+  if (!streamed) {
+    console.warn("[nico] model stream sent no tokens; using grounded retrieval");
+    yield* devAnswer(message, passages, context);
+  }
 }
 
-function cloudflareGatewayConfigured(): boolean {
-  return Boolean(
-    process.env.CLOUDFLARE_ACCOUNT_ID && process.env.CLOUDFLARE_API_TOKEN,
-  );
+/**
+ * Two tiers so chit-chat does not pay for a ten-year cash-flow read. The fast
+ * tier is opt-in: an absent signal, or any grounded passage, keeps the strong
+ * model. Setting NICO_FAST_MODEL to NICO_MODEL collapses this to one tier.
+ */
+export function selectModel(
+  passages: KnowledgePassage[],
+  context: ComposeContext,
+): string {
+  const fast = context.conversational === true && passages.length === 0;
+  return fast
+    ? (process.env.NICO_FAST_MODEL ?? FAST_MODEL)
+    : (process.env.NICO_MODEL ?? STRONG_MODEL);
 }
 
-function byokGatewayConfigured(): boolean {
-  return Boolean(process.env.AI_GATEWAY_URL && process.env.ANTHROPIC_API_KEY);
+function budgetMs(raw: string | undefined, fallback: number): number {
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function userContent(
@@ -98,110 +134,67 @@ function userContent(
   return `Knowledge passages:\n\n${sources}${artifact}${world}\n\nUser:\n${message}`;
 }
 
-async function* streamAnthropicViaCloudflare(
+async function* streamAnthropic(
   message: string,
   passages: KnowledgePassage[],
   context: ComposeContext,
 ): AsyncGenerator<string> {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID!;
-  const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/messages`;
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
-    "Content-Type": "application/json",
-    "anthropic-version": "2023-06-01",
-  };
-  if (process.env.CF_AIG_GATEWAY_ID) {
-    headers["cf-aig-gateway-id"] = process.env.CF_AIG_GATEWAY_ID;
-  }
-  yield* streamAnthropicSse(url, headers, {
-    model: process.env.NICO_MODEL ?? "anthropic/claude-sonnet-4-5",
-    max_tokens: 4096,
-    stream: true,
-    system: NICO_SYSTEM,
-    messages: [{ role: "user", content: userContent(message, passages, context) }],
-  });
-}
-
-async function* streamAnthropicViaByok(
-  message: string,
-  passages: KnowledgePassage[],
-  context: ComposeContext,
-): AsyncGenerator<string> {
-  const base = process.env.AI_GATEWAY_URL!.replace(/\/$/, "");
-  const url = `${base}/v1/messages`;
-  yield* streamAnthropicSse(
-    url,
-    {
-      "x-api-key": process.env.ANTHROPIC_API_KEY!,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
-    },
-    {
-      model: process.env.NICO_MODEL ?? "claude-sonnet-4-5",
-      max_tokens: 4096,
-      stream: true,
-      system: NICO_SYSTEM,
-      messages: [{ role: "user", content: userContent(message, passages, context) }],
-    },
+  // Two budgets, not one. A provider that accepts the socket and then goes
+  // quiet has to be dropped in seconds, but an answer that is already
+  // streaming has earned a far longer leash.
+  const firstTokenMs = budgetMs(
+    process.env.NICO_FIRST_TOKEN_TIMEOUT_MS,
+    FIRST_TOKEN_TIMEOUT_MS,
   );
-}
+  const ceilingMs = budgetMs(
+    process.env.NICO_STREAM_TIMEOUT_MS,
+    STREAM_TIMEOUT_MS,
+  );
+  const controller = new AbortController();
+  const ceilingTimer = setTimeout(() => controller.abort(), ceilingMs);
+  let firstTokenTimer: ReturnType<typeof setTimeout> | undefined = setTimeout(
+    () => controller.abort(),
+    firstTokenMs,
+  );
 
-async function* streamAnthropicSse(
-  url: string,
-  headers: Record<string, string>,
-  body: Record<string, unknown>,
-): AsyncGenerator<string> {
-  const res = await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
+  const anthropic = createAnthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+    ...(process.env.AI_GATEWAY_URL
+      ? { baseURL: process.env.AI_GATEWAY_URL.replace(/\/$/, "") }
+      : {}),
   });
-  if (!res.ok || !res.body) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(
-      `AI Gateway ${res.status}: ${detail.slice(0, 280) || res.statusText}`,
-    );
-  }
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
+  try {
+    const result = streamText({
+      model: anthropic(selectModel(passages, context)),
+      system: NICO_SYSTEM,
+      messages: [
+        { role: "user", content: userContent(message, passages, context) },
+      ],
+      abortSignal: controller.signal,
+      maxRetries: 0,
+    });
 
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const frames = buffer.split("\n\n");
-    buffer = frames.pop() ?? "";
-    for (const frame of frames) {
-      const token = tokenFromSseFrame(frame);
+    for await (const token of result.textStream) {
+      if (firstTokenTimer !== undefined) {
+        clearTimeout(firstTokenTimer);
+        firstTokenTimer = undefined;
+      }
       if (token) yield token;
     }
-  }
-}
-
-function tokenFromSseFrame(frame: string): string | null {
-  for (const line of frame.split("\n")) {
-    if (!line.startsWith("data: ")) continue;
-    const raw = line.slice(6).trim();
-    if (raw === "[DONE]") return null;
-    try {
-      const json = JSON.parse(raw) as {
-        type?: string;
-        delta?: { type?: string; text?: string };
-      };
-      if (
-        json.type === "content_block_delta" &&
-        json.delta?.type === "text_delta" &&
-        json.delta.text
-      ) {
-        return json.delta.text;
-      }
-    } catch {
-      return null;
+  } catch (err) {
+    if (controller.signal.aborted) {
+      throw new Error(
+        firstTokenTimer === undefined
+          ? `Anthropic aborted: stream exceeded ${ceilingMs}ms`
+          : `Anthropic aborted: no first token within ${firstTokenMs}ms`,
+      );
     }
+    throw err;
+  } finally {
+    if (firstTokenTimer !== undefined) clearTimeout(firstTokenTimer);
+    clearTimeout(ceilingTimer);
   }
-  return null;
 }
 
 async function* devAnswer(
@@ -229,15 +222,15 @@ async function* devAnswer(
       parts.push(`${p.excerpt}\n`);
     }
     parts.push(
-      "\n---\n*Dev mode: this is direct retrieval, not model reasoning. ",
-      "Add CLOUDFLARE_ACCOUNT_ID + CLOUDFLARE_API_TOKEN (or AI_GATEWAY_URL + ANTHROPIC_API_KEY) to get the full consultant.*",
+      process.env.ANTHROPIC_API_KEY
+        ? "\n---\n*Direct retrieval: the model call did not come through, so this is the binder without commentary.*"
+        : "\n---\n*Dev mode: this is direct retrieval, not model reasoning. Add ANTHROPIC_API_KEY to get the full consultant.*",
     );
   }
 
   for (const part of parts) {
     for (let i = 0; i < part.length; i += 24) {
       yield part.slice(i, i + 24);
-      await new Promise((r) => setTimeout(r, 12));
     }
   }
 }

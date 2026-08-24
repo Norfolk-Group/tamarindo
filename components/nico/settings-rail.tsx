@@ -11,12 +11,32 @@ import { cn } from "@/lib/utils";
 
 export type AdminSection = "approvals" | "capabilities" | "variables";
 
-const ADMIN_NAV: { id: AdminSection; label: string; icon: typeof ShieldCheck }[] =
-  [
-    { id: "approvals", label: "Approvals", icon: ShieldCheck },
-    { id: "capabilities", label: "Capabilities", icon: ListTree },
-    { id: "variables", label: "Variables", icon: SlidersHorizontal },
-  ];
+type SectionNavItem = {
+  id: AdminSection;
+  label: string;
+  icon: typeof ShieldCheck;
+};
+
+const VARIABLES_NAV: SectionNavItem = {
+  id: "variables",
+  label: "Variables",
+  icon: SlidersHorizontal,
+};
+
+const ADMIN_NAV: SectionNavItem[] = [
+  { id: "approvals", label: "Approvals", icon: ShieldCheck },
+  { id: "capabilities", label: "Capabilities", icon: ListTree },
+  VARIABLES_NAV,
+];
+
+/** Non-admins only ever see the user-scoped Variables surface. */
+function settingsSections(isAdmin: boolean): SectionNavItem[] {
+  return isAdmin ? ADMIN_NAV : [VARIABLES_NAV];
+}
+
+export function defaultSettingsSection(isAdmin: boolean): AdminSection {
+  return isAdmin ? "approvals" : "variables";
+}
 
 type ApprovalRow = {
   id: string;
@@ -25,7 +45,8 @@ type ApprovalRow = {
   status: string;
 };
 
-export function AdminRail({
+export function SettingsRail({
+  isAdmin,
   section,
   onSection,
   onClose,
@@ -35,6 +56,7 @@ export function AdminRail({
   onDecide,
   onRefreshApprovals,
 }: {
+  isAdmin: boolean;
   section: AdminSection;
   onSection: (section: AdminSection) => void;
   onClose: () => void;
@@ -44,15 +66,21 @@ export function AdminRail({
   onDecide: (approvalId: string, decision: "approved" | "rejected") => void;
   onRefreshApprovals: () => void;
 }) {
+  const title = isAdmin ? "ADMIN" : "PREFERENCES";
+  const sections = settingsSections(isAdmin);
+  const active = sections.some((item) => item.id === section)
+    ? section
+    : defaultSettingsSection(isAdmin);
+
   return (
     <aside
       id="nico-admin-rail"
       className="flex h-full w-96 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground"
-      aria-label="Admin"
+      aria-label={isAdmin ? "Admin" : "Preferences"}
     >
       <div className="flex h-14 shrink-0 items-center justify-between px-3">
         <p className="text-sm font-semibold tracking-widest text-muted-foreground">
-          ADMIN
+          {title}
         </p>
         <Button
           type="button"
@@ -60,25 +88,28 @@ export function AdminRail({
           size="icon"
           className="size-8"
           onClick={onClose}
-          aria-label="Close admin"
+          aria-label={isAdmin ? "Close admin" : "Close preferences"}
         >
           <X className="size-4" />
         </Button>
       </div>
 
-      <nav className="flex flex-col gap-1 px-2 pb-2" aria-label="Admin sections">
-        {ADMIN_NAV.map((item) => (
+      <nav
+        className="flex flex-col gap-1 px-2 pb-2"
+        aria-label={isAdmin ? "Admin sections" : "Preferences sections"}
+      >
+        {sections.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => onSection(item.id)}
             className={cn(
               "transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm",
-              section === item.id
+              active === item.id
                 ? "bg-primary/15 text-primary"
                 : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
             )}
-            aria-current={section === item.id ? "page" : undefined}
+            aria-current={active === item.id ? "page" : undefined}
           >
             <item.icon className="size-4 shrink-0" />
             <span className="flex-1 text-left">{item.label}</span>
@@ -89,7 +120,7 @@ export function AdminRail({
       <Separator />
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {section === "approvals" && (
+        {isAdmin && active === "approvals" && (
           <ApprovalsPanel
             rows={approvals}
             error={approvalError}
@@ -97,10 +128,12 @@ export function AdminRail({
             onRefresh={onRefreshApprovals}
           />
         )}
-        {section === "capabilities" && (
+        {isAdmin && active === "capabilities" && (
           <CapabilitiesPanel capabilities={capabilities} />
         )}
-        {section === "variables" && <VariablesWorkspace scope="admin" />}
+        {active === "variables" && (
+          <VariablesWorkspace scope={isAdmin ? "admin" : "user"} />
+        )}
       </div>
     </aside>
   );

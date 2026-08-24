@@ -87,6 +87,10 @@ export async function* runTurn(
 
   let artifactNote: string | undefined;
   const variableSet = parseVariableSet(message);
+  const modelAction =
+    Boolean(variableSet) ||
+    isCashflowModelRequest(message) ||
+    isWorkbookRequest(message);
   if (variableSet) {
     yield {
       type: "activity",
@@ -204,11 +208,16 @@ export async function* runTurn(
 
   yield { type: "activity", state: "drafting", label: "Drafting a reply…" };
 
+  // Routing signal for the composer's fast tier. A world check (weather,
+  // markets) still counts as conversation; grounded or model work does not.
+  const conversational = passages.length === 0 && !artifactNote && !modelAction;
+
   let reply = "";
   try {
     for await (const chunk of composeAnswer(message, passages, {
       artifactNote,
       worldNote,
+      conversational,
     })) {
       reply += chunk;
       yield { type: "token", text: chunk };
