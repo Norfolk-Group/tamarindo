@@ -8,7 +8,7 @@ demoable on its own.
 | # | Slice | Status |
 |---|-------|--------|
 | 1 | App shell: Workers + OpenNext, WorkOS AuthKit, left rail, full-screen conversation canvas, design tokens | **shipped** — hosted `tamarindo-web.norfolk-ai.workers.dev` + sibling `tamarindo-nico-agent`; local AuthKit admin signed NDA |
-| 2 | Data layer: Neon schema via Prisma — profiles, NDA audit, artifacts, data room, deal terms, memory (pgvector) | **shipped** — local Docker and Tamarindo Neon migrated + seeded; Hyperdrive on `ep-plain-bird-a6pzy4b1` |
+| 2 | Data layer: Neon schema via Prisma — profiles, NDA audit, artifacts, data room, deal terms, memory (pgvector), cell graph | **shipped** — Tamarindo Neon (`lively-voice-04777651`) has the full worksheet (`ModelScenario` / `ModelCell` / `ReportCell`) and is the hosted system of record via Hyperdrive `ep-plain-bird-a6pzy4b1`. Laptop `next dev` stays on Docker Postgres. |
 | 3 | Nico core: Agents SDK session, procedures + capability map, approval gates, resumable streaming, avatar state machine | **shipped** — DO handshake + chrome AE2; SSE `/api/nico/chat` removed |
 | 4 | Artifact engines: Excel, decks, podcasts via Workflows | **shipped** — custom OOXML + `tamarindo-nico-artifacts` / `tamarindo-nico-watch` deployed; OpenNext workflow binds still commented |
 | 5 | Intake flow: invite → interview → bio → NDA click-wrap → data-room gating | **shipped** — +f4 invite accepted as investor; bio + `nda-v1` signed; confidential `dataroom.list` unlocked |
@@ -19,8 +19,9 @@ demoable on its own.
 
 1. **Shell** — sign in with WorkOS, see the dressed conversation screen
    (tokens, fonts, orb, one styled exchange), rail collapses.
-2. **Data** — migrations run against local Docker Postgres and Neon;
-   `db:generate` produces typed client; seed script creates an admin.
+2. **Data** — hosted Neon is current (including the cell-graph and report
+   book). Local Docker is for laptop work only. `db:generate` produces
+   typed client; seed script creates an admin.
 3. **Core** — a message round-trips through the Durable Object with
    streaming; a demo procedure appears in the capability map; an approval
    card blocks a demo outbound action; reload resumes the stream.

@@ -14,10 +14,13 @@ Pipeline:
    owns every fee Tamarindo charges and every fee a Tamarindo entity pays
    (`lib/artifacts/fees.ts`). Center engines own manpower. Uncited rates
    stay blank.
-2. **HyperFormula** computes the formula graph server-side to validate that
-   every cell resolves and sanity checks pass (no #REF!, balance checks).
-3. **ExcelJS** writes the `.xlsx` with real formulas, named ranges, an
-   assumptions sheet, and formatting (mono numbers, Tamarindo styling).
+2. **`runCashflowModel`** (`decimal.js`) is the calculator. Each run
+   materializes `ModelCell` values plus human-readable formulas and
+   `ModelCellDep` edges on Neon. That is the live book, not a spreadsheet
+   library.
+3. **Hand-rolled OOXML** (`lib/artifacts/excel.ts`) writes the downloadable
+   `.xlsx` so Excel can recompute the formulas. No HyperFormula or ExcelJS
+   package — they do not fit the Workers isolate.
 4. Every input traces to a source: a cell either derives from a formula, an
    admin record, or a cited document.
 
