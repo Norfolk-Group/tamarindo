@@ -88,12 +88,18 @@ describe("workosConfigState", () => {
     WORKOS_API_KEY: process.env.WORKOS_API_KEY,
     WORKOS_CLIENT_ID: process.env.WORKOS_CLIENT_ID,
     WORKOS_COOKIE_PASSWORD: process.env.WORKOS_COOKIE_PASSWORD,
+    DATABASE_URL: process.env.DATABASE_URL,
+    NODE_ENV: process.env.NODE_ENV,
+    ALLOW_DEV_LOCAL: process.env.ALLOW_DEV_LOCAL,
   };
 
   afterEach(() => {
     setEnv("WORKOS_API_KEY", previous.WORKOS_API_KEY);
     setEnv("WORKOS_CLIENT_ID", previous.WORKOS_CLIENT_ID);
     setEnv("WORKOS_COOKIE_PASSWORD", previous.WORKOS_COOKIE_PASSWORD);
+    setEnv("DATABASE_URL", previous.DATABASE_URL);
+    setEnv("NODE_ENV", previous.NODE_ENV);
+    setEnv("ALLOW_DEV_LOCAL", previous.ALLOW_DEV_LOCAL);
     withAuth.mockReset();
     upsert.mockReset();
     findFirstInvite.mockReset();
@@ -128,12 +134,33 @@ describe("workosConfigState", () => {
     expect(workosConfigState()).toBe("ready");
   });
 
-  it("fails closed when keys are ready but AuthKit has no session (AE1)", async () => {
+  it("fails closed when keys are ready but AuthKit has no session on a remote DB (AE1)", async () => {
     process.env.WORKOS_API_KEY = "sk_test";
     process.env.WORKOS_CLIENT_ID = "client_test";
     process.env.WORKOS_COOKIE_PASSWORD = VALID_COOKIE;
+    process.env.DATABASE_URL =
+      "postgresql://user:pass@ep-example.us-east-1.aws.neon.tech/neondb";
     withAuth.mockResolvedValue({ user: null });
     await expect(getSessionActor()).resolves.toBeNull();
+  });
+
+  it("falls back to dev-local on loopback when WorkOS is ready but there is no cookie", async () => {
+    process.env.NODE_ENV = "development";
+    process.env.WORKOS_API_KEY = "sk_test";
+    process.env.WORKOS_CLIENT_ID = "client_test";
+    process.env.WORKOS_COOKIE_PASSWORD = VALID_COOKIE;
+    process.env.DATABASE_URL =
+      "postgresql://norfolk:norfolk@localhost:5432/norfolk_dev?schema=public";
+    delete process.env.ALLOW_DEV_LOCAL;
+    upsert.mockResolvedValue({ displayName: "Ricardo (dev)", role: "admin" });
+    withAuth.mockResolvedValue({ user: null });
+    const actor = await getSessionActor();
+    expect(actor).toEqual({
+      kind: "user",
+      id: "dev-local",
+      displayName: "Ricardo (dev)",
+      role: "admin",
+    });
   });
 
   it("maps a WorkOS session to an actor whose role comes from Profile", async () => {

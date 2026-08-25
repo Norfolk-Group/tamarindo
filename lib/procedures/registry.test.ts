@@ -43,8 +43,26 @@ describe("humanOnly capability map (KTD4 / AE3)", () => {
       .capabilities({ role: "member", kind: "agent" })
       .map((c) => c.name);
     expect(names).toContain("artifacts.create");
+    expect(names).toContain("media.generate");
+    expect(names).toContain("model.report");
+    expect(names).toContain("icp.list");
+    expect(names).toContain("icp.get");
+    expect(names).toContain("icp.set");
+    expect(names).toContain("icp.vintages");
     expect(names).not.toContain("approvals.decide");
     expect(names).not.toContain("dealTerms.publish");
+  });
+
+  it("lets an investor agent read period reports and ICPs but not icp.set", () => {
+    const names = registry
+      .capabilities({ role: "investor", kind: "agent" })
+      .map((c) => c.name);
+    expect(names).toContain("model.report");
+    expect(names).toContain("icp.list");
+    expect(names).toContain("icp.get");
+    expect(names).toContain("icp.vintages");
+    expect(names).not.toContain("icp.set");
+    expect(names).not.toContain("model.setVariables");
   });
 
   it("shows approvals.decide and nda.sign to a human admin, not to an admin agent", () => {

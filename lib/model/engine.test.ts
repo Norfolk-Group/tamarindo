@@ -28,6 +28,7 @@ describe("cashflow engine", () => {
     expect(model.us.years).toHaveLength(10);
     expect(model.sucursal.years).toHaveLength(10);
     expect(model.consolidated.years).toHaveLength(10);
+    expect(model.vehicle.years).toHaveLength(10);
   });
 
   it("keeps US+sucursal net cash equal to consolidated every year", () => {
@@ -111,6 +112,24 @@ describe("cashflow engine", () => {
     expect(model.summary.aircraftAumEndUsd).toBeLessThan(24_000_000);
     expect(model.summary.intervestLineEndUsd).toBe(75_000_000);
     expect(model.summary.partnerLineEndUsd).toBe(75_000_000);
+  });
+
+  it("keeps Intervest vehicle cash off the OpCo consolidation", () => {
+    const model = runCashflowModel(defaultValues());
+    const down = model.vehicle.lines.find((row) => row.id === "clientDown")!;
+    const balloon = model.vehicle.lines.find((row) => row.id === "balloon")!;
+    const purchases = model.vehicle.lines.find((row) => row.id === "purchases")!;
+    expect(down.values.reduce((sum, value) => sum + value, 0)).toBeGreaterThan(0);
+    expect(purchases.values.reduce((sum, value) => sum + value, 0)).toBeLessThan(0);
+    expect(balloon.values.reduce((sum, value) => sum + value, 0)).toBeGreaterThan(0);
+    for (let i = 0; i < 10; i += 1) {
+      const opco =
+        model.us.years[i].netChangeUsd + model.sucursal.years[i].netChangeUsd;
+      expect(model.consolidated.years[i].netChangeUsd).toBeCloseTo(opco, 2);
+      expect(model.vehicle.years[i].netChangeUsd).not.toBe(
+        model.consolidated.years[i].netChangeUsd,
+      );
+    }
   });
 
   it("keeps Intervest exclusive for the first three fiscal years", () => {

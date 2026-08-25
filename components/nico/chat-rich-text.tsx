@@ -8,26 +8,41 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  parseChat,
-  type ChartSpec,
-} from "@/lib/nico/chat-rich-parse";
+import { ChatChart } from "@/components/nico/chat-chart";
+import { ChatMedia } from "@/components/nico/chat-media";
+import { ChatReportGlance } from "@/components/nico/chat-report-glance";
+import { parseChat } from "@/lib/nico/chat-rich-parse";
 
-export function ChatRichText({ text }: { text: string }) {
+export function ChatRichText({
+  text,
+  streaming = false,
+}: {
+  text: string;
+  streaming?: boolean;
+}) {
   const segments = parseChat(text);
   return (
     <div className="flex flex-col gap-3 text-sm leading-relaxed">
       {segments.map((segment, i) => {
+        const last = i === segments.length - 1;
         if (segment.kind === "chart") {
-          return <InlineBarChart key={i} spec={segment.spec} />;
+          return <ChatChart key={i} spec={segment.spec} />;
+        }
+        if (segment.kind === "report") {
+          return <ChatReportGlance key={i} spec={segment.spec} />;
+        }
+        if (segment.kind === "image" || segment.kind === "video") {
+          return <ChatMedia key={i} kind={segment.kind} spec={segment.spec} />;
         }
         if (segment.kind === "table") {
           return (
-            <Table key={i}>
+            <Table key={i} className="nico-rich-enter">
               <TableHeader>
                 <TableRow>
                   {segment.headers.map((h) => (
-                    <TableHead key={h}>{h}</TableHead>
+                    <TableHead key={h} className="font-mono">
+                      {h}
+                    </TableHead>
                   ))}
                 </TableRow>
               </TableHeader>
@@ -35,7 +50,9 @@ export function ChatRichText({ text }: { text: string }) {
                 {segment.rows.map((row, r) => (
                   <TableRow key={r}>
                     {row.map((cell, c) => (
-                      <TableCell key={c}>{cell}</TableCell>
+                      <TableCell key={c} className="font-mono">
+                        {cell}
+                      </TableCell>
                     ))}
                   </TableRow>
                 ))}
@@ -46,9 +63,15 @@ export function ChatRichText({ text }: { text: string }) {
         return (
           <div key={i} className="whitespace-pre-wrap">
             {renderInline(segment.text)}
+            {streaming && last ? (
+              <span className="nico-caret ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 bg-teal-400 align-middle" />
+            ) : null}
           </div>
         );
       })}
+      {streaming && segments.length === 0 ? (
+        <span className="nico-caret inline-block h-4 w-1.5 bg-teal-400" />
+      ) : null}
     </div>
   );
 }
@@ -61,63 +84,4 @@ function renderInline(text: string) {
     }
     return <span key={i}>{part}</span>;
   });
-}
-
-function InlineBarChart({ spec }: { spec: ChartSpec }) {
-  const max = Math.max(...spec.values.map((v) => Math.abs(v)), 1);
-  const horizontal = spec.type === "hbar";
-  return (
-    <figure className="rounded-lg border border-border p-3">
-      {spec.title ? (
-        <figcaption className="mb-2 text-xs text-muted-foreground">
-          {spec.title}
-          {spec.unit ? ` (${spec.unit})` : ""}
-        </figcaption>
-      ) : null}
-      <div className={horizontal ? "flex flex-col gap-2" : "flex items-end gap-2 h-36"}>
-        {spec.labels.map((label, i) => {
-          const value = spec.values[i] ?? 0;
-          const pct = Math.max(4, (Math.abs(value) / max) * 100);
-          return (
-            <div
-              key={label}
-              className={
-                horizontal
-                  ? "grid grid-cols-[7rem_1fr_auto] items-center gap-2"
-                  : "flex min-w-0 flex-1 flex-col items-center gap-1"
-              }
-            >
-              {horizontal ? (
-                <span className="truncate text-xs text-muted-foreground">
-                  {label}
-                </span>
-              ) : null}
-              <div
-                className={
-                  horizontal
-                    ? "h-2 rounded-sm bg-primary/80"
-                    : "w-full rounded-sm bg-primary/80"
-                }
-                style={
-                  horizontal
-                    ? { width: `${pct}%` }
-                    : { height: `${pct}%` }
-                }
-              />
-              {horizontal ? (
-                <span className="text-xs tabular-nums">{value}</span>
-              ) : (
-                <>
-                  <span className="text-xs tabular-nums">{value}</span>
-                  <span className="w-full truncate text-center text-[10px] text-muted-foreground">
-                    {label}
-                  </span>
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </figure>
-  );
 }

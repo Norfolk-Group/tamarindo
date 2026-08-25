@@ -257,6 +257,83 @@ export function buildConsolidated(
   };
 }
 
+/**
+ * Tamarindo-Intervest (and later vehicles) — not consolidated into OpCo.
+ * Client down, monthly remittance, and the purchase-option balloon land here.
+ * The warehouse draw funds the 60%; the vehicle buys the asset at full price.
+ */
+export function buildVehicle(
+  months: MonthAcc[],
+  fyCount: number,
+  fyLabels: string[],
+): DivisionStatement {
+  const years = buildYears(
+    fyCount,
+    fyLabels,
+    (acc) => ({
+      cfo: acc.clientDown + acc.remitted - acc.activation - acc.origination,
+      cfi: -acc.assetPurchase,
+      cff: acc.fundedNew,
+    }),
+    months,
+  );
+  const yearly = Array.from({ length: fyCount }, (_, i) => sumYear(months, i + 1));
+  return {
+    id: "vehicle",
+    title: "Tamarindo-Intervest (funding vehicle)",
+    years,
+    lines: [
+      line(
+        "clientDown",
+        "Client down payment (40% homes / 20% autos / 30% aircraft)",
+        "operatingIn",
+        yearly.map((y) => y.clientDown),
+      ),
+      line(
+        "remitExBalloon",
+        "Lease remittances from Tamarindo US (ex balloon)",
+        "operatingIn",
+        yearly.map((y) => cents(d(y.remitted).minus(y.balloon))),
+      ),
+      line(
+        "balloon",
+        "Purchase option / balloon (lessee takes title)",
+        "operatingIn",
+        yearly.map((y) => y.balloon),
+      ),
+      line(
+        "activation",
+        "Activation fee to Tamarindo US (2% of draw)",
+        "operatingOut",
+        yearly.map((y) => y.activation),
+      ),
+      line(
+        "origination",
+        "Origination fee to Tamarindo US",
+        "operatingOut",
+        yearly.map((y) => y.origination),
+      ),
+      line(
+        "purchases",
+        "Asset purchases (homes, autos, aircraft at ticket)",
+        "investing",
+        yearly.map((y) => -y.assetPurchase),
+      ),
+      line(
+        "draws",
+        "Warehouse / line draws (funded amount)",
+        "financing",
+        yearly.map((y) => y.fundedNew),
+      ),
+      line("line", "Intervest committed line (EOP)", "memo", yearly.map((y) => y.intervestLine)),
+      line("aum", "Funded outstanding (EOP)", "memo", yearly.map((y) => y.fundedAum)),
+      line("homes", "Homes originated", "memo", yearly.map((y) => y.originated)),
+      line("autos", "Auto leases originated", "memo", yearly.map((y) => y.autosOriginated)),
+      line("aircraft", "Aircraft leases originated", "memo", yearly.map((y) => y.aircraftOriginated)),
+    ],
+  };
+}
+
 function usIcpFeeLines(
   us: DivisionStatement,
   _sucursal: DivisionStatement,

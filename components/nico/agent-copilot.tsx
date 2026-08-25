@@ -10,7 +10,13 @@ import {
 } from "@/lib/nico/attach";
 import { sessionKey } from "@/lib/nico/session-key";
 import { ChatRichText } from "@/components/nico/chat-rich-text";
-import { applyUiDataPart, type AppliedTurn } from "@/lib/nico/stream-apply";
+import { ChatThinkingRow } from "@/components/nico/chat-presence";
+import { ChatReportSkeleton } from "@/components/nico/chat-report-skeleton";
+import {
+  applyUiDataPart,
+  emptyAppliedTurn,
+  type AppliedTurn,
+} from "@/lib/nico/stream-apply";
 
 /**
  * Live `useAgentChat` attach (KTD6). Presence comes only from
@@ -26,6 +32,8 @@ export function AgentSession({
   onPresence?: (update: (prev: AppliedTurn) => AppliedTurn) => void;
 }) {
   const url = new URL(host);
+  const [input, setInput] = useState("");
+  const [live, setLive] = useState(emptyAppliedTurn);
   const agent = useAgent({
     agent: "NicoAgent",
     name: sessionKey(bundle.profileId, bundle.conversationId),
@@ -39,37 +47,46 @@ export function AgentSession({
     headers: { "x-nico-handshake": bundle.token },
     getInitialMessages: ({ url }) => fetchAgentMessages(url, bundle.token),
     onData: (part) => {
+      setLive((prev) => applyUiDataPart(prev, part));
       onPresence?.((prev) => applyUiDataPart(prev, part));
     },
   });
-  const [input, setInput] = useState("");
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  const streaming =
+    live.avatarState === "speaking" || live.avatarState === "drafting";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex-1 overflow-y-auto px-5 py-6">
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={
-                message.role === "user"
-                  ? "self-end rounded-2xl rounded-br-sm bg-primary/15 px-4 py-2.5 text-sm"
-                  : "text-sm leading-relaxed"
-              }
-            >
-              {message.role === "user" ? (
-                message.parts
-                  .map((part) => (part.type === "text" ? part.text : ""))
-                  .join("")
-              ) : (
-                <ChatRichText
-                  text={message.parts
+          {messages.map((message) => {
+            const isLastAssistant = message.id === lastAssistant?.id;
+            return (
+              <div
+                key={message.id}
+                className={
+                  message.role === "user"
+                    ? "nico-msg-enter self-end rounded-2xl rounded-br-sm bg-primary/15 px-4 py-2.5 text-sm"
+                    : "nico-msg-enter text-sm leading-relaxed"
+                }
+              >
+                {message.role === "user" ? (
+                  message.parts
                     .map((part) => (part.type === "text" ? part.text : ""))
-                    .join("")}
-                />
-              )}
-            </div>
-          ))}
+                    .join("")
+                ) : (
+                  <ChatRichText
+                    streaming={streaming && isLastAssistant}
+                    text={message.parts
+                      .map((part) => (part.type === "text" ? part.text : ""))
+                      .join("")}
+                  />
+                )}
+              </div>
+            );
+          })}
+          <ChatReportSkeleton presence={live} />
+          <ChatThinkingRow presence={live} />
         </div>
       </div>
       <form
@@ -112,6 +129,8 @@ export function AgentAttach({
 
   useEffect(() => {
     if (!host) return;
+    setBundle(null);
+    setFailed(false);
     void issueHandshake(conversationId).then((next) => {
       if (!next) setFailed(true);
       else setBundle(next);

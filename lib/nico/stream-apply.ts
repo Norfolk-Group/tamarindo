@@ -4,11 +4,20 @@ import {
   type StreamEvent,
 } from "@/lib/contracts/events";
 
+export type AppliedMedia = {
+  kind: "image" | "video";
+  url: string;
+  alt: string;
+  title?: string;
+};
+
 export type AppliedTurn = {
   reply: string;
   sources: { title: string; path: string; excerpt: string }[];
   avatarState: AvatarState;
   activityLabel: string;
+  progress?: number;
+  media: AppliedMedia[];
   done: boolean;
   error?: string;
 };
@@ -19,6 +28,7 @@ export function emptyAppliedTurn(): AppliedTurn {
     sources: [],
     avatarState: "idle",
     activityLabel: "Ready",
+    media: [],
     done: false,
   };
 }
@@ -42,8 +52,22 @@ export function applyStreamEvent(
         ...prev,
         avatarState: state.data,
         activityLabel: event.label,
+        progress: event.progress,
       };
     }
+    case "media":
+      return {
+        ...prev,
+        media: [
+          ...prev.media,
+          {
+            kind: event.kind,
+            url: event.url,
+            alt: event.alt,
+            title: event.title,
+          },
+        ],
+      };
     case "source":
       return {
         ...prev,
@@ -89,7 +113,8 @@ export function applyUiDataPart(prev: AppliedTurn, part: unknown): AppliedTurn {
     event.type === "activity" ||
     event.type === "error" ||
     event.type === "done" ||
-    event.type === "source"
+    event.type === "source" ||
+    event.type === "media"
   ) {
     return applyStreamEvent(prev, event);
   }

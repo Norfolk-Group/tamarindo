@@ -9,9 +9,19 @@ import {
 } from "@/lib/model/cell-store";
 import { runCashflowModel } from "@/lib/model/engine";
 import { cashflowWorkbookSpec } from "@/lib/model/excel-spec";
-import { renderCashflowHtml } from "@/lib/model/html";
 import { renderCashflowPdf } from "@/lib/model/pdf";
-import { loadModelValues, saveModelValues } from "@/lib/model/store";
+import { buildReportWorkbook } from "@/lib/procedures/reports";
+import { workbookForDepth } from "@/lib/model/report-depth";
+import { renderReportHtml } from "@/lib/model/sheet-html";
+import { renderReportCsv } from "@/lib/model/sheet-csv";
+import { saveReportWorkbook } from "@/lib/model/report-store";
+import {
+  describeModelCase,
+  discardPersonalCase,
+  loadValuesForActor,
+  publishSharedCase,
+  saveModelValues,
+} from "@/lib/model/store";
 import type { ModelVariableView, VariableValue } from "@/lib/model/types";
 import { VARIABLE_DEFS, VARIABLE_KEYS } from "@/lib/model/variables";
 import { profileIdFor } from "@/lib/procedures/profile";
@@ -44,15 +54,20 @@ export const modelGet = defineProcedure({
     model: z.unknown(),
     variables: z.array(z.unknown()),
     canEditAdmin: z.boolean(),
+    canEdit: z.boolean(),
+    caseSource: z.enum(["personal", "shared", "seed"]),
   }),
   minRole: "investor",
   requiresApproval: false,
   handler: async (_input, ctx) => {
-    const values = await loadModelValues();
+    const profileId = await profileIdFor(ctx.actor.id);
+    const described = await describeModelCase(profileId);
     return {
-      model: runCashflowModel(values),
-      variables: viewsForRole(values, ctx.actor.role),
+      model: runCashflowModel(described.values),
+      variables: viewsForRole(described.values, ctx.actor.role),
       canEditAdmin: ctx.actor.role === "admin",
+      canEdit: ctx.actor.role === "admin" || ctx.actor.role === "member",
+      caseSource: described.source,
     };
   },
 });
@@ -60,33 +75,70 @@ export const modelGet = defineProcedure({
 export const modelSetVariables = defineProcedure({
   name: "model.setVariables",
   description:
-    "Set cash-flow model variables. Members may set the published key set; admin may set every variable. Recalculates on the server.",
+    "Set this caller's personal case. Members may set published keys; admin may set every variable. Recalculates on the server. resetToShared drops the personal case.",
   input: z.object({
-    values: z.record(z.string(), VariableValueSchema),
+    values: z.record(z.string(), VariableValueSchema).optional(),
+    resetToShared: z.boolean().optional(),
+    publishShared: z.boolean().optional(),
   }),
   output: z.object({
     model: z.unknown(),
     variables: z.array(z.unknown()),
     canEditAdmin: z.boolean(),
+    canEdit: z.boolean(),
+    caseSource: z.enum(["personal", "shared", "seed"]),
     applied: z.array(z.string()),
   }),
   minRole: "member",
   requiresApproval: false,
   handler: async (input, ctx) => {
-    const current = await loadModelValues();
+    const createdById = await profileIdFor(ctx.actor.id);
+    if (input.publishShared) {
+      if (ctx.actor.role !== "admin") {
+        throw new Error("Only an admin can publish the company case");
+      }
+      const current = await loadValuesForActor(ctx.actor);
+      const allowed = allowedKeys(ctx.actor.role);
+      for (const [key, value] of Object.entries(input.values ?? {})) {
+        if (!allowed.has(key)) continue;
+        current[key] = value;
+      }
+      const saved = await publishSharedCase(current, createdById);
+      return {
+        model: runCashflowModel(saved),
+        variables: viewsForRole(saved, ctx.actor.role),
+        canEditAdmin: true,
+        canEdit: true,
+        caseSource: "shared",
+        applied: ["__shared__"],
+      };
+    }
+    if (input.resetToShared) {
+      const described = await discardPersonalCase(createdById);
+      return {
+        model: runCashflowModel(described.values),
+        variables: viewsForRole(described.values, ctx.actor.role),
+        canEditAdmin: ctx.actor.role === "admin",
+        canEdit: true,
+        caseSource: described.source,
+        applied: [],
+      };
+    }
+    const current = await loadValuesForActor(ctx.actor);
     const allowed = allowedKeys(ctx.actor.role);
     const applied: string[] = [];
-    for (const [key, value] of Object.entries(input.values)) {
+    for (const [key, value] of Object.entries(input.values ?? {})) {
       if (!allowed.has(key)) continue;
       current[key] = value;
       applied.push(key);
     }
-    const createdById = await profileIdFor(ctx.actor.id);
     const saved = await saveModelValues(current, createdById);
     return {
       model: runCashflowModel(saved),
       variables: viewsForRole(saved, ctx.actor.role),
       canEditAdmin: ctx.actor.role === "admin",
+      canEdit: true,
+      caseSource: "personal",
       applied,
     };
   },
@@ -95,9 +147,11 @@ export const modelSetVariables = defineProcedure({
 export const modelExport = defineProcedure({
   name: "model.export",
   description:
-    "Build HTML, PDF, or Excel of the current cash-flow statement. Calculation stays on the server.",
+    "Build HTML, PDF, CSV, or Excel of a live report (statements, investor returns, or sensitivity). Calculation stays on the server.",
   input: z.object({
-    format: z.enum(["html", "pdf", "xlsx"]),
+    format: z.enum(["html", "pdf", "xlsx", "csv"]),
+    kind: z.enum(["statements", "returns", "sensitivity", "income"]).optional(),
+    depth: z.enum(["summary", "extended"]).optional(),
   }),
   output: z.object({
     filename: z.string(),
@@ -106,15 +160,40 @@ export const modelExport = defineProcedure({
   }),
   minRole: "investor",
   requiresApproval: false,
-  handler: async ({ format }, ctx) => {
-    const values = await loadModelValues();
+  handler: async ({ format, kind: rawKind, depth: rawDepth }, ctx) => {
+    const kind = rawKind ?? "statements";
+    const depth = rawDepth ?? (format === "html" ? "summary" : "extended");
+    const values = await loadValuesForActor(ctx.actor);
     const model = runCashflowModel(values);
+    const workbook = buildReportWorkbook(kind, model, values, 1, model.fyCount);
+    try {
+      const createdById = await profileIdFor(ctx.actor.id);
+      await saveReportWorkbook(workbook, createdById);
+    } catch {
+      /* Export still returns bytes if the workbook row cannot persist. */
+    }
+    const stem =
+      kind === "returns"
+        ? "tamarindo-returns"
+        : kind === "sensitivity"
+          ? "tamarindo-sensitivity"
+          : kind === "income"
+            ? "tamarindo-income"
+            : "tamarindo-cashflow";
     if (format === "html") {
-      const html = renderCashflowHtml(model);
       return {
-        filename: "tamarindo-cashflow.html",
+        filename: `${stem}.html`,
         contentType: "text/html; charset=utf-8",
-        base64: Buffer.from(html, "utf8").toString("base64"),
+        base64: Buffer.from(renderReportHtml(workbook, { depth }), "utf8").toString("base64"),
+      };
+    }
+    if (format === "csv") {
+      return {
+        filename: `${stem}.csv`,
+        contentType: "text/csv; charset=utf-8",
+        base64: Buffer.from(renderReportCsv(workbookForDepth(workbook, depth)), "utf8").toString(
+          "base64",
+        ),
       };
     }
     if (format === "xlsx") {
@@ -131,9 +210,10 @@ export const modelExport = defineProcedure({
         base64: bytes.toString("base64"),
       };
     }
-    const pdf = await renderCashflowPdf(renderCashflowHtml(model));
+    const html = renderReportHtml(workbook, { depth });
+    const pdf = await renderCashflowPdf(html);
     return {
-      filename: "tamarindo-cashflow.pdf",
+      filename: `${stem}.pdf`,
       contentType: "application/pdf",
       base64: pdf.toString("base64"),
     };
@@ -157,7 +237,7 @@ export const modelSaveScenario = defineProcedure({
   minRole: "member",
   requiresApproval: false,
   handler: async (input, ctx) => {
-    const values = await loadModelValues();
+    const values = await loadValuesForActor(ctx.actor);
     const createdById = await profileIdFor(ctx.actor.id);
     return saveScenario({
       name: input.name,
@@ -215,7 +295,7 @@ export const modelExplain = defineProcedure({
   handler: async (input, ctx) => {
     let scenarioId = input.scenarioId ?? (await latestScenarioId());
     if (!scenarioId) {
-      const values = await loadModelValues();
+      const values = await loadValuesForActor(ctx.actor);
       const createdById = await profileIdFor(ctx.actor.id);
       const saved = await saveScenario({
         name: "Base case (auto)",

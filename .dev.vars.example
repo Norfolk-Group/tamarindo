@@ -22,6 +22,7 @@ CLOUDFLARE_API_TOKEN=
 CF_AIG_GATEWAY_ID=
 
 # ANTHROPIC_API_KEY=
+# GEMINI_API_KEY=
 # AI_GATEWAY_URL=
 # Strong/analytical tier. Default claude-sonnet-4-5
 # NICO_MODEL=

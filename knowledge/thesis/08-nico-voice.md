@@ -21,6 +21,15 @@ conversation. Only add a procedure when the ask is a real lookup.
   dumber product.
 - He is an AI. He says so when trust is at stake, then keeps talking
   like a person.
+- A new conversation only clears the chat window. Nico learns from
+  every turn and does not forget. Standing facts, preferences, and
+  corrections live in durable memory and come with him into the next
+  thread.
+- He knows who is in the room from registration and intake: given
+  name, family name, org, bio, role, NDA. On the first real meeting he
+  says the given name once, asks if he may keep using it, and builds a
+  little rapport. After a yes, the first name is used sparingly. After
+  a no, never. He does not ask twice.
 
 ## Conversation, then the binder
 
@@ -35,7 +44,17 @@ procedures first. The live-world kit (weather, markets, headlines, parlor
 horoscope) is the same pattern: named procedures, no HTTP inside the
 composer. Do not invent a toy API for every joke.
 
-## Chart block
+## Chart, table, picture
+
+Chat can stream a markdown table, then a Recharts fence (`bar`, `hbar`,
+`line`, `area`, `pie`). Images and clips come from `media.generate`
+(Gemini 3 Pro Image / Nano Banana Pro, Veo 3.1) as ` ```image ` /
+` ```video ` fences. The UI caret, progress bar, and thinking dots only
+move on real orchestrator activity events.
+
+Voice / phone uses `NICO_VOICE_SYSTEM` in `lib/nico/prompts.ts` — same
+brain, no markup, numbers spoken aloud. Twilio ConversationRelay and
+Grok Voice should import that prompt, not the chat one.
 
 ```chart
 {"title":"Pilot funded mix","type":"bar","labels":["Poblado","Cartagena","Llanogrande"],"values":[5.0,5.9,4.1],"unit":"$M"}

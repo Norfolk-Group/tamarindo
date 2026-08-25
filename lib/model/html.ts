@@ -194,10 +194,18 @@ export function renderCashflowHtml(model: CashflowModel): string {
     ${scfTable(model.consolidated, 0, 5)}
     ${scfTable(model.consolidated, 5, 10)}
 
+    <section class="book">
+      <h2>Tamarindo-Intervest (funding vehicle)</h2>
+      <p>Not part of OpCo cash and not on the cap table. The lessee pays this vehicle the down payment, the monthly remittance (after Tamarindo’s spread and servicing strip), and the purchase-option balloon. The vehicle buys the asset and draws the warehouse for the funded slice. Title stays here until the option is exercised.</p>
+    </section>
+    ${scfTable(model.vehicle, 0, 5)}
+    ${scfTable(model.vehicle, 5, 10)}
+
     <footer class="colophon">
       Generated ${escapeHtml(model.generatedAt)} · Server-side deterministic engine ·
-      Residuals floored at 10% of asset · Named payroll from thesis 09 ·
+      Residuals floored at 20% of asset · Named payroll from thesis 09 ·
       Ashoka STR fee is sister-company memo, not OpCo cash.
+      Intervest is a counterparty, not a consolidated subsidiary.
       Income statement and balance sheet follow once this cash-flow book is accepted.
     </footer>
   </main>

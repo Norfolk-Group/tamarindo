@@ -71,6 +71,9 @@ Rules:
 Avatar art: start with a polished orb (ships day one, ages well); a
 character rig can replace the skin later without code changes.
 
+Pitch-deck chrome (16:9, gold for money only, mono tables) is specified in
+[design/pitch-deck.md](design/pitch-deck.md) — do not invent a second deck look.
+
 ## UI stack
 
 | Layer | Choice |

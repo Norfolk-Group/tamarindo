@@ -1,5 +1,16 @@
-import type { DeckSpec } from "@/lib/artifacts/deck";
+import type { DeckSlide, DeckSpec } from "@/lib/artifacts/deck";
 import { zipStore } from "@/lib/artifacts/zip-store";
+
+function slideLines(slide: DeckSlide): string[] {
+  const lines = [...slide.bullets];
+  if (slide.table) {
+    if (slide.table.caption) lines.push(slide.table.caption);
+    lines.push(slide.table.headers.join("  |  "));
+    for (const row of slide.table.rows) lines.push(row.join("  |  "));
+    if (slide.table.footnote) lines.push(slide.table.footnote);
+  }
+  return lines;
+}
 
 function xmlEscape(value: string): string {
   return value
@@ -36,7 +47,7 @@ function slideXml(title: string, bullets: string[]): string {
 }
 
 export function renderDeckPptx(spec: DeckSpec): Buffer {
-  const slides = spec.slides.slice(0, 5);
+  const slides = spec.slides;
   const files: { name: string; data: Buffer }[] = [
     {
       name: "[Content_Types].xml",
@@ -88,7 +99,7 @@ export function renderDeckPptx(spec: DeckSpec): Buffer {
   slides.forEach((slide, i) => {
     files.push({
       name: `ppt/slides/slide${i + 1}.xml`,
-      data: Buffer.from(slideXml(slide.title, slide.bullets)),
+      data: Buffer.from(slideXml(slide.title, slideLines(slide))),
     });
   });
   return zipStore(files);

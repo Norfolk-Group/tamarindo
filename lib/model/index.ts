@@ -3,7 +3,17 @@ export { computeContracts } from "@/lib/model/contracts";
 export { renderCashflowHtml } from "@/lib/model/html";
 export { renderCashflowPdf } from "@/lib/model/pdf";
 export { cashflowWorkbookSpec } from "@/lib/model/excel-spec";
-export { loadModelValues, saveModelValues } from "@/lib/model/store";
+export {
+  loadModelValues,
+  loadValuesForActor,
+  saveModelValues,
+  personalVarsTitle,
+} from "@/lib/model/store";
+export { computeInvestorReturns } from "@/lib/model/returns";
+export { runSensitivity } from "@/lib/model/sensitivity";
+export { renderReportHtml } from "@/lib/model/sheet-html";
+export { renderReportCsv } from "@/lib/model/sheet-csv";
+export { blueVariableDefs, isBlueVariable } from "@/lib/model/blue-variables";
 export {
   VARIABLE_DEFS,
   defaultValues,

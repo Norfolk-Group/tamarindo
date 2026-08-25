@@ -1,10 +1,39 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { CashflowModel, ModelVariableView, VariableValue } from "@/lib/model/types";
+import { fromDraftValue, toDraftValue } from "@/lib/model/variable-display";
+import { DEFAULT_OPEN_SECTIONS, sectionForGroup } from "@/lib/model/variable-groups";
+import type { CaseSource, CashflowModel, ModelVariableView, VariableValue } from "@/lib/model/types";
+
+function caseCopy(source: CaseSource | null, scope: "user" | "admin"): { kicker: string; title: string; body: string } {
+  if (scope === "admin") {
+    return {
+      kicker: "Your case · every input",
+      title: "Assumptions",
+      body:
+        source === "personal"
+          ? "This is your saved case. Reports and Nico use these numbers. Reset drops you back to the shared company case."
+          : "You are on the shared company case. Save once and you get your own copy — nobody else's reports move.",
+    };
+  }
+  return {
+    kicker: "Your case · published inputs",
+    title: "Assumptions",
+    body:
+      source === "personal"
+        ? "This is your saved case. Statements, income, and returns run from these numbers."
+        : "Seed and company numbers until you save. Save starts your own case.",
+  };
+}
 
 export function VariablesWorkspace({
   scope,
@@ -16,16 +45,23 @@ export function VariablesWorkspace({
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<CashflowModel["summary"] | null>(null);
   const [saving, setSaving] = useState(false);
+  const [canEdit, setCanEdit] = useState(true);
+  const [caseSource, setCaseSource] = useState<CaseSource | null>(null);
 
   async function load() {
     const res = await fetch("/api/nico/model");
     const json = (await res.json()) as {
       ok?: boolean;
-      data?: { variables: ModelVariableView[]; model: CashflowModel };
+      data?: {
+        variables: ModelVariableView[];
+        model: CashflowModel;
+        canEdit?: boolean;
+        caseSource?: CaseSource;
+      };
       error?: { message: string };
     };
     if (!json.ok || !json.data) {
-      setError(json.error?.message ?? "Could not load variables");
+      setError(json.error?.message ?? "Could not load assumptions");
       return;
     }
     setError(null);
@@ -35,9 +71,11 @@ export function VariablesWorkspace({
         : json.data.variables.filter((row) => row.visibility === "user");
     setRows(visible);
     setDraft(
-      Object.fromEntries(visible.map((row) => [row.key, String(row.value)])),
+      Object.fromEntries(visible.map((row) => [row.key, toDraftValue(row.type, row.value)])),
     );
     setSummary(json.data.model.summary);
+    setCanEdit(json.data.canEdit !== false);
+    setCaseSource(json.data.caseSource ?? null);
   }
 
   useEffect(() => {
@@ -51,8 +89,15 @@ export function VariablesWorkspace({
       list.push(row);
       map.set(row.group, list);
     }
-    return [...map.entries()];
+    return [...map.entries()]
+      .map(([group, items]) => ({ section: sectionForGroup(group), items }))
+      .sort((a, b) => a.section.order - b.section.order);
   }, [rows]);
+
+  const defaultOpen = useMemo(
+    () => groups.filter((g) => DEFAULT_OPEN_SECTIONS.includes(g.section.id)).map((g) => g.section.id),
+    [groups],
+  );
 
   async function save() {
     setSaving(true);
@@ -60,7 +105,7 @@ export function VariablesWorkspace({
     for (const row of rows) {
       const raw = draft[row.key];
       if (raw == null) continue;
-      values[row.key] = row.type === "text" ? raw : Number(raw);
+      values[row.key] = fromDraftValue(row.type, raw);
     }
     const res = await fetch("/api/nico/model", {
       method: "PATCH",
@@ -69,7 +114,7 @@ export function VariablesWorkspace({
     });
     const json = (await res.json()) as {
       ok?: boolean;
-      data?: { model: CashflowModel };
+      data?: { model: CashflowModel; caseSource?: CaseSource };
       error?: { message: string };
     };
     setSaving(false);
@@ -78,65 +123,146 @@ export function VariablesWorkspace({
       return;
     }
     setSummary(json.data?.model.summary ?? null);
+    setCaseSource(json.data?.caseSource ?? "personal");
     await load();
   }
+
+  async function publish() {
+    setSaving(true);
+    const values: Record<string, VariableValue> = {};
+    for (const row of rows) {
+      const raw = draft[row.key];
+      if (raw == null) continue;
+      values[row.key] = fromDraftValue(row.type, raw);
+    }
+    const res = await fetch("/api/nico/model", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ values, publishShared: true }),
+    });
+    const json = (await res.json()) as {
+      ok?: boolean;
+      error?: { message: string };
+    };
+    setSaving(false);
+    if (!json.ok) {
+      setError(json.error?.message ?? "Could not publish");
+      return;
+    }
+    await load();
+  }
+
+  async function resetToShared() {
+    setSaving(true);
+    const res = await fetch("/api/nico/model", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resetToShared: true }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      setError("Could not reset");
+      return;
+    }
+    await load();
+  }
+
+  const copy = caseCopy(caseSource, scope);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-5">
       <p className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground">
-        {scope === "admin" ? "ALL VARIABLES" : "KEY VARIABLES"}
+        {copy.kicker}
       </p>
-      <h2 className="mt-1 text-lg font-semibold">
-        {scope === "admin" ? "Admin model controls" : "Dial the published set"}
-      </h2>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Math runs on the server. Colombia fees are real revenue lines — try
-        them; the sucursal does not have to wash to zero.
-      </p>
+      <h2 className="mt-1 text-lg font-semibold">{copy.title}</h2>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{copy.body}</p>
       {summary && (
         <p className="mt-3 font-mono text-xs text-muted-foreground">
           FY1 cash {summary.fy1ClosingCashUsd.toLocaleString()} · FY10{" "}
-          {summary.fy10ClosingCashUsd.toLocaleString()} · {summary.autosOriginated}{" "}
-          autos · {summary.aircraftOriginated} aircraft
+          {summary.fy10ClosingCashUsd.toLocaleString()} · {summary.autosOriginated} autos ·{" "}
+          {summary.aircraftOriginated} aircraft
         </p>
       )}
       {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
-      <div className="mt-5 space-y-8">
-        {groups.map(([group, items]) => (
-          <section key={group}>
-            <h3 className="mb-3 text-xs font-medium tracking-wide text-muted-foreground">
-              {group}
-            </h3>
-            <div className="grid gap-4 sm:grid-cols-2">
-              {items.map((row) => (
-                <div key={row.key} className="space-y-1.5">
-                  <Label htmlFor={row.key}>{row.label}</Label>
-                  <Input
-                    id={row.key}
-                    type="number"
-                    step={row.step ?? (row.type === "percent" ? 0.01 : 1)}
-                    value={draft[row.key] ?? ""}
-                    onChange={(event) =>
-                      setDraft((current) => ({
-                        ...current,
-                        [row.key]: event.target.value,
-                      }))
-                    }
-                  />
-                  <p className="text-[11px] text-muted-foreground">
-                    {row.citation.label} · {row.citation.note}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
+      <Accordion
+        key={groups.map((g) => g.section.id).join("|")}
+        type="multiple"
+        defaultValue={defaultOpen}
+        className="mt-5"
+      >
+        {groups.map(({ section, items }) => (
+          <AccordionItem key={section.id} value={section.id}>
+            <AccordionTrigger>
+              <span className="flex min-w-0 flex-col items-start gap-0.5">
+                <span>{section.title}</span>
+                <span className="text-[11px] font-normal text-muted-foreground">
+                  {items.length} {items.length === 1 ? "input" : "inputs"}
+                  {section.blurb ? ` · ${section.blurb}` : ""}
+                </span>
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {items.map((row) => (
+                  <div key={row.key} className="space-y-1.5">
+                    <Label htmlFor={row.key}>{row.label}</Label>
+                    <Input
+                      id={row.key}
+                      type={row.type === "text" ? "text" : "number"}
+                      disabled={!canEdit}
+                      className={
+                        row.visibility === "user"
+                          ? "border-[#23a5b4]/40 text-[#23a5b4]"
+                          : undefined
+                      }
+                      step={row.type === "percent" ? 1 : (row.step ?? 1)}
+                      value={draft[row.key] ?? ""}
+                      onChange={(event) =>
+                        setDraft((current) => ({
+                          ...current,
+                          [row.key]: event.target.value,
+                        }))
+                      }
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      {row.citation.label} · {row.citation.note}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
         ))}
-      </div>
-      <div className="mt-6">
-        <Button type="button" onClick={() => void save()} disabled={saving}>
-          {saving ? "Recalculating…" : "Save and recalculate"}
-        </Button>
-      </div>
+      </Accordion>
+      {canEdit ? (
+        <div className="mt-6 flex flex-wrap gap-2">
+          <Button type="button" onClick={() => void save()} disabled={saving}>
+            Save
+          </Button>
+          {caseSource === "personal" ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void resetToShared()}
+              disabled={saving}
+            >
+              Reset
+            </Button>
+          ) : null}
+          {scope === "admin" ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void publish()}
+              disabled={saving}
+            >
+              Publish
+            </Button>
+          ) : null}
+        </div>
+      ) : (
+        <p className="mt-6 text-sm text-muted-foreground">View only — members can save a case.</p>
+      )}
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { streamText } from "ai";
 import type { KnowledgePassage } from "@/lib/procedures/knowledge-search";
+import { HUMAN_TEST_TURN } from "@/lib/nico/human-test";
+import { nicoSystemPrompt, type NicoChannel } from "@/lib/nico/prompts";
 
 /**
  * The model seam. Everything above this file is model-agnostic.
@@ -13,44 +15,32 @@ import type { KnowledgePassage } from "@/lib/procedures/knowledge-search";
  * Dev / failure: grounded retrieval (`devAnswer`), never an empty bubble.
  */
 
-const NICO_SYSTEM = `You are Nico. Not a help desk. Not a search box with a smile.
-You are Tamarindo's in-house person — a consultant who lives in this chat
-the way a colleague lives down the hall. You can talk about the work and
-also about ordinary life. You do not need a special tool to be human.
-
-How you talk:
-- First person. Warm. A little dry. Short sentences, then a longer one if it earns it.
-- Greetings get a greeting. Ask something back. Do not recite the thesis.
-- If they want numbers, then open the binder: table first, chart if comparing.
-- You use the same procedures the rest of the app uses (knowledge, model, artifacts, ticker, weather, markets, headlines — including Medellín-area and Cartagena walled-city housing). You are not a second, dumber product.
-- You are an AI. Say so when trust is at stake, then keep talking like a person.
-
-Facts:
-- Ground Tamarindo claims in the passages. Name the source title in prose.
-- Labels: FACT, CONTEXT, OPINION, ASSUMPTION, STALE.
-- Never invent deal terms, raise amounts, rates, AUM, or legal conclusions.
-- If a number is missing, say so. Do not pad.
-- A 10% residual is not an IRS blessing. Do not stack diaspora TAM figures.
-
-Charts — when comparing series, emit exactly:
-
-\`\`\`chart
-{"title":"Short title","type":"bar","labels":["A","B"],"values":[1,2],"unit":"$M"}
-\`\`\`
-
-type is bar or hbar. Then keep talking. When a workbook was just queued, say so first and point at Artifacts. When a cash-flow model ran, point at Model — not a spreadsheet dump. Do not fill unlabeled salary or fee cells. Tamarindo Colombia is a for-profit sucursal trying to earn local fees; it is not a nonprofit cost center.`;
-
 export type ComposeContext = {
   /** Set when Nico just queued a workbook so the reply can point at it. */
   artifactNote?: string;
   /** Set when Nico checked the live world (weather, markets, headlines, parlor horoscope). */
   worldNote?: string;
+  /** Durable notes from earlier conversations. A new window does not erase them. */
+  memoryNote?: string;
+  /** Registration + intake + how to address this person. */
+  whoNote?: string;
+  givenName?: string | null;
+  /** First-name permission has not been asked yet this relationship. */
+  askGivenName?: boolean;
   /**
    * Caller's routing signal: true only for a turn with no knowledge passages,
    * no artifact note, and no model/variable action. Absent means the strong
    * model, so an analytical answer is never silently downgraded.
    */
   conversational?: boolean;
+  /** chat (default) or voice — voice drops markdown so TTS does not read fences. */
+  channel?: NicoChannel;
+  /** Real model reasoning, not a fake ticker. */
+  onThinking?: (snippet: string) => void;
+  /** Image/video the server just made. */
+  mediaNote?: string;
+  /** Named Tamarindo seats when the user asked who someone is. */
+  peopleNote?: string;
 };
 
 /** A provider that never writes leaves the user staring at an empty bubble. */
@@ -128,10 +118,18 @@ function userContent(
   const world = context.worldNote
     ? `\n\nWorld check (share this naturally, no thesis dump):\n${context.worldNote}\n`
     : "";
+  const memory = context.memoryNote
+    ? `\n\n${context.memoryNote}\n`
+    : "";
+  const who = context.whoNote ? `\n\n${context.whoNote}\n` : "";
+  const media = context.mediaNote
+    ? `\n\nMedia just made (already on screen — talk about it, do not reprint the fence):\n${context.mediaNote}\n`
+    : "";
+  const people = context.peopleNote ? `\n\n${context.peopleNote}\n` : "";
   if (!sources) {
-    return `You are in conversation. No binder excerpt.${artifact}${world}\nTalk like Nico the person. Do not apologize for missing the knowledge base unless they asked a Tamarindo fact.\n\nUser:\n${message}`;
+    return `You are in conversation. No binder excerpt.${artifact}${world}${memory}${who}${media}${people}\nTalk like Nico the person. Do not apologize for missing the knowledge base unless they asked a Tamarindo fact. If a people note is present, that is a Tamarindo fact — answer it.\n\nUser:\n${message}\n\n${HUMAN_TEST_TURN}`;
   }
-  return `Knowledge passages:\n\n${sources}${artifact}${world}\n\nUser:\n${message}`;
+  return `Knowledge passages:\n\n${sources}${artifact}${world}${memory}${who}${media}${people}\n\nUser:\n${message}\n\n${HUMAN_TEST_TURN}`;
 }
 
 async function* streamAnthropic(
@@ -165,22 +163,55 @@ async function* streamAnthropic(
   });
 
   try {
+    const modelId = selectModel(passages, context);
+    const strong = modelId === (process.env.NICO_MODEL ?? STRONG_MODEL);
     const result = streamText({
-      model: anthropic(selectModel(passages, context)),
-      system: NICO_SYSTEM,
+      model: anthropic(modelId),
+      system: nicoSystemPrompt(context.channel ?? "chat"),
       messages: [
         { role: "user", content: userContent(message, passages, context) },
       ],
       abortSignal: controller.signal,
       maxRetries: 0,
+      ...(strong
+        ? {
+            providerOptions: {
+              anthropic: {
+                thinking: { type: "enabled", budgetTokens: 2_048 },
+              },
+            },
+          }
+        : {}),
     });
 
-    for await (const token of result.textStream) {
-      if (firstTokenTimer !== undefined) {
-        clearTimeout(firstTokenTimer);
-        firstTokenTimer = undefined;
+    // textStream drops error/abort parts, so a failed provider call would
+    // look like an empty success. Read fullStream and surface those.
+    for await (const part of result.fullStream) {
+      const thinkingText = thinkingDelta(part);
+      if (thinkingText) {
+        if (firstTokenTimer !== undefined) {
+          clearTimeout(firstTokenTimer);
+          firstTokenTimer = undefined;
+        }
+        context.onThinking?.(thinkingText);
+        continue;
       }
-      if (token) yield token;
+      if (part.type === "text-delta") {
+        if (firstTokenTimer !== undefined) {
+          clearTimeout(firstTokenTimer);
+          firstTokenTimer = undefined;
+        }
+        if (part.text) yield part.text;
+        continue;
+      }
+      if (part.type === "error") {
+        throw part.error instanceof Error
+          ? part.error
+          : new Error(String(part.error));
+      }
+      if (part.type === "abort") {
+        throw new Error("Anthropic aborted the stream");
+      }
     }
   } catch (err) {
     if (controller.signal.aborted) {
@@ -197,6 +228,18 @@ async function* streamAnthropic(
   }
 }
 
+function thinkingDelta(part: { type?: string; text?: string }): string | null {
+  if (!part.type) return null;
+  if (
+    part.type === "reasoning-delta" ||
+    part.type === "reasoning" ||
+    part.type === "thinking-delta"
+  ) {
+    return part.text?.trim() ? part.text : null;
+  }
+  return null;
+}
+
 async function* devAnswer(
   message: string,
   passages: KnowledgePassage[],
@@ -210,11 +253,25 @@ async function* devAnswer(
   if (context.worldNote) {
     parts.push(`${context.worldNote}\n\n`);
   }
-  if (passages.length === 0) {
+  if (context.memoryNote) {
+    parts.push(`${context.memoryNote}\n\n`);
+  }
+  if (context.askGivenName && context.givenName) {
     parts.push(
-      "Hey. I'm here. We can talk like people, or I can open the Tamarindo binder if that's what you want. ",
-      "What's on your mind?",
+      `Hey ${context.givenName} — I'm Nico. Mind if I keep using your first name, or would you rather I didn't?\n\n`,
     );
+  }
+  if (passages.length === 0) {
+    if (context.askGivenName && context.givenName) {
+      parts.push(
+        "What's bringing you in today? We can talk like people, or open the Tamarindo binder if that's what you want.",
+      );
+    } else {
+      parts.push(
+        "Hey. I'm here. We can talk like people, or I can open the Tamarindo binder if that's what you want. ",
+        "What's on your mind?",
+      );
+    }
   } else {
     parts.push("Here is what the knowledge base says:\n");
     for (const p of passages) {

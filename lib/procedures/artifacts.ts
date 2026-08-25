@@ -1,10 +1,18 @@
 import { z } from "zod";
 import type { Prisma } from "@/lib/generated/prisma";
 import { prisma } from "@/lib/db";
-import { UnpublishedTermsError, deckSpecFromPublishedTerms } from "@/lib/artifacts/deck";
+import { UnpublishedTermsError } from "@/lib/artifacts/deck";
+import {
+  deckSpecFromPublishedTerms,
+  raiseDeckSpec,
+  structureOnlyDeckSpec,
+} from "@/lib/artifacts/raise-deck";
+import { structureMemoMarkdown } from "@/lib/artifacts/structure-memo";
 import { parseEntityList } from "@/lib/artifacts/centers";
 import { podcastScriptFromMemo } from "@/lib/artifacts/podcast";
 import { tenYearWorkbookSpec } from "@/lib/artifacts/workbook";
+import { runCashflowModel } from "@/lib/model/engine";
+import { loadValuesForActor } from "@/lib/model/store";
 import { signDownloadToken } from "@/lib/artifacts/signed-url";
 import { completeArtifactJob } from "@/lib/artifacts/complete-job";
 import { startArtifactJob } from "@/lib/artifacts/start-job";
@@ -57,19 +65,24 @@ export const artifactsList = defineProcedure({
 export const artifactsCreate = defineProcedure({
   name: "artifacts.create",
   description:
-    "Queue a shared workspace artifact. For kind=excel, omit entities or pass family/all to build the whole Tamarindo business (US, Intervest, Colombia, Ashoka) plus a Family rollup. The Workflow starts when NICO_ARTIFACTS is bound.",
+    "Queue a shared workspace artifact. kind=deck uses variant raise (published Deal Terms), raise-draft (admin working copy), or structure (corporate map, no ask). kind=excel: omit entities or pass family/all for the whole Tamarindo business.",
   input: z.object({
     kind: ArtifactKindSchema,
     title: z.string().min(1).max(200),
     entities: z.array(z.string()).optional(),
+    variant: z.enum(["raise", "raise-draft", "structure"]).optional(),
+    omitPersonIds: z.array(z.string()).optional(),
     memo: z.object({ title: z.string(), body: z.string() }).optional(),
   }),
   output: z.object({ id: z.string(), status: z.literal("queued") }),
   minRole: "member",
   requiresApproval: false,
   handler: async (input, ctx) => {
+    if (input.variant === "raise-draft" && ctx.actor.role !== "admin") {
+      throw new Error("raise-draft decks are admin only");
+    }
     const createdById = await profileIdFor(ctx.actor.id);
-    const metadata = await specMetadata(input);
+    const metadata = await specMetadata(input, ctx.actor);
     const row = await prisma.artifact.create({
       data: {
         kind: input.kind,
@@ -85,30 +98,45 @@ export const artifactsCreate = defineProcedure({
   },
 });
 
-async function specMetadata(input: {
-  kind: "excel" | "deck" | "podcast" | "memo" | "chart";
-  entities?: string[];
-  memo?: { title: string; body: string };
-}): Promise<Record<string, unknown>> {
+async function specMetadata(
+  input: {
+    kind: "excel" | "deck" | "podcast" | "memo" | "chart";
+    entities?: string[];
+    variant?: "raise" | "raise-draft" | "structure";
+    omitPersonIds?: string[];
+    memo?: { title: string; body: string };
+  },
+  actor: { id: string },
+): Promise<Record<string, unknown>> {
   if (input.kind === "excel") {
     const entities = parseEntityList(input.entities);
     return { status: "queued", spec: tenYearWorkbookSpec(entities) };
   }
   if (input.kind === "deck") {
+    const variant = input.variant ?? "raise";
+    if (variant === "structure") {
+      return { status: "queued", spec: structureOnlyDeckSpec(), variant };
+    }
     const current = await prisma.dealTerms.findFirst({
       where: { status: "published" },
       orderBy: { version: "desc" },
     });
+    const terms = {
+      version: current?.version ?? null,
+      status: current?.status ?? null,
+      payload:
+        current?.payload && typeof current.payload === "object"
+          ? (current.payload as Record<string, unknown>)
+          : null,
+    };
     try {
-      const spec = deckSpecFromPublishedTerms({
-        version: current?.version ?? null,
-        status: current?.status ?? null,
-        payload:
-          current?.payload && typeof current.payload === "object"
-            ? (current.payload as Record<string, unknown>)
-            : null,
-      });
-      return { status: "queued", spec };
+      const model = runCashflowModel(await loadValuesForActor(actor));
+      const options = { omitPersonIds: input.omitPersonIds };
+      const spec =
+        variant === "raise-draft"
+          ? raiseDeckSpec(terms, "raise-draft", model, options)
+          : deckSpecFromPublishedTerms(terms, model, options);
+      return { status: "queued", spec, variant };
     } catch (err) {
       if (err instanceof UnpublishedTermsError) throw err;
       throw err;
@@ -117,6 +145,15 @@ async function specMetadata(input: {
   if (input.kind === "podcast") {
     if (!input.memo) throw new Error("Podcast needs a memo body");
     return { status: "queued", spec: podcastScriptFromMemo(input.memo) };
+  }
+  if (input.kind === "memo") {
+    if (input.variant === "structure") {
+      return { status: "queued", spec: structureMemoMarkdown(), variant: "structure" };
+    }
+    if (input.memo) {
+      return { status: "queued", spec: input.memo, variant: "memo" };
+    }
+    return { status: "queued" };
   }
   return { status: "queued" };
 }

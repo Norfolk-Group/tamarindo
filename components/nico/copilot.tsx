@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Capability } from "@/lib/contracts/procedure";
 import { AvatarOrb } from "@/components/nico/avatar-orb";
+import { ChatPresenceBar } from "@/components/nico/chat-presence";
 import { LeftRail, type PrimaryPanel } from "@/components/nico/left-rail";
 import {
   defaultSettingsSection,
@@ -39,7 +40,9 @@ export function Copilot({
 }) {
   const [showIntake, setShowIntake] = useState(needsIntake);
   const [showNda, setShowNda] = useState(needsNda);
-  const [conversationId] = useState(() => loadConversationId(userId));
+  const [conversationId, setConversationId] = useState(() =>
+    loadConversationId(userId),
+  );
   const [presence, setPresence] = useState(emptyAppliedTurn);
   const [primary, setPrimary] = useState<PrimaryPanel>("conversation");
   const [adminOpen, setAdminOpen] = useState(false);
@@ -48,6 +51,13 @@ export function Copilot({
   );
   const agentHost = nicoAgentHost(agentUrl);
   const showChat = primary === "conversation" && !(adminOpen && adminSection === "variables");
+
+  function startNewConversation() {
+    setConversationId(mintConversationId(userId));
+    setPresence(emptyAppliedTurn());
+    setPrimary("conversation");
+    setAdminOpen(false);
+  }
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -63,10 +73,11 @@ export function Copilot({
         onAdminOpen={setAdminOpen}
         adminSection={adminSection}
         onAdminSection={setAdminSection}
+        onNewConversation={startNewConversation}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-5">
+        <header className="relative flex h-14 shrink-0 items-center gap-3 border-b border-border px-5">
           <AvatarOrb state={presence.avatarState} />
           <div className="min-w-0">
             <p className="text-sm font-semibold leading-tight">Nico</p>
@@ -77,6 +88,7 @@ export function Copilot({
               {presence.activityLabel}
             </p>
           </div>
+          <ChatPresenceBar presence={presence} />
         </header>
         <NewsTicker />
 
@@ -98,6 +110,7 @@ export function Copilot({
               </div>
               {agentHost ? (
                 <AgentAttach
+                  key={conversationId}
                   conversationId={conversationId}
                   host={agentHost}
                   onPresence={setPresence}
@@ -121,12 +134,21 @@ export function Copilot({
   );
 }
 
+function conversationStorageKey(userId: string): string {
+  return `nico.conversationId.${userId}`;
+}
+
+function mintConversationId(userId: string): string {
+  const id = crypto.randomUUID();
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(conversationStorageKey(userId), id);
+  }
+  return id;
+}
+
 function loadConversationId(userId: string): string {
   if (typeof window === "undefined") return crypto.randomUUID();
-  const key = `nico.conversationId.${userId}`;
-  const existing = window.localStorage.getItem(key);
+  const existing = window.localStorage.getItem(conversationStorageKey(userId));
   if (existing) return existing;
-  const id = crypto.randomUUID();
-  window.localStorage.setItem(key, id);
-  return id;
+  return mintConversationId(userId);
 }

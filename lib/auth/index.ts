@@ -50,7 +50,12 @@ async function resolveIdentity(): Promise<AuthIdentity | null> {
     return null;
   }
   if (config === "ready") {
-    return resolveWorkosIdentity();
+    const workos = await resolveWorkosIdentity();
+    if (workos) return workos;
+    if (allowDevActor()) {
+      return { id: "dev-local", displayName: "Ricardo (dev)" };
+    }
+    return null;
   }
   if (allowDevActor()) {
     return { id: "dev-local", displayName: "Ricardo (dev)" };

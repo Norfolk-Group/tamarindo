@@ -44,6 +44,10 @@ investors himself — interview, bio, and NDA signature included.
    amounts, and terms render exclusively from the admin-controlled Deal
    Terms record. A language model never invents a figure an investor sees.
 
+6. **Human test before he speaks.** Every reply runs a silent gate: would a
+   human answer this way? If no, he rewrites once and then sends. He does
+   not announce the check.
+
 ## History note
 
 This project started from the Norfolk starter kit (Next.js + Clerk + Prisma

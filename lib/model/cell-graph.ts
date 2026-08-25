@@ -13,7 +13,7 @@ import { VARIABLE_DEFS } from "@/lib/model/variables";
 
 export type GraphCell = {
   key: string;
-  sheet: "input" | "us" | "sucursal" | "consolidated" | "summary";
+  sheet: "input" | "us" | "sucursal" | "consolidated" | "vehicle" | "summary";
   lineId: string;
   label: string;
   fy: number | null;
@@ -77,6 +77,26 @@ const LINE_RECIPES: Record<string, { formula: string; vars: string[] }> = {
   remit: {
     formula: "collections − spread − servicing, remitted to vehicles",
     vars: ["spreadSharePct", "servicingBps"],
+  },
+  remitExBalloon: {
+    formula: "remittance to the vehicle minus the purchase-option balloon",
+    vars: ["spreadSharePct", "servicingBps"],
+  },
+  clientDown: {
+    formula: "ticket − funded (homes use downPaymentPct; autos 20%; aircraft 30%)",
+    vars: ["downPaymentPct"],
+  },
+  balloon: {
+    formula: "purchase option paid to the vehicle at term (minResidualOfAssetPct of ticket)",
+    vars: ["minResidualOfAssetPct"],
+  },
+  purchases: {
+    formula: "full ticket paid to the seller (home / auto / aircraft)",
+    vars: [],
+  },
+  draws: {
+    formula: "warehouse draw = funded amount (ticket × LTV)",
+    vars: [],
   },
   toSucursal: {
     formula: "usMandateMonthlyUsd × 12 + sucursalClosingFeeUsd × closes",
@@ -276,6 +296,7 @@ export function buildCellGraph(
   divisionCells(model.us, model.fyCount, cells, deps, knownInputs);
   divisionCells(model.sucursal, model.fyCount, cells, deps, knownInputs);
   divisionCells(model.consolidated, model.fyCount, cells, deps, knownInputs);
+  divisionCells(model.vehicle, model.fyCount, cells, deps, knownInputs);
 
   // Consolidated lines read from the entity statements where ids match.
   const usIds = new Set(model.us.lines.map((line) => line.id));

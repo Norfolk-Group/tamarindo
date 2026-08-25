@@ -4,15 +4,25 @@
  * NULL, using Cloudflare Workers AI @cf/baai/bge-m3.
  *
  *   set -a; source .env; set +a; node scripts/embed-chunks.mjs
+ *   node --env-file=.env scripts/embed-chunks.mjs --only knowledge/documents/foo.txt
  *
  * Requires DATABASE_URL, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN.
  * Does not migrate; assumes the vector(1024) column + HNSW index exist.
+ * --only embeds null rows for those sourcePath(s) only.
  */
 
-const BATCH_SIZE = 40;
+const BATCH_SIZE = 16;
+/** bge-m3 does not need a whole meeting transcript; the API batch cap is 60k tokens. */
+const MAX_CHARS = 4_000;
+const MAX_BATCH_CHARS = 24_000;
 const EXPECTED_DIMS = 1024;
-const FETCH_TIMEOUT_MS = 10_000;
+const FETCH_TIMEOUT_MS = 20_000;
 const MAX_RETRIES = 2;
+
+const onlyIdx = process.argv.indexOf("--only");
+const ONLY = onlyIdx >= 0
+  ? process.argv.slice(onlyIdx + 1).filter((a) => !a.startsWith("--"))
+  : [];
 
 const { DATABASE_URL, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN } =
   process.env;
@@ -92,16 +102,48 @@ function toVectorLiteral(vector) {
   return `[${vector.join(",")}]`;
 }
 
-const rows = await prisma.$queryRaw`
-  SELECT id, content FROM "MemoryChunk" WHERE embedding IS NULL
+function clip(text) {
+  if (text.length <= MAX_CHARS) return text;
+  return `${text.slice(0, MAX_CHARS)}\n`;
+}
+
+function batchesOf(rows) {
+  const batches = [];
+  let current = [];
+  let chars = 0;
+  for (const row of rows) {
+    const n = Math.min(row.content.length, MAX_CHARS);
+    if (
+      current.length > 0 &&
+      (current.length >= BATCH_SIZE || chars + n > MAX_BATCH_CHARS)
+    ) {
+      batches.push(current);
+      current = [];
+      chars = 0;
+    }
+    current.push(row);
+    chars += n;
+  }
+  if (current.length) batches.push(current);
+  return batches;
+}
+
+const pending = await prisma.$queryRaw`
+  SELECT id, content, "sourcePath" FROM "MemoryChunk" WHERE embedding IS NULL
 `;
-console.log(`Found ${rows.length} chunks without embeddings.`);
+const rows = ONLY.length
+  ? pending.filter((row) => ONLY.includes(row.sourcePath))
+  : pending;
+console.log(
+  `Found ${rows.length} chunks without embeddings${
+    ONLY.length ? ` for ${ONLY.join(", ")}` : ""
+  }.`,
+);
 
 let done = 0;
 let batches = 0;
-for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-  const batch = rows.slice(i, i + BATCH_SIZE);
-  const vectors = await embedBatch(batch.map((r) => r.content));
+for (const batch of batchesOf(rows)) {
+  const vectors = await embedBatch(batch.map((r) => clip(r.content)));
   for (let j = 0; j < batch.length; j += 1) {
     await prisma.$executeRawUnsafe(
       `UPDATE "MemoryChunk" SET embedding = $1::vector WHERE id = $2`,

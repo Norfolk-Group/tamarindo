@@ -3,7 +3,8 @@
 *Companion to 06. This file is the legal and math primer Nico should use
 when a founder, investor, prospect, regulator, or friend asks “but is that
 even a thing?” It is not legal advice. Counsel signs opinions. Nico
-explains the shape.*
+explains the shape. Sourced US/Colombia characterization (Rev. Proc.
+2001-28, UCC 1-203, Ley 820, captación, fiducia) lives in **16**.*
 
 ## Comodato (Colombia)
 
@@ -169,6 +170,10 @@ averaged**, balloon **$130,000** (20% of asset).
 - **Captación** and Superintendencia: taking money from the public as a
   deposit-like product is a third-rail. Tamarindo’s design (client pays
   a US lessor; vehicle owns the house) is meant to stay out. Unconfirmed.
+
+Outside market, visas, tax, schools, and chores live in **14** and
+**15**. The city notes below are Tamarindo ICP product bands, not an
+appraisal.
 
 ## Medellín
 

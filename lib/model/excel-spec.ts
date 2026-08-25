@@ -96,6 +96,7 @@ export function cashflowWorkbookSpec(
     divisionSheet(model.us, model.fyLabels),
     divisionSheet(model.sucursal, model.fyLabels),
     divisionSheet(model.consolidated, model.fyLabels),
+    divisionSheet(model.vehicle, model.fyLabels),
   ];
 
   if (options?.admin) {

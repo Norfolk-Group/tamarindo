@@ -8,7 +8,12 @@ import {
 import { computeContracts, contractById } from "@/lib/model/contracts";
 import { monthDepartmentCash } from "@/lib/model/departments";
 import { emptyMonth } from "@/lib/model/engine-acc";
-import { buildConsolidated, buildSucursal, buildUs } from "@/lib/model/engine-statements";
+import {
+  buildConsolidated,
+  buildSucursal,
+  buildUs,
+  buildVehicle,
+} from "@/lib/model/engine-statements";
 import { cents, d, monthlyRate } from "@/lib/model/money";
 import {
   aircraftOriginationsThisMonth,
@@ -28,8 +33,20 @@ type LiveBook = {
   payment: number;
   residual: number;
   outstanding: number;
+  purchaseUsd: number;
+  fundedUsd: number;
   rateMonthly: ReturnType<typeof d>;
 };
+
+function bookVehiclePurchase(
+  acc: ReturnType<typeof emptyMonth>,
+  purchaseUsd: number,
+  fundedUsd: number,
+): void {
+  acc.assetPurchase += purchaseUsd;
+  acc.fundedNew += fundedUsd;
+  acc.clientDown += cents(d(purchaseUsd).minus(fundedUsd));
+}
 
 function fiscalLabel(fy: number, startYear: number, startMonth: number): string {
   const open = addMonths(startYear, startMonth, (fy - 1) * 12);
@@ -133,6 +150,8 @@ export function runCashflowModel(
           payment: icp.monthlyLeaseUsd,
           residual: icp.residualUsd,
           outstanding: icp.fundedUsd,
+          purchaseUsd: icp.purchasePriceUsd,
+          fundedUsd: icp.fundedUsd,
           rateMonthly: monthlyRate(d(icp.clientRate)),
         },
         icp.fundedUsd,
@@ -141,6 +160,7 @@ export function runCashflowModel(
       );
       planCursor += 1;
       if (!ok) continue;
+      bookVehiclePurchase(acc, icp.purchasePriceUsd, icp.fundedUsd);
       acc.originated += 1;
       originatedTotal += 1;
       acc.activation += cents(d(icp.fundedUsd).times(activationPct));
@@ -175,6 +195,8 @@ export function runCashflowModel(
           payment: autoQuote.monthlyLeaseUsd,
           residual: autoQuote.residualUsd,
           outstanding: autoQuote.fundedUsd,
+          purchaseUsd: autoQuote.ticketUsd,
+          fundedUsd: autoQuote.fundedUsd,
           rateMonthly: monthlyRate(d(autoQuote.clientRate)),
         },
         autoQuote.fundedUsd,
@@ -182,6 +204,7 @@ export function runCashflowModel(
         m,
       );
       if (!ok) break;
+      bookVehiclePurchase(acc, autoQuote.ticketUsd, autoQuote.fundedUsd);
       acc.autosOriginated += 1;
       autosTotal += 1;
       acc.activation += cents(d(autoQuote.fundedUsd).times(activationPct));
@@ -200,6 +223,8 @@ export function runCashflowModel(
           payment: airQuote.monthlyLeaseUsd,
           residual: airQuote.residualUsd,
           outstanding: airQuote.fundedUsd,
+          purchaseUsd: airQuote.ticketUsd,
+          fundedUsd: airQuote.fundedUsd,
           rateMonthly: monthlyRate(d(airQuote.clientRate)),
         },
         airQuote.fundedUsd,
@@ -207,6 +232,7 @@ export function runCashflowModel(
         m,
       );
       if (!ok) break;
+      bookVehiclePurchase(acc, airQuote.ticketUsd, airQuote.fundedUsd);
       acc.aircraftOriginated += 1;
       aircraftTotal += 1;
       acc.activation += cents(d(airQuote.fundedUsd).times(activationPct));
@@ -225,6 +251,7 @@ export function runCashflowModel(
       const collected = last
         ? cents(d(interest).plus(principal).plus(lease.residual))
         : lease.payment;
+      if (last) acc.balloon += lease.residual;
       const usSpread = cents(d(interest).times(spreadShare));
       const usServicing = cents(d(lease.outstanding).times(servicingAnnual).div(12));
       const usKeep = usSpread + usServicing;
@@ -319,6 +346,7 @@ export function runCashflowModel(
   const us = buildUs(months, fyCount, fyLabels);
   const sucursal = buildSucursal(months, fyCount, fyLabels);
   const consolidated = buildConsolidated(us, sucursal, months, fyCount, fyLabels);
+  const vehicle = buildVehicle(months, fyCount, fyLabels);
   const last = months[months.length - 1];
 
   return {
@@ -331,6 +359,7 @@ export function runCashflowModel(
     us,
     sucursal,
     consolidated,
+    vehicle,
     capTable: buildCapTable(values),
     summary: {
       fyLabels,

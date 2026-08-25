@@ -135,7 +135,7 @@ export const VARIABLE_DEFS: VariableDef[] = [
     label: "Purchase option floor (% of asset cost)",
     group: "Lease",
     type: "percent",
-    visibility: "admin",
+    visibility: "user",
     defaultValue: 0.2,
     min: 0.1,
     max: 0.4,

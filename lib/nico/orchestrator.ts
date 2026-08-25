@@ -4,17 +4,31 @@ import { asAgent } from "@/lib/nico/agent-actor";
 import { invokeAgentTool } from "@/lib/nico/registry-tools";
 import { appendMessage, ensureConversation } from "@/lib/nico/session";
 import { composeAnswer } from "@/lib/nico/composer";
+import { learnFromTurn, recallLearned } from "@/lib/nico/memory";
+import { loadWho } from "@/lib/nico/who";
 import { needsKnowledgeSearch } from "@/lib/nico/knowledge-intent";
+import { isAssumptionsAsk } from "@/lib/nico/assumption-intent";
 import {
   isCashflowModelRequest,
   parseVariableSet,
 } from "@/lib/nico/model-intent";
+import { formatVariableValue } from "@/lib/model/variable-display";
+import { DEFAULT_OPEN_SECTIONS } from "@/lib/model/variable-groups";
+import type { ModelVariableView } from "@/lib/model/types";
+import { parseReportAsk } from "@/lib/nico/report-intent";
+import { buildReportGlance, formatReportFence } from "@/lib/model/report-glance";
+import type { ReportKind, ReportWorkbook } from "@/lib/model/report-workbook";
+import { parseIcpAsk, type IcpAsk } from "@/lib/nico/icp-intent";
 import {
   entitiesForWorkbook,
   isWorkbookRequest,
 } from "@/lib/nico/workbook-intent";
 import { parseWorldAsk } from "@/lib/nico/world-intent";
 import { runWorldAsk, worldActivityLabel } from "@/lib/nico/world-tools";
+import { parseMediaAsk } from "@/lib/nico/media-intent";
+import { parseDeckAsk, type DeckAsk } from "@/lib/nico/deck-intent";
+import { UnpublishedTermsError } from "@/lib/artifacts/deck";
+import { peopleNoteFor } from "@/lib/nico/people";
 import { profileIdFor } from "@/lib/procedures/profile";
 import { ProcedureError } from "@/lib/procedures/registry";
 import type { KnowledgePassage } from "@/lib/procedures/knowledge-search";
@@ -86,11 +100,20 @@ export async function* runTurn(
   }
 
   let artifactNote: string | undefined;
+  let reportPreface = "";
+  let waitPreface = "";
   const variableSet = parseVariableSet(message);
+  const deckAsk = parseDeckAsk(message);
+  const reportAsk = parseReportAsk(message);
+  const icpAsk = parseIcpAsk(message);
   const modelAction =
     Boolean(variableSet) ||
+    Boolean(icpAsk) ||
+    Boolean(reportAsk) ||
     isCashflowModelRequest(message) ||
-    isWorkbookRequest(message);
+    isWorkbookRequest(message) ||
+    Boolean(deckAsk) ||
+    isAssumptionsAsk(message);
   if (variableSet) {
     yield {
       type: "activity",
@@ -116,13 +139,155 @@ export async function* runTurn(
       if (updated.applied.length === 0) {
         artifactNote = adminOnlyNote;
       } else {
-        const successNote = `Updated ${updated.applied.join(", ")}. Consolidated cash FY1 ${updated.model.summary.fy1ClosingCashUsd}, FY10 ${updated.model.summary.fy10ClosingCashUsd}. Open Model or Variables to see the rest.`;
+        const successNote = `Updated ${updated.applied.join(", ")}. Consolidated cash FY1 ${updated.model.summary.fy1ClosingCashUsd}, FY10 ${updated.model.summary.fy10ClosingCashUsd}. Open Assumptions or Statements to see the rest.`;
         artifactNote = adminOnlyNote
           ? `${successNote} ${adminOnlyNote}`
           : successNote;
       }
     } catch (err) {
       artifactNote = `I tried to change a variable and hit: ${
+        err instanceof Error ? err.message : "unknown error"
+      }.`;
+    }
+  } else if (isAssumptionsAsk(message)) {
+    yield {
+      type: "activity",
+      state: "drafting",
+      label: "Reading your assumptions…",
+    };
+    try {
+      const data = (await invokeAgentTool(
+        "model.get",
+        {},
+        toolActor,
+        traceId,
+      )) as { variables?: ModelVariableView[] };
+      const rows = (data.variables ?? []).filter((row) =>
+        DEFAULT_OPEN_SECTIONS.includes(row.group),
+      );
+      const table = [
+        "| Input | Value |",
+        "| --- | --- |",
+        ...rows.map(
+          (row) =>
+            `| ${row.label} | ${formatVariableValue(row.type, row.value)} |`,
+        ),
+      ].join("\n");
+      reportPreface = `${table}\n\n`;
+      yield { type: "token", text: reportPreface };
+      artifactNote =
+        "Glance is the meeting levers. The rest is in Assumptions. Do not reprint the table.";
+    } catch (err) {
+      artifactNote = `I tried to read the assumptions and hit: ${
+        err instanceof Error ? err.message : "unknown error"
+      }.`;
+    }
+  } else if (icpAsk) {
+    yield {
+      type: "activity",
+      state: "drafting",
+      label: icpActivityLabel(icpAsk),
+    };
+    try {
+      artifactNote = await runIcpAsk(icpAsk, toolActor, traceId);
+    } catch (err) {
+      artifactNote = `I tried to read the ICP catalog and hit: ${
+        err instanceof Error ? err.message : "unknown error"
+      }.`;
+    }
+  } else if (reportAsk) {
+    if (reportAsk.liveBuild) {
+      waitPreface = `${reportAsk.waitLine ?? "Give me a moment — building that from the live model."}\n\n`;
+      yield { type: "token", text: waitPreface };
+      yield {
+        type: "activity",
+        state: "drafting",
+        label: "Building the report from the live model…",
+        progress: 0.2,
+      };
+    } else {
+      yield {
+        type: "activity",
+        state: "drafting",
+        label:
+          reportAsk.kind === "returns"
+            ? "Calculating investor returns…"
+            : reportAsk.kind === "sensitivity"
+              ? "Running sensitivity…"
+              : `Slicing FY${reportAsk.fromFy ?? 1}–FY${reportAsk.toFy ?? 10}…`,
+      };
+    }
+    try {
+      const data = (await invokeAgentTool(
+        "model.report",
+        {
+          kind: reportAsk.kind,
+          fromFy: reportAsk.fromFy,
+          toFy: reportAsk.toFy,
+        },
+        toolActor,
+        traceId,
+      )) as {
+        kind: ReportKind;
+        fromFy: number;
+        toFy: number;
+        previewPath?: string;
+        workbook?: ReportWorkbook;
+        consolidated: {
+          years: Array<{
+            fy: number;
+            label: string;
+            closingCashUsd: number;
+            originated?: number;
+            byIcp?: Array<{ originated: number }>;
+          }>;
+        };
+      };
+      if (reportAsk.liveBuild) {
+        yield {
+          type: "activity",
+          state: "drafting",
+          label: "Laying out the sheet…",
+          progress: 0.7,
+        };
+      }
+      const glance = buildReportGlance({
+        kind: data.kind,
+        fromFy: data.fromFy,
+        toFy: data.toFy,
+        workbook: data.workbook,
+        consolidated: data.consolidated,
+        depth: reportAsk.depth,
+      });
+      if (glance) {
+        reportPreface = formatReportFence(glance);
+        yield { type: "token", text: reportPreface };
+      }
+      const preview =
+        " Glance is already on screen — Summary first, Extended is every line. Same numbers. Do not reprint the fence. Full book opens in a new tab; PDF is 16:9 for later print; CSV is the same tables.";
+      if (data.kind === "income") {
+        artifactNote = `I built a cash-basis OpCo income statement from the live model — receipts, payments, cash from operations. It is not an accrual accountant's P&L.${preview}`;
+      } else if (data.kind === "returns") {
+        artifactNote = `Investor returns, live from the blue-variable set. Unit vehicle IRR is the Intervest-style lease return. OpCo has cash-on-cash, not a fake exit IRR.${preview}`;
+      } else if (data.kind === "sensitivity") {
+        artifactNote = `Sensitivity grid: down payment, balloon floor, spread, and activation — each shocked, engine rerun. Shocks are not saved.${preview}`;
+      } else {
+        const years = data.consolidated.years;
+        const first = years[0];
+        const last = years[years.length - 1];
+        const originated = years.reduce(
+          (sum, year) =>
+            sum +
+            (year.byIcp ?? []).reduce((n, row) => n + (row.originated ?? 0), 0),
+          0,
+        );
+        artifactNote =
+          first && last
+            ? `Period report FY${data.fromFy}–FY${data.toFy} from the cash-flow engine. ${first.label} close ${first.closingCashUsd}; ${last.label} close ${last.closingCashUsd}. Homes originated in the slice: ${originated}.${preview}`
+            : `Period report FY${data.fromFy}–FY${data.toFy} came back empty. Open the full book in a new tab.`;
+      }
+    } catch (err) {
+      artifactNote = `I tried to slice that period and hit: ${
         err instanceof Error ? err.message : "unknown error"
       }.`;
     }
@@ -182,6 +347,92 @@ export async function* runTurn(
         err instanceof Error ? err.message : "unknown error"
       }. I can still walk the thesis numbers with you.`;
     }
+  } else if (deckAsk) {
+    yield {
+      type: "activity",
+      state: "drafting",
+      label:
+        deckAsk.kind === "memo"
+          ? "Writing the structure memo…"
+          : "Building the deck…",
+    };
+    try {
+      const created = (await invokeAgentTool(
+        "artifacts.create",
+        {
+          kind: deckAsk.kind,
+          title: deckTitle(deckAsk),
+          variant: deckAsk.variant,
+        },
+        toolActor,
+        traceId,
+      )) as { id: string };
+      artifactNote = deckQueuedNote(deckAsk, created.id);
+    } catch (err) {
+      if (err instanceof UnpublishedTermsError) {
+        artifactNote =
+          "Deal Terms are not published. I will not invent the ask. I can queue a structure deck or an admin raise-draft instead.";
+      } else {
+        artifactNote = `I tried to queue that artifact and hit: ${
+          err instanceof Error ? err.message : "unknown error"
+        }.`;
+      }
+    }
+  }
+
+  let mediaNote: string | undefined;
+  let mediaPreface = "";
+  const mediaAsk = parseMediaAsk(message);
+  if (mediaAsk) {
+    yield {
+      type: "activity",
+      state: "generating",
+      label:
+        mediaAsk.kind === "video"
+          ? "Directing a Veo clip…"
+          : "Painting with Nano Banana Pro…",
+      progress: 0.15,
+    };
+    try {
+      const made = (await invokeAgentTool(
+        "media.generate",
+        { kind: mediaAsk.kind, prompt: mediaAsk.prompt },
+        toolActor,
+        traceId,
+      )) as {
+        kind: "image" | "video";
+        status: "ready" | "pending";
+        url?: string;
+        alt: string;
+        title: string;
+        operation?: string;
+        model: string;
+      };
+      if (made.status === "ready" && made.url) {
+        yield {
+          type: "media",
+          kind: made.kind,
+          url: made.url,
+          alt: made.alt,
+          title: made.title,
+        };
+        const fence = made.kind === "video" ? "video" : "image";
+        const block = `\n\`\`\`${fence}\n${JSON.stringify({
+          url: made.url,
+          alt: made.alt,
+          title: made.title,
+        })}\n\`\`\`\n`;
+        mediaPreface = block;
+        yield { type: "token", text: block };
+        mediaNote = `Ready via ${made.model}. Title: ${made.title}. Already shown in the chat.`;
+      } else {
+        mediaNote = `Veo is still rendering (${made.operation ?? "queued"}). I will not invent a finished clip.`;
+      }
+    } catch (err) {
+      mediaNote = `I tried to make that ${mediaAsk.kind} and hit: ${
+        err instanceof Error ? err.message : "unknown error"
+      }.`;
+    }
   }
 
   let worldNote: string | undefined;
@@ -206,19 +457,80 @@ export async function* runTurn(
     }
   }
 
+  let memoryNote: string | undefined;
+  try {
+    const recalled = await recallLearned(message);
+    if (recalled) memoryNote = recalled;
+  } catch (err) {
+    console.warn("[nico] memory recall skipped", err);
+  }
+
+  let whoNote: string | undefined;
+  let givenName: string | null = null;
+  let askGivenName = false;
+  let pendingNameAsk = false;
+  try {
+    const who = await loadWho({
+      actor,
+      conversationId,
+      userMessage: message,
+      memoryNote,
+    });
+    whoNote = who.whoNote;
+    givenName = who.givenName;
+    askGivenName = who.askGivenName;
+    pendingNameAsk = who.pendingNameAsk;
+  } catch (err) {
+    console.warn("[nico] who skipped", err);
+  }
+
   yield { type: "activity", state: "drafting", label: "Drafting a reply…" };
 
   // Routing signal for the composer's fast tier. A world check (weather,
   // markets) still counts as conversation; grounded or model work does not.
-  const conversational = passages.length === 0 && !artifactNote && !modelAction;
+  // Recalled memory is orientation, not analysis — it must not force Sonnet.
+  const peopleNote = peopleNoteFor(message);
 
-  let reply = "";
+  const conversational =
+    passages.length === 0 &&
+    !artifactNote &&
+    !modelAction &&
+    !mediaNote &&
+    !peopleNote;
+
+  let reply = `${mediaPreface}${waitPreface}${reportPreface}`;
+  const pendingThoughts: string[] = [];
+  let speaking = false;
   try {
     for await (const chunk of composeAnswer(message, passages, {
       artifactNote,
       worldNote,
+      memoryNote,
+      whoNote,
+      givenName,
+      askGivenName,
       conversational,
+      mediaNote,
+      peopleNote,
+      onThinking: (snippet) => {
+        const line = snippet.replace(/\s+/g, " ").trim().slice(0, 140);
+        if (line) pendingThoughts.push(line);
+      },
     })) {
+      while (pendingThoughts.length) {
+        const thought = pendingThoughts.shift();
+        if (thought) {
+          yield {
+            type: "activity",
+            state: "thinking",
+            label: thought,
+          };
+        }
+      }
+      if (!speaking) {
+        speaking = true;
+        yield { type: "activity", state: "speaking", label: "Answering…" };
+      }
       reply += chunk;
       yield { type: "token", text: chunk };
       // AE2 live probe (`scripts/ae2-resume.mjs`) uses conversationId `ae2-*`
@@ -241,8 +553,120 @@ export async function* runTurn(
     appendMessage({ conversationId, role: "assistant", content: reply }),
   );
 
+  await persistSafely(async () => {
+    const profileId = await profileIdFor(actor.id);
+    await learnFromTurn({
+      userMessage: message,
+      reply,
+      profileId,
+      conversationId,
+      pendingNameAsk,
+      givenName,
+    });
+  });
+
   yield { type: "activity", state: "idle", label: "Ready" };
   yield { type: "done" };
+}
+
+function icpActivityLabel(ask: IcpAsk): string {
+  if (ask.kind === "list") return "Reading the ICP catalog…";
+  if (ask.kind === "get") return `Opening ${ask.id}…`;
+  if (ask.kind === "set") return `Updating ${ask.id}…`;
+  return "Reading planned vintages…";
+}
+
+async function runIcpAsk(
+  ask: IcpAsk,
+  toolActor: Actor,
+  traceId: string,
+): Promise<string> {
+  if (ask.kind === "list") {
+    const data = (await invokeAgentTool("icp.list", {}, toolActor, traceId)) as {
+      icps: Array<{ code: string; name: string; city: string }>;
+    };
+    const lines = data.icps
+      .map((icp) => `${icp.code} ${icp.name} (${icp.city})`)
+      .join("; ");
+    return `Six ICPs from the live engine: ${lines}. Ask for one by id to see lease, residual, and mix.`;
+  }
+  if (ask.kind === "get") {
+    const data = (await invokeAgentTool(
+      "icp.get",
+      { id: ask.id },
+      toolActor,
+      traceId,
+    )) as {
+      icp: {
+        code: string;
+        name: string;
+        city: string;
+        purchasePriceUsd: number;
+        monthlyLeaseUsd: number;
+        residualUsd: number;
+        clientRate: number;
+        termMonths: number;
+      };
+    };
+    const icp = data.icp;
+    return `${icp.code} ${icp.name} in ${icp.city}. Purchase ${icp.purchasePriceUsd}, lease ${icp.monthlyLeaseUsd}/mo, residual ${icp.residualUsd}, rate ${icp.clientRate}, term ${icp.termMonths} months. Numbers are from the cash-flow engine, not a PDF.`;
+  }
+  if (ask.kind === "set") {
+    const updated = (await invokeAgentTool(
+      "icp.set",
+      { id: ask.id, values: ask.values },
+      toolActor,
+      traceId,
+    )) as {
+      applied: string[];
+      icp: { code: string; purchasePriceUsd: number; monthlyLeaseUsd: number };
+    };
+    if (updated.applied.length === 0) {
+      return `No ${ask.id} variables were applied. Members can change the published ICP keys; ask an admin for the rest.`;
+    }
+    return `Updated ${updated.applied.join(", ")}. ${updated.icp.code} purchase ${updated.icp.purchasePriceUsd}, lease ${updated.icp.monthlyLeaseUsd}/mo. Open Model to see the rest of the book.`;
+  }
+  const data = (await invokeAgentTool(
+    "icp.vintages",
+    { year: ask.year, month: ask.month },
+    toolActor,
+    traceId,
+  )) as {
+    total: number;
+    byMonth: Array<{ year: number; month: number; count: number }>;
+    byIcp: Array<{ icpId: string; count: number }>;
+  };
+  const window =
+    ask.year && ask.month
+      ? `${ask.year}-${String(ask.month).padStart(2, "0")}`
+      : ask.year
+        ? String(ask.year)
+        : "the plan horizon";
+  const mix = data.byIcp
+    .filter((row) => row.count > 0)
+    .map((row) => `${row.icpId}:${row.count}`)
+    .join(", ");
+  return `Planned originations in ${window}: ${data.total} homes${mix ? ` (${mix})` : ""}. This is the plan, not a write.`;
+}
+
+function deckTitle(ask: DeckAsk): string {
+  if (ask.kind === "memo") return "Tamarindo structure memo";
+  if (ask.variant === "raise-draft") return "Tamarindo raise (working draft)";
+  if (ask.variant === "structure") return "Tamarindo corporate structure";
+  return "Tamarindo investor raise";
+}
+
+function deckQueuedNote(ask: DeckAsk, id: string): string {
+  if (ask.kind === "memo") {
+    return `Queued the entity / Ashoka memo. Artifact ${id}. Open Artifacts in the left rail.`;
+  }
+  if (ask.variant === "raise-draft") {
+    return `Queued an admin working raise deck. Artifact ${id}. The ask slide stays unpublished — I did not invent a number.`;
+  }
+  if (ask.variant === "structure") {
+    return `Queued the corporate-structure deck. Artifact ${id}. No raise amount on this one.`;
+  }
+  return `Queued the investor raise deck. Artifact ${id}. Open Artifacts in the left rail.`;
 }
 
 async function persistSafely(fn: () => Promise<void>): Promise<void> {

@@ -33,11 +33,14 @@ import {
   modelSaveScenario,
   modelSetVariables,
 } from "@/lib/procedures/model";
+import { modelReport } from "@/lib/procedures/reports";
+import { icpGet, icpList, icpSet, icpVintages } from "@/lib/procedures/icp";
 import { tickerList } from "@/lib/procedures/ticker";
 import { weatherGet } from "@/lib/procedures/weather";
 import { horoscopeGet } from "@/lib/procedures/horoscope";
 import { marketsGet } from "@/lib/procedures/markets";
 import { newsHeadlines } from "@/lib/procedures/news";
+import { mediaGenerate } from "@/lib/procedures/media";
 
 const capabilitiesList = defineProcedure({
   name: "capabilities.list",
@@ -78,7 +81,12 @@ export const registry = new ProcedureRegistry()
   .register(meetingsJoin)
   .register(modelGet)
   .register(modelSetVariables)
+  .register(modelReport)
   .register(modelExport)
+  .register(icpList)
+  .register(icpGet)
+  .register(icpSet)
+  .register(icpVintages)
   .register(modelSaveScenario)
   .register(modelListScenarios)
   .register(modelExplain)
@@ -88,4 +96,5 @@ export const registry = new ProcedureRegistry()
   .register(horoscopeGet)
   .register(marketsGet)
   .register(newsHeadlines)
+  .register(mediaGenerate)
   .register(capabilitiesList);

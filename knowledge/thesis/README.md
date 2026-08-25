@@ -23,6 +23,11 @@ should be pasted into an investor deck without its validation step.
 | [11-equity.md](11-equity.md) | $6.5M across three rounds (smallest first), five equal partners, half pay 8 months |
 | [12-rate-benchmarks.md](12-rate-benchmarks.md) | Market rate research: Mexico cross-border USD, Colombian leasing, exotic car leases, FICO tier policy, full rate-vs-IRR scenario grid |
 | [13-deal-waterfall.md](13-deal-waterfall.md) | One typical deal start to finish — ICP-1 at 11.84%, $84k balloon, who makes what |
+| [14-medellin-cartagena-market.md](14-medellin-cartagena-market.md) | 2025–26 asking prices, rents, STR, HOA, predial, FX — Poblado, Envigado, Llanogrande, Bocagrande, Castillo, Centro |
+| [15-colombia-living.md](15-colombia-living.md) | Visas, taxes, schools, travel, home maintenance for a part-year US owner |
+| [16-lease-characterization.md](16-lease-characterization.md) | True lease vs mortgage, comodato vs Ley 820, captación, fiducia, foreign title — CONTEXT for counsel |
+| [17-end-of-lease-title.md](17-end-of-lease-title.md) | How the lessee actually buys: US balloon vs Colombian *escritura*/RUNT, foreigners, POA, BanRep, walk-away |
+| [18-kyc-aml.md](18-kyc-aml.md) | US CIP/OFAC/8300/CTA vs Colombian notary SIPLAFT and sucursal SAGRILAFT — do not invent licenses |
 | [../qa/README.md](../qa/README.md) | Simulated conversational Q&As (work + life) |
 
 ## The thesis in one paragraph

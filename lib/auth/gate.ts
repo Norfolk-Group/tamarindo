@@ -47,7 +47,8 @@ export function isApiPath(pathname: string): boolean {
 
 /**
  * Decide whether a request proceeds, redirects to `/sign-in`, or 401s.
- * `allowDevBypass` is only true when WorkOS is absent and KTD14 allows it.
+ * `allowDevBypass` is true when KTD14 allows `dev-local` (loopback DB).
+ * WorkOS being configured does not block that on localhost.
  */
 export function sessionGate(
   pathname: string,

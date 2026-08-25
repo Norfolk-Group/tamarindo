@@ -15,6 +15,9 @@ export type VariableType = "percent" | "usd" | "integer" | "month" | "text";
 
 export type VariableVisibility = "user" | "admin";
 
+/** Where the live input set came from for this caller. */
+export type CaseSource = "personal" | "shared" | "seed";
+
 export type VariableValue = number | string;
 
 export type VariableDef = {
@@ -109,7 +112,7 @@ export type DivisionYear = {
 };
 
 export type DivisionStatement = {
-  id: "us" | "sucursal" | "consolidated";
+  id: "us" | "sucursal" | "consolidated" | "vehicle";
   title: string;
   years: DivisionYear[];
   lines: StatementLine[];
@@ -172,6 +175,7 @@ export type CashflowModel = {
   us: DivisionStatement;
   sucursal: DivisionStatement;
   consolidated: DivisionStatement;
+  vehicle: DivisionStatement;
   capTable: CapTableView;
   summary: ModelSummary;
 };

@@ -54,4 +54,42 @@ describe("parseChat", () => {
       },
     });
   });
+
+  it("parses a report glance fence", () => {
+    const segments = parseChat(
+      [
+        "Here is the take.",
+        "```report",
+        JSON.stringify({
+          kind: "statements",
+          title: "Consolidated cash",
+          takeaway: "FY1 to FY10",
+          headers: ["Line", "FY1"],
+          rows: [{ cells: ["Closing cash", "$1"], tone: "gold" }],
+          previewPath: "/api/nico/model/export?format=html&kind=statements",
+          pdfPath: "/api/nico/model/export?format=pdf&kind=statements",
+          csvPath: "/api/nico/model/export?format=csv&kind=statements",
+        }),
+        "```",
+      ].join("\n"),
+    );
+    expect(segments.some((s) => s.kind === "report")).toBe(true);
+  });
+
+  it("parses a line chart and an image fence", () => {
+    const segments = parseChat(
+      [
+        "```chart",
+        '{"title":"Cash","type":"line","labels":["Y1","Y2"],"values":[1,2],"unit":"$M"}',
+        "```",
+        "```image",
+        '{"url":"https://example.com/x.png","alt":"Poblado","title":"Dusk"}',
+        "```",
+      ].join("\n"),
+    );
+    expect(segments).toMatchObject([
+      { kind: "chart", spec: { type: "line", labels: ["Y1", "Y2"] } },
+      { kind: "image", spec: { alt: "Poblado", title: "Dusk" } },
+    ]);
+  });
 });
