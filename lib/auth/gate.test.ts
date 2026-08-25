@@ -49,7 +49,7 @@ describe("sessionGate", () => {
     });
   });
 
-  it("allows the local bypass only when WorkOS is absent", () => {
+  it("allows the local loopback bypass when asked", () => {
     expect(sessionGate("/", false, { allowDevBypass: true })).toEqual({
       action: "allow",
     });

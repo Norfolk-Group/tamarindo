@@ -13,7 +13,7 @@ import { sessionGate } from "@/lib/auth/gate";
 export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const config = workosConfigState();
-  const allowDevBypass = config === "absent" && allowDevActor();
+  const allowDevBypass = allowDevActor();
 
   if (config === "partial") {
     console.error("[auth] workos_partial_config");
@@ -40,7 +40,7 @@ async function gateWithAuthKit(request: NextRequest, pathname: string) {
 
   const { session, headers } = await authkit(request, { redirectUri });
   const decision = sessionGate(pathname, Boolean(session.user), {
-    allowDevBypass: false,
+    allowDevBypass: allowDevActor(),
   });
 
   if (decision.action === "redirect") {

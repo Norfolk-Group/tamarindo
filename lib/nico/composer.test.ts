@@ -41,8 +41,15 @@ describe("composeAnswer", () => {
   });
 
   it("falls back to grounded retrieval when the key is missing", async function () {
-    const text = await collect(composeAnswer("hey", []));
-    expect(text).toContain("I'm here");
+    const text = await collect(
+      composeAnswer("hey", [], {
+        givenName: "Ricardo",
+        askGivenName: true,
+      }),
+    );
+    expect(text).toContain("Hey Ricardo");
+    expect(text).toContain("first name");
+    expect(text).toContain("What's bringing you in");
     expect(streamText).not.toHaveBeenCalled();
   });
 
@@ -112,6 +119,47 @@ describe("composeAnswer", () => {
     };
     expect(call.messages[0].content).toContain("First close is Q1");
   });
+
+  it("puts who-this-is and the first-name ask in the model prompt", async function () {
+    process.env.ANTHROPIC_API_KEY = "sk-test";
+    streamText.mockReturnValue({
+      fullStream: (async function* () {
+        yield { type: "text-delta", text: "Hey Ricardo." };
+      })(),
+    });
+    await collect(
+      composeAnswer("hey", [], {
+        conversational: true,
+        whoNote: 'Say "Ricardo" once, then ask if you may keep using that first name.',
+        givenName: "Ricardo",
+        askGivenName: true,
+      }),
+    );
+    const call = streamText.mock.calls[0][0] as {
+      messages: { content: string }[];
+    };
+    expect(call.messages[0].content).toContain("Ricardo");
+    expect(call.messages[0].content).toContain("keep using that first name");
+  });
+
+  it("treats a people note as a Tamarindo fact even with no passages", async function () {
+    process.env.ANTHROPIC_API_KEY = "sk-test";
+    streamText.mockReturnValue({
+      fullStream: (async function* () {
+        yield { type: "text-delta", text: "Dov is the MD." };
+      })(),
+    });
+    await collect(
+      composeAnswer("who is Dov?", [], {
+        peopleNote: "Kaleil Dov Isaza Tuzman — founder and Managing Director.",
+      }),
+    );
+    const call = streamText.mock.calls[0][0] as {
+      messages: { content: string }[];
+    };
+    expect(call.messages[0].content).toContain("Kaleil Dov Isaza Tuzman");
+    expect(call.messages[0].content).toContain("Tamarindo fact");
+  });
 });
 
 describe("selectModel", () => {
@@ -127,6 +175,25 @@ describe("selectModel", () => {
       "claude-sonnet-4-5",
     );
     expect(selectModel([], { conversational: true })).toBe("claude-haiku-4-5");
+  });
+
+  it("surfaces Anthropic reasoning as thinking, not as chat text", async function () {
+    process.env.ANTHROPIC_API_KEY = "sk-test";
+    const thoughts: string[] = [];
+    streamText.mockReturnValue({
+      fullStream: (async function* () {
+        yield { type: "reasoning-delta", text: "They want the balloon." };
+        yield { type: "text-delta", text: "Twenty percent of the asset." };
+      })(),
+    });
+    const text = await collect(
+      composeAnswer("what is the balloon?", [passage], {
+        onThinking: (s) => thoughts.push(s),
+      }),
+    );
+    expect(thoughts.join("")).toContain("balloon");
+    expect(text).toBe("Twenty percent of the asset.");
+    expect(text).not.toContain("They want");
   });
 
   it("honors env overrides so the two tiers can collapse", () => {

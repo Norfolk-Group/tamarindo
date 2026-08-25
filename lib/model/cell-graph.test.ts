@@ -23,6 +23,11 @@ describe("cell graph", () => {
     expect(spreadFy3).toBeTruthy();
     expect(spreadFy3!.value).toBe(engineRow.values[2]);
     expect(spreadFy3!.formula).toContain("spreadSharePct");
+
+    const balloon = graph.cells.find((cell) => cell.key === "vehicle.balloon.fy10");
+    const vehicleRow = model.vehicle.lines.find((line) => line.id === "balloon")!;
+    expect(balloon).toBeTruthy();
+    expect(balloon!.value).toBe(vehicleRow.values[9]);
   });
 
   it("links derived cells to their variable inputs and totals", () => {

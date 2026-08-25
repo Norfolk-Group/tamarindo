@@ -72,6 +72,7 @@ model Profile {
   corrections      Correction[]
   consents         ConsentRecord[]
   modelScenarios   ModelScenario[]
+  reportWorkbooks  ReportWorkbook[]
 
   @@index([role])
   @@index([ndaSignedAt])
@@ -280,6 +281,64 @@ model ModelCellDep {
 
   @@unique([cellId, inputId])
   @@index([inputId])
+}
+
+// ── Live report book (Excel-like HTML / PDF / CSV) ───────────────────────
+// The engine calculates. These rows are the formatted view: one cell per
+// grid address, with formula, number format, and tone (blue = input).
+
+model ReportWorkbook {
+  id          String        @id @default(cuid())
+  kind        String
+  title       String
+  theme       String        @default("tamarindo-sheet")
+  generatedAt DateTime
+  isLive      Boolean       @default(false)
+  createdById String?
+  createdBy   Profile?      @relation(fields: [createdById], references: [id])
+  sheets      ReportSheet[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([kind, isLive, createdAt])
+  @@index([createdById])
+}
+
+model ReportSheet {
+  id         String         @id @default(cuid())
+  workbookId String
+  workbook   ReportWorkbook @relation(fields: [workbookId], references: [id], onDelete: Cascade)
+  key        String
+  title      String
+  caption    String?        @db.Text
+  sortOrder  Int            @default(0)
+  cells      ReportCell[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([workbookId, key])
+  @@index([workbookId, sortOrder])
+}
+
+model ReportCell {
+  id        String      @id @default(cuid())
+  sheetId   String
+  sheet     ReportSheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  /// Semantic or grid address, e.g. "us.spread.fy3" or "units!R3C2".
+  address   String
+  rowIndex  Int
+  colIndex  Int
+  text      String      @db.Text
+  value     Decimal?    @db.Decimal(24, 8)
+  formula   String?     @db.Text
+  format    String
+  tone      String
+  rowKind   String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([sheetId, address])
+  @@index([sheetId, rowIndex, colIndex])
 }
 
 // ── Memory ───────────────────────────────────────────────────────────────

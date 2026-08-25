@@ -13,6 +13,7 @@ export const AvatarStateSchema = z.enum([
   "thinking",
   "researching",
   "drafting",
+  "generating",
   "speaking",
   "awaiting_approval",
 ]);
@@ -24,6 +25,16 @@ export const ActivityEventSchema = z.object({
   state: AvatarStateSchema,
   /** Human sentence, e.g. "Searching the Tamarindo thesis…" */
   label: z.string(),
+  /** 0–1 when the orchestrator knows a real fraction (never decoration). */
+  progress: z.number().min(0).max(1).optional(),
+});
+
+export const MediaEventSchema = z.object({
+  type: z.literal("media"),
+  kind: z.enum(["image", "video"]),
+  url: z.string(),
+  alt: z.string(),
+  title: z.string().optional(),
 });
 
 export const TokenEventSchema = z.object({
@@ -51,6 +62,7 @@ export const StreamEventSchema = z.discriminatedUnion("type", [
   ActivityEventSchema,
   TokenEventSchema,
   SourceEventSchema,
+  MediaEventSchema,
   DoneEventSchema,
   ErrorEventSchema,
 ]);

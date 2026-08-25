@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Build-time only. Walks curated markdown and writes a TS module so
+ * Build-time only. Walks curated .md/.txt and writes a TS module so
  * knowledge.search never uses fs at request time (Workers-safe).
  */
 import { promises as fs } from "node:fs";
@@ -8,10 +8,13 @@ import path from "node:path";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT = path.join(ROOT, "lib/knowledge/corpus.generated.ts");
+const TEXT_EXT = /\.(md|txt)$/i;
 
 const SOURCES = [
   { dir: "knowledge/thesis", visibility: "public" },
   { dir: "knowledge/qa", visibility: "public" },
+  { dir: "knowledge/documents", visibility: "confidential" },
+  { dir: "knowledge/meetings", visibility: "confidential" },
   { dir: "docs/nico", visibility: "confidential" },
 ];
 
@@ -34,7 +37,7 @@ async function walk(dir, files) {
   for (const entry of entries) {
     const absolute = path.join(dir, entry.name);
     if (entry.isDirectory()) await walk(absolute, files);
-    else if (/\.md$/i.test(entry.name)) files.push(absolute);
+    else if (TEXT_EXT.test(entry.name)) files.push(absolute);
   }
 }
 

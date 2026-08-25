@@ -39,6 +39,7 @@ describe("applyStreamEvent", () => {
       "thinking",
       "researching",
       "drafting",
+      "generating",
       "speaking",
       "awaiting_approval",
     ] as const;
@@ -129,5 +130,24 @@ describe("applyStreamEvent", () => {
     ]);
     expect(presence.avatarState).toBe("drafting");
     expect(presence.activityLabel).toBe("Drafting a reply…");
+  });
+
+  it("keeps a real progress fraction and a media card", () => {
+    const withProgress = applyStreamEvent(emptyAppliedTurn(), {
+      type: "activity",
+      state: "generating",
+      label: "Painting with Nano Banana Pro…",
+      progress: 0.15,
+    });
+    expect(withProgress.progress).toBe(0.15);
+    const withMedia = applyStreamEvent(withProgress, {
+      type: "media",
+      kind: "image",
+      url: "data:image/png;base64,xx",
+      alt: "Poblado stack",
+      title: "Poblado stack",
+    });
+    expect(withMedia.media).toHaveLength(1);
+    expect(withMedia.media[0]?.kind).toBe("image");
   });
 });

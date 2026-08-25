@@ -41,8 +41,24 @@ describe("needsKnowledgeSearch", () => {
     ).toBe(false);
   });
 
+  it("does not search the thesis for a plain illustration ask", () => {
+    expect(
+      needsKnowledgeSearch("draw me an illustration of a dusk skyline"),
+    ).toBe(false);
+    expect(
+      needsKnowledgeSearch("illustrate the ICP-1 balloon for me"),
+    ).toBe(true);
+  });
+
+  it("searches a short who-is about a named person", () => {
+    expect(needsKnowledgeSearch("who is Dov?")).toBe(true);
+    expect(needsKnowledgeSearch("Who is Rosario")).toBe(true);
+  });
+
   it("searches when the user asks a Tamarindo fact", () => {
     expect(needsKnowledgeSearch("what is the thesis?")).toBe(true);
     expect(needsKnowledgeSearch("Intervest yield?")).toBe(true);
+    expect(needsKnowledgeSearch("what's predial in Cartagena")).toBe(true);
+    expect(needsKnowledgeSearch("US tourist visa days in Colombia")).toBe(true);
   });
 });

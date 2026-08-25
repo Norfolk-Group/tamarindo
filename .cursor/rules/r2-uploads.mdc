@@ -7,6 +7,8 @@ alwaysApply: true
 
 When the user attaches files in this chat (or says they uploaded files here), copy every file into the Cloudflare R2 bucket `tamarindo-files` in the same turn.
 
+Keys come from `lib/storage/r2-schema.ts`. Do not invent parallel trees.
+
 ## How
 
 1. Find the saved paths (often under `.cursor/projects/.../assets` or the message `<image_files>` / attachment list).
@@ -16,16 +18,25 @@ When the user attaches files in this chat (or says they uploaded files here), co
 npx wrangler r2 object put tamarindo-files/<key> --file <local-path> --remote --content-type <mime>
 ```
 
-3. Key convention:
-   - Chat attachments: `uploads/chat/YYYY-MM-DD/<original-or-clean-filename>`
-   - Dropbox / source docs pulled for the model: `source/dropbox/<filename>`
-   - Generated artifacts stay under `artifacts/<id>/<filename>` (existing app path)
+3. Key convention (canonical):
+   - Chat attachments: `library/kb/raw/chat/YYYY-MM-DD/<filename>`
+   - Dropbox / source docs: `library/kb/raw/dropbox/<filename>`
+   - Brand / photos / logos: `library/kb/raw/brand/<entity-or-person>/<filename>`
+   - Text Nico produced for himself: `library/kb/derived/extracts/YYYY-MM-DD/<filename>`
+   - User-downloadable artifacts: `library/share/users/artifacts/<id>/<filename>`
+   - Nano Banana / generated images: `library/illustrations/generated/YYYY-MM-DD/<id>.png`
+   - Veo clips: `library/media/generated/YYYY-MM-DD/<id>.mp4`
 
-4. Do not commit the binaries to git. Do not print temporary download URLs.
-5. After upload, tell the user the R2 keys. If a message claims files were uploaded but none are attached, say so and still persist any earlier chat attachments that are not yet in R2.
+   Legacy keys (`uploads/chat/…`, `source/dropbox/…`, `artifacts/…`) still resolve via `canonicalR2Key`. Prefer the library keys for new writes.
+
+4. After a text-bearing upload (pdf, docx, xlsx, txt, md), extract to `knowledge/documents/` and `library/kb/derived/extracts/…`, then `npm run knowledge:sync` and `node --env-file=.env scripts/ingest-memory-chunks.mjs --apply --only <extract>`. Do not run full `--apply`.
+5. Do not commit the binaries to git. Do not print temporary download URLs.
+6. After upload, tell the user the R2 keys. If a message claims files were uploaded but none are attached, say so and still persist any earlier chat attachments that are not yet in R2.
 
 ## Do not
 
 - Skip this because the file was already copied into `public/` or a canvas
 - Put objects on `--local` R2
 - Publish a data-room row unless the user asked
+- Embed every binary. Logos and scratch files get a caption at most.
+- Write anyone's personal legal history into extracts or the knowledge base

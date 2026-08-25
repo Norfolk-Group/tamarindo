@@ -1,6 +1,11 @@
 import { generateText } from "ai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { prisma } from "@/lib/db";
+import {
+  addressPreferenceNote,
+  offeredGivenName,
+  parseAddressConsent,
+} from "@/lib/nico/given-name";
 
 export const LEARNED_SOURCE = "memory/learned";
 
@@ -16,6 +21,8 @@ export type LearnTurnInput = {
   reply: string;
   profileId: string;
   conversationId: string;
+  pendingNameAsk?: boolean;
+  givenName?: string | null;
 };
 
 const RECALL_LIMIT = 24;
@@ -48,12 +55,13 @@ export function heuristicExtract(userMessage: string): LearnedNote[] {
   if (correction?.[1]) {
     notes.push({ kind: "correction", text: cleanNote(correction[1]) });
   }
-  const name = text.match(
-    /(?:my name is|i(?:'m| am)|call me)\s+([A-ZÁÉÍÓÚÑ][\p{L}'-]+(?:\s+[A-ZÁÉÍÓÚÑ][\p{L}'-]+)?)/iu,
-  );
-  if (name?.[1] && !/^(here|ready|back|good|fine)\b/i.test(name[1])) {
-    notes.push({ kind: "fact", text: `The person in this room is ${name[1]}.` });
+  const offered = offeredGivenName(text);
+  if (offered) {
+    notes.push({ kind: "fact", text: `The person in this room is ${offered}` });
   }
+  const consent = parseAddressConsent(text);
+  const address = consent ? addressPreferenceNote(consent) : null;
+  if (address) notes.push(address);
   return uniqueNotes(notes);
 }
 
@@ -160,6 +168,13 @@ export async function recallLearned(query: string): Promise<string> {
 
 export async function learnFromTurn(input: LearnTurnInput): Promise<void> {
   const notes = await extractDurableNotes(input.userMessage, input.reply);
+  const consent = parseAddressConsent(input.userMessage, {
+    pendingAsk: input.pendingNameAsk,
+  });
+  const address = consent
+    ? addressPreferenceNote(consent, input.givenName)
+    : null;
+  if (address) notes.push(address);
   await saveLearned(notes, {
     profileId: input.profileId,
     conversationId: input.conversationId,

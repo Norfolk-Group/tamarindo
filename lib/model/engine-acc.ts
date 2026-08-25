@@ -17,6 +17,10 @@ export type MonthAcc = {
   seed: number;
   leaseCollected: number;
   remitted: number;
+  clientDown: number;
+  assetPurchase: number;
+  balloon: number;
+  fundedNew: number;
   originated: number;
   autosOriginated: number;
   aircraftOriginated: number;
@@ -69,6 +73,10 @@ export function emptyMonth(): MonthAcc {
     seed: 0,
     leaseCollected: 0,
     remitted: 0,
+    clientDown: 0,
+    assetPurchase: 0,
+    balloon: 0,
+    fundedNew: 0,
     originated: 0,
     autosOriginated: 0,
     aircraftOriginated: 0,
@@ -112,6 +120,10 @@ export function sumYear(months: MonthAcc[], fy: number): MonthAcc {
     acc.seed += month.seed;
     acc.leaseCollected += month.leaseCollected;
     acc.remitted += month.remitted;
+    acc.clientDown += month.clientDown;
+    acc.assetPurchase += month.assetPurchase;
+    acc.balloon += month.balloon;
+    acc.fundedNew += month.fundedNew;
     acc.originated += month.originated;
     acc.autosOriginated += month.autosOriginated;
     acc.aircraftOriginated += month.aircraftOriginated;

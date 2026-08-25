@@ -41,7 +41,11 @@ ICP-1.
 
 ## Month 120
 
-Client pays the $84,000 option and owns the home. Vehicle balance → 0.
+Client pays the $84,000 option. Vehicle balance → 0. **US payment is not
+Colombian title:** ownership on the folio still needs *escritura* + ORIP
+registro (homes) or RUNT *traspaso* (autos). Visa is not required;
+passport + RUT is. Walk-away leaves title with the vehicle. See thesis
+**17** (mechanics) and **18** (KYC).
 
 ## Who makes what over the life (engine math)
 

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { renderArtifactBytes } from "@/lib/artifacts/render-bytes";
+import { userArtifactKey } from "@/lib/storage/r2-schema";
 
 type R2Like = {
   put: (key: string, value: ArrayBuffer | Uint8Array) => Promise<unknown>;
@@ -32,7 +33,7 @@ export async function completeArtifactJob(artifactId: string): Promise<{
   let storageRef = row.storageRef ?? `render:${row.kind}`;
   const r2 = artifactObjectStore();
   if (r2) {
-    storageRef = `artifacts/${row.id}/${file.filename}`;
+    storageRef = userArtifactKey(row.id, file.filename);
     await r2.put(storageRef, file.bytes);
   }
 

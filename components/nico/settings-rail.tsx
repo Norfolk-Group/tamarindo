@@ -19,7 +19,7 @@ type SectionNavItem = {
 
 const VARIABLES_NAV: SectionNavItem = {
   id: "variables",
-  label: "Variables",
+  label: "Assumptions",
   icon: SlidersHorizontal,
 };
 

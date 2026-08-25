@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Capability } from "@/lib/contracts/procedure";
 import { AvatarOrb } from "@/components/nico/avatar-orb";
+import { ChatPresenceBar } from "@/components/nico/chat-presence";
 import { LeftRail, type PrimaryPanel } from "@/components/nico/left-rail";
 import {
   defaultSettingsSection,
@@ -76,7 +77,7 @@ export function Copilot({
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border px-5">
+        <header className="relative flex h-14 shrink-0 items-center gap-3 border-b border-border px-5">
           <AvatarOrb state={presence.avatarState} />
           <div className="min-w-0">
             <p className="text-sm font-semibold leading-tight">Nico</p>
@@ -87,6 +88,7 @@ export function Copilot({
               {presence.activityLabel}
             </p>
           </div>
+          <ChatPresenceBar presence={presence} />
         </header>
         <NewsTicker />
 

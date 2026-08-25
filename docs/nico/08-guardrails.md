@@ -19,6 +19,10 @@ Valuations, raise amounts, instruments, and conditions render exclusively
 from the admin-controlled **Deal Terms** record (Admin → Deal Terms). The
 deck's ask slide, term-sheet drafts, and any investor-facing figure pull
 from that record. A language model never invents a number an investor sees.
+
+Operating numbers (P&L, cash flow, vehicle IRR, sensitivity) come from
+**blue variables** plus `runCashflowModel` — see
+[12-blue-variables.md](12-blue-variables.md). Those are not Deal Terms.
 Term-sheet drafts carry a "draft, not legal advice" footer.
 
 ## The NDA gate

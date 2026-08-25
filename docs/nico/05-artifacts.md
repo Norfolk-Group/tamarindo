@@ -24,20 +24,28 @@ Pipeline:
 Covers: income statements, cash flow statements, DCFs (WACC, terminal
 value), scenario/sensitivity tables.
 
-## Pitch decks — ask and terms included
+Live path (what ships): blue variables + `runCashflowModel` + a formatted
+report workbook. See [12-blue-variables.md](12-blue-variables.md). HTML
+preview (new window), 16:9 PDF, and CSV are the same object. Cells and formulas persist on
+`ModelCell` and the report-workbook artifact row.
 
-1. **Pietro** (output specialist) fills a structured outline: problem,
-   market, traction, team, projections (pulled live from the model), use of
-   funds, the ask, term summary.
-2. **The ask and terms render only from the admin-controlled Deal Terms
-   record** (raise amount, pre-money, instrument, board seats). Never from
-   model imagination. See [08-guardrails.md](08-guardrails.md).
-3. **PptxGenJS** renders real `.pptx` on the Tamarindo template; a React
-   preview renders slide thumbnails in the conversation.
-4. Lint gates before delivery: overflow text, missing citations, off-brand
-   colors.
-5. Term-sheet drafts carry a "draft, not legal advice" footer and pass the
-   approval gate before any investor sees them.
+## Pitch decks — 10 story + thank you + 6 backup
+
+Canonical contract: [11-pitch-deck.md](11-pitch-deck.md). Design:
+[design/pitch-deck.md](design/pitch-deck.md).
+
+1. Nico **recalculates** (`runCashflowModel`) then fills the 10-slide
+   storyline. Slide 6 is P&L and slide 7 is Use of Funds — Excel-like
+   tables, live cells, never a pasted PNG of last week's book.
+2. **The ask** (slide 9) and any investor-facing raise figure render only
+   from published Deal Terms. Unpublished → refuse. See
+   [08-guardrails.md](08-guardrails.md).
+3. One spec, three formats: HTML (new window), PPTX, PDF. Preview:
+   `GET /api/nico/artifacts/:id/html`.
+4. Chat may omit a teammate or rebuild after a variable change. It may not
+   add slides, drop the tables, or invent the ask.
+5. An admin reference `.pptx` on `library/templates/pitch/` is a layout
+   hint only. Nico still writes an original deck.
 
 ## Podcasts — NotebookLM-style
 

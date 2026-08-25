@@ -6,14 +6,29 @@ import { ProcedureError } from "@/lib/procedures/registry";
 export async function GET(request: Request) {
   const actor = await getSessionActor();
   if (!actor) return jsonErr("No session", 401, { code: "UNAUTHORIZED" });
-  const format = new URL(request.url).searchParams.get("format") ?? "html";
-  if (format !== "html" && format !== "pdf" && format !== "xlsx") {
-    return jsonErr("format must be html, pdf, or xlsx", 400, { code: "VALIDATION" });
+  const url = new URL(request.url);
+  const format = url.searchParams.get("format") ?? "html";
+  const kind = url.searchParams.get("kind") ?? "statements";
+  const depthRaw = url.searchParams.get("depth");
+  const depth =
+    depthRaw === "summary" || depthRaw === "extended" ? depthRaw : undefined;
+  if (format !== "html" && format !== "pdf" && format !== "xlsx" && format !== "csv") {
+    return jsonErr("format must be html, pdf, xlsx, or csv", 400, { code: "VALIDATION" });
+  }
+  if (
+    kind !== "statements" &&
+    kind !== "returns" &&
+    kind !== "sensitivity" &&
+    kind !== "income"
+  ) {
+    return jsonErr("kind must be statements, returns, sensitivity, or income", 400, {
+      code: "VALIDATION",
+    });
   }
   try {
     const data = (await registry.invoke(
       "model.export",
-      { format },
+      { format, kind, depth },
       { actor, traceId: crypto.randomUUID() },
     )) as { filename: string; contentType: string; base64: string };
     const bytes = Buffer.from(data.base64, "base64");

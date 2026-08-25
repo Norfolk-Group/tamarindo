@@ -1,28 +1,51 @@
+import { parseReportGlance, type ReportGlance } from "@/lib/model/report-glance";
+
+export type ChartSeries = { name: string; values: number[] };
+
 export type ChartSpec = {
   title?: string;
-  type?: "bar" | "hbar";
+  type?: "bar" | "hbar" | "line" | "area" | "pie";
   labels: string[];
   values: number[];
+  series?: ChartSeries[];
   unit?: string;
+};
+
+export type MediaSpec = {
+  url: string;
+  alt: string;
+  title?: string;
 };
 
 export type ChatSegment =
   | { kind: "text"; text: string }
   | { kind: "table"; headers: string[]; rows: string[][] }
-  | { kind: "chart"; spec: ChartSpec };
+  | { kind: "chart"; spec: ChartSpec }
+  | { kind: "report"; spec: ReportGlance }
+  | { kind: "image"; spec: MediaSpec }
+  | { kind: "video"; spec: MediaSpec };
 
-const CHART_FENCE = /```chart\s*\n([\s\S]*?)```/g;
+const FENCE = /```(chart|image|video|report)\s*\n([\s\S]*?)```/g;
 
 export function parseChat(text: string): ChatSegment[] {
   const pieces: ChatSegment[] = [];
   let last = 0;
-  const re = new RegExp(CHART_FENCE.source, "g");
+  const re = new RegExp(FENCE.source, "g");
   let match: RegExpExecArray | null;
   while ((match = re.exec(text))) {
     pieces.push(...parseMarkdownTables(text.slice(last, match.index)));
-    const spec = parseChart(match[1] ?? "");
-    if (spec) pieces.push({ kind: "chart", spec });
-    else pieces.push({ kind: "text", text: match[0] });
+    const tag = match[1];
+    const body = match[2] ?? "";
+    if (tag === "chart") {
+      const spec = parseChart(body);
+      pieces.push(spec ? { kind: "chart", spec } : { kind: "text", text: match[0] });
+    } else if (tag === "report") {
+      const spec = parseReportGlance(body);
+      pieces.push(spec ? { kind: "report", spec } : { kind: "text", text: match[0] });
+    } else if (tag === "image" || tag === "video") {
+      const spec = parseMedia(body);
+      pieces.push(spec ? { kind: tag, spec } : { kind: "text", text: match[0] });
+    }
     last = match.index + match[0].length;
   }
   pieces.push(...parseMarkdownTables(text.slice(last)));
@@ -32,8 +55,26 @@ export function parseChat(text: string): ChatSegment[] {
 export function parseChart(raw: string): ChartSpec | null {
   try {
     const json = JSON.parse(raw) as ChartSpec;
-    if (!Array.isArray(json.labels) || !Array.isArray(json.values)) return null;
-    return json;
+    if (!Array.isArray(json.labels)) return null;
+    if (!Array.isArray(json.values) && !Array.isArray(json.series)) return null;
+    return {
+      ...json,
+      values: Array.isArray(json.values) ? json.values : json.series?.[0]?.values ?? [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function parseMedia(raw: string): MediaSpec | null {
+  try {
+    const json = JSON.parse(raw) as MediaSpec;
+    if (typeof json.url !== "string" || !json.url) return null;
+    return {
+      url: json.url,
+      alt: typeof json.alt === "string" ? json.alt : "Illustration",
+      title: json.title,
+    };
   } catch {
     return null;
   }

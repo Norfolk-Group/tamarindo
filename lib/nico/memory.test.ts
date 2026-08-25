@@ -37,4 +37,13 @@ describe("heuristicExtract", () => {
     expect(heuristicExtract("what's the weather")).toEqual([]);
     expect(heuristicExtract("I'm here")).toEqual([]);
   });
+
+  it("keeps an explicit first-name permission", () => {
+    expect(heuristicExtract("you can call me by my first name")).toEqual([
+      {
+        kind: "preference",
+        text: "Nico may call this person by first name",
+      },
+    ]);
+  });
 });

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -12,7 +13,38 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatPct, formatUsd } from "@/lib/model/format";
-import type { CapTableView, CashflowModel, DivisionStatement } from "@/lib/model/types";
+import type {
+  CapTableView,
+  CashflowModel,
+  DivisionStatement,
+  StatementLine,
+} from "@/lib/model/types";
+
+const SCF_SECTIONS: Array<{
+  key: StatementLine["section"];
+  title: string;
+}> = [
+  { key: "operatingIn", title: "Cash from operations — receipts" },
+  { key: "operatingOut", title: "Cash from operations — payments" },
+  { key: "investing", title: "Cash from investing" },
+  { key: "financing", title: "Cash from financing" },
+  { key: "memo", title: "Supplementary (not in cash totals)" },
+];
+
+function sectionedLines(
+  division: DivisionStatement,
+): Array<{ kind: "section"; title: string } | { kind: "line"; line: StatementLine }> {
+  const out: Array<
+    { kind: "section"; title: string } | { kind: "line"; line: StatementLine }
+  > = [];
+  for (const section of SCF_SECTIONS) {
+    const lines = division.lines.filter((line) => line.section === section.key);
+    if (lines.length === 0) continue;
+    out.push({ kind: "section", title: section.title });
+    for (const line of lines) out.push({ kind: "line", line });
+  }
+  return out;
+}
 
 type Payload = {
   model: CashflowModel;
@@ -85,16 +117,17 @@ export function ModelWorkspace() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground">
-            10-YEAR STATEMENT OF CASH FLOWS
+            STATEMENTS · YOUR CASE
           </p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-            US · Colombia sucursal · Consolidated
+            US · Colombia sucursal · Consolidated · Intervest vehicle
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             {s.homesOriginated} homes · {s.autosOriginated} autos ·{" "}
             {s.aircraftOriginated} aircraft · January cohort {s.januaryCohortYear}.
             Five equal partners; $6.5M equity across three rounds pays the venture.
-            Intervest funds leases, not salaries. Colombia bills clients.
+            Intervest is the funding vehicle — down, remittance, balloon — not
+            OpCo cash and not on the cap table. Colombia bills clients.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -102,15 +135,50 @@ export function ModelWorkspace() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => window.open("/api/nico/model/export?format=html", "_blank")}
+            onClick={() =>
+              window.open("/api/nico/model/export?format=html&kind=income", "_blank", "noopener,noreferrer")
+            }
           >
-            Open HTML
+            Income (new tab)
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              window.open("/api/nico/model/export?format=html&kind=statements", "_blank", "noopener,noreferrer")
+            }
+          >
+            Statements (new tab)
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              window.open("/api/nico/model/export?format=html&kind=returns", "_blank", "noopener,noreferrer")
+            }
+          >
+            Returns (new tab)
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              window.open("/api/nico/model/export?format=html&kind=sensitivity", "_blank", "noopener,noreferrer")
+            }
+          >
+            Sensitivity (new tab)
           </Button>
           <Button type="button" variant="outline" size="sm" asChild>
-            <a href="/api/nico/model/export?format=pdf">Download PDF</a>
+            <a href="/api/nico/model/export?format=csv&kind=statements">CSV</a>
           </Button>
           <Button type="button" variant="outline" size="sm" asChild>
-            <a href="/api/nico/model/export?format=xlsx">Download Excel</a>
+            <a href="/api/nico/model/export?format=pdf&kind=statements">PDF 16:9</a>
+          </Button>
+          <Button type="button" variant="outline" size="sm" asChild>
+            <a href="/api/nico/model/export?format=xlsx">Excel</a>
           </Button>
         </div>
       </div>
@@ -127,10 +195,11 @@ export function ModelWorkspace() {
       </div>
 
       <Tabs defaultValue="consolidated" className="mt-8">
-        <TabsList>
+        <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="us">Tamarindo US</TabsTrigger>
           <TabsTrigger value="sucursal">Colombia sucursal</TabsTrigger>
           <TabsTrigger value="consolidated">Consolidated</TabsTrigger>
+          <TabsTrigger value="vehicle">Intervest vehicle</TabsTrigger>
           <TabsTrigger value="equity">Equity</TabsTrigger>
         </TabsList>
         <TabsContent value="us">
@@ -141,6 +210,14 @@ export function ModelWorkspace() {
         </TabsContent>
         <TabsContent value="consolidated">
           <DivisionTable division={model.consolidated} onProbe={explain} />
+        </TabsContent>
+        <TabsContent value="vehicle">
+          <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
+            The lessee pays this vehicle the down payment, monthly remittance
+            (after Tamarindo’s strip), and the purchase-option balloon. Title
+            stays here until that balloon is paid. Not consolidated into OpCo.
+          </p>
+          <DivisionTable division={model.vehicle} onProbe={explain} />
         </TabsContent>
         <TabsContent value="equity">
           <CapTableBlock table={model.capTable} />
@@ -298,6 +375,24 @@ function DivisionTable({
   division: DivisionStatement;
   onProbe: (key: string) => void;
 }) {
+  const sections = useMemo(() => {
+    const out: Array<{ title: string; lines: StatementLine[] }> = [];
+    for (const row of sectionedLines(division)) {
+      if (row.kind === "section") {
+        out.push({ title: row.title, lines: [] });
+      } else {
+        const last = out[out.length - 1];
+        if (last) last.lines.push(row.line);
+        else out.push({ title: "Lines", lines: [row.line] });
+      }
+    }
+    return out;
+  }, [division]);
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  function isOpen(title: string): boolean {
+    return open[title] !== false;
+  }
+
   return (
     <div className="mt-4 overflow-x-auto">
       <Table>
@@ -312,22 +407,49 @@ function DivisionTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {division.lines.map((line) => (
-            <TableRow key={line.id}>
-              <TableCell className="text-muted-foreground">{line.label}</TableCell>
-              {line.values.map((value, i) => (
-                <TableCell key={`${line.id}-${i}`} className="p-0 text-right">
+          {sections.map((section) => (
+            <Fragment key={section.title}>
+              <TableRow>
+                <TableCell colSpan={division.years.length + 1} className="p-0">
                   <button
                     type="button"
-                    className="w-full px-2 py-2 text-right font-mono text-xs hover:bg-muted/60"
-                    title="Trace this number"
-                    onClick={() => onProbe(`${division.id}.${line.id}.fy${i + 1}`)}
+                    className="flex w-full items-center gap-2 px-2 pt-5 pb-1 text-left text-[11px] font-medium tracking-[0.14em] text-muted-foreground hover:text-foreground"
+                    aria-expanded={isOpen(section.title)}
+                    onClick={() =>
+                      setOpen((current) => ({
+                        ...current,
+                        [section.title]: !isOpen(section.title),
+                      }))
+                    }
                   >
-                    {formatUsd(value)}
+                    <ChevronDown
+                      className={`size-3.5 transition-transform ${isOpen(section.title) ? "" : "-rotate-90"}`}
+                      aria-hidden
+                    />
+                    {section.title}
                   </button>
                 </TableCell>
-              ))}
-            </TableRow>
+              </TableRow>
+              {isOpen(section.title)
+                ? section.lines.map((line) => (
+                    <TableRow key={line.id}>
+                      <TableCell className="text-muted-foreground">{line.label}</TableCell>
+                      {line.values.map((value, i) => (
+                        <TableCell key={`${line.id}-${i}`} className="p-0 text-right">
+                          <button
+                            type="button"
+                            className="w-full px-2 py-2 text-right font-mono text-xs hover:bg-muted/60"
+                            title="Trace this number"
+                            onClick={() => onProbe(`${division.id}.${line.id}.fy${i + 1}`)}
+                          >
+                            {formatUsd(value)}
+                          </button>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                : null}
+            </Fragment>
           ))}
           <TableRow>
             <TableCell className="font-medium">Closing cash</TableCell>

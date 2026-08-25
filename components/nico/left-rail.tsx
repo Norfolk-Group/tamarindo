@@ -37,8 +37,8 @@ const PRIMARY_NAV: {
   icon: typeof MessageSquare;
 }[] = [
   { id: "conversation", label: "Conversation", icon: MessageSquare },
-  { id: "model", label: "Model", icon: Table2 },
-  { id: "variables", label: "Variables", icon: SlidersHorizontal },
+  { id: "model", label: "Statements", icon: Table2 },
+  { id: "variables", label: "Assumptions", icon: SlidersHorizontal },
   { id: "artifacts", label: "Artifacts", icon: FileSpreadsheet },
   { id: "dataroom", label: "Data Room", icon: FolderLock },
 ];
