@@ -20,7 +20,8 @@ in the database — not only in a JSON blob on an artifact row.
 |------|---------|
 | **Blue variable** | User-facing input. Ships a **seed default**. Members may change it. Excel convention: blue = typed. |
 | **Grey variable** | Admin-only input. On the admin Assumptions list; members do not edit it. |
-| **Personal case** | One saved input set per profile. First save copies away from the shared company case. |
+| **Personal case** | One saved input set per profile. First save copies away from the shared company case. The only working set. |
+| **Named what-if** | A personal snapshot of that live case (`ModelScenario`). Save-as does not change the live case. Load copies it back onto the personal case. Not a second live case. |
 | **Engine** | Server-side calculator. Tamarindo: `runCashflowModel`. |
 | **Report workbook** | One live book of a `kind`. Contains sheets. |
 | **Report cell** | One grid address: value, display text, formula, format, tone, row kind. |
@@ -37,11 +38,12 @@ published Deal Terms record.
 3. Offer the **same** workbook as HTML (preview window), PDF, and CSV.
 4. Mark blue-variable cells `tone=blue`. Mark totals / IRRs `tone=gold`.
 5. UI and the agent call the same procedures (`model.setVariables`,
-   `model.report`, `model.export`).
+   `model.saveScenario`, `model.listScenarios`, `model.applyScenario`,
+   `model.diffScenarios`, `model.report`, `model.export`).
 6. Label FACT / OPINION / ASSUMPTION on cited inputs. Do not invent a raise
    or an exit IRR.
 7. Sensitivity shocks rerun the engine in memory. They do **not** save
-   unless the user says save.
+   unless the user names a save (`save this as {name}` → `model.saveScenario`).
 
 ## MUST NOT
 
@@ -50,6 +52,7 @@ published Deal Terms record.
 3. Treat vehicle warehouse cash as OpCo equity.
 4. Put formulas only in the client.
 5. Restyle HTML, PDF, and CSV as three different products.
+6. Treat a named what-if as a second live case.
 
 ## Data (Prisma shape — Tamarindo)
 
@@ -74,7 +77,12 @@ row off. History stays.
 | Procedure | Does |
 |-----------|------|
 | `model.get` | Engine output + variables this role may see |
-| `model.setVariables` | Write this caller’s personal case; recalculate. `resetToShared` drops it. Admin `publishShared` writes the company case. |
+| `model.setVariables` | Write this caller’s personal case; recalculate. `resetToShared` drops it. Does **not** publish the company case. |
+| `model.publishShared` | Admin **human** only. Writes the shared company case. Agents cannot invoke it. UI Publish POSTs `/api/nico/model`. |
+| `model.saveScenario` | Snapshot the current live case as a named personal what-if. Does not change the live case or its title. |
+| `model.listScenarios` | This profile’s named what-ifs. Hides auto-saved `"Base case (auto)"`. Members see blue keys only. |
+| `model.applyScenario` | Copy one owned snapshot onto this profile’s personal case. Never publishes. Members persist only published keys. |
+| `model.diffScenarios` | Compare two owned snapshots. Glance of input deltas plus FY1/FY10 closing cash — not a second report book. |
 | `model.report` | Build workbook for `statements` \| `income` \| `returns` \| `sensitivity`; persist cells; return preview path |
 | `model.export` | `html` \| `pdf` \| `csv` \| `xlsx` of that kind; optional `depth=summary\|extended` |
 
@@ -100,11 +108,15 @@ headers; CSV is the same tables. PDF/CSV default to extended.
 
 Honor: “financial statements”, a fiscal-year slice, “investor returns”,
 “sensitivity on {lever}”, “set {blue variable} to {n}”, “show my
-assumptions” (meeting-lever glance, not the 181-row book). Percents are
-typed and shown as 40, not 0.40.
+assumptions” (meeting-lever glance, not the 181-row book), “save this as
+{name}” (`model.saveScenario`, not Publish), “load {name}” / “apply {name}”
+(`model.applyScenario` after a name match), “compare {A} and {B}”
+(`model.diffScenarios`, compact glance). Percents are typed and shown as 40,
+not 0.40.
 
-Refuse: invent the ask, save a shock as the base case, add slides past a
-product cap, discuss anyone’s personal legal history.
+Refuse: invent the ask, save a shock as the base case, treat a named
+what-if as a second live case, add slides past a product cap, discuss
+anyone’s personal legal history.
 
 ## Feed this back to the kit
 

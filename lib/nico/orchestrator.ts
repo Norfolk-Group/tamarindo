@@ -1,13 +1,21 @@
 import type { Actor } from "@/lib/contracts/procedure";
 import type { StreamEvent } from "@/lib/contracts/events";
 import { asAgent } from "@/lib/nico/agent-actor";
-import { invokeAgentTool } from "@/lib/nico/registry-tools";
+import { agentToolSet, invokeAgentTool } from "@/lib/nico/registry-tools";
 import { appendMessage, ensureConversation } from "@/lib/nico/session";
 import { composeAnswer } from "@/lib/nico/composer";
 import { learnFromTurn, recallLearned } from "@/lib/nico/memory";
 import { loadWho } from "@/lib/nico/who";
 import { needsKnowledgeSearch } from "@/lib/nico/knowledge-intent";
-import { isAssumptionsAsk } from "@/lib/nico/assumption-intent";
+import {
+  formatScenarioDiffGlance,
+  isAssumptionsAsk,
+  matchScenarioByName,
+  namedScenarioCount,
+  parseScenarioAsk,
+  type ScenarioAsk,
+  type ScenarioDiffGlanceRow,
+} from "@/lib/nico/assumption-intent";
 import {
   isCashflowModelRequest,
   parseVariableSet,
@@ -102,11 +110,13 @@ export async function* runTurn(
   let artifactNote: string | undefined;
   let reportPreface = "";
   let waitPreface = "";
+  const scenarioAsk = parseScenarioAsk(message);
   const variableSet = parseVariableSet(message);
   const deckAsk = parseDeckAsk(message);
   const reportAsk = parseReportAsk(message);
   const icpAsk = parseIcpAsk(message);
   const modelAction =
+    Boolean(scenarioAsk) ||
     Boolean(variableSet) ||
     Boolean(icpAsk) ||
     Boolean(reportAsk) ||
@@ -114,7 +124,25 @@ export async function* runTurn(
     isWorkbookRequest(message) ||
     Boolean(deckAsk) ||
     isAssumptionsAsk(message);
-  if (variableSet) {
+  if (scenarioAsk) {
+    yield {
+      type: "activity",
+      state: "drafting",
+      label: scenarioActivityLabel(scenarioAsk),
+    };
+    try {
+      const result = await runScenarioAsk(scenarioAsk, toolActor, traceId);
+      if (result.preface) {
+        reportPreface = result.preface;
+        yield { type: "token", text: reportPreface };
+      }
+      artifactNote = result.note;
+    } catch (err) {
+      artifactNote = `I tried to handle that what-if and hit: ${
+        err instanceof Error ? err.message : "unknown error"
+      }.`;
+    }
+  } else if (variableSet) {
     yield {
       type: "activity",
       state: "drafting",
@@ -498,8 +526,22 @@ export async function* runTurn(
     !mediaNote &&
     !peopleNote;
 
+  // Registry procedures as model tools — only on turns no regex route already
+  // executed, so the model cannot re-run a variable set or media job the
+  // switchboard just performed. Approval-gated procedures stay blocked inside
+  // registry.invoke until a durable Approval row is approved.
+  let tools: Awaited<ReturnType<typeof agentToolSet>> | undefined;
+  if (!modelAction && !mediaNote) {
+    try {
+      tools = await agentToolSet(toolActor, traceId);
+    } catch (err) {
+      console.warn("[nico] agent tool set skipped", err);
+    }
+  }
+
   let reply = `${mediaPreface}${waitPreface}${reportPreface}`;
   const pendingThoughts: string[] = [];
+  const pendingToolCalls: string[] = [];
   let speaking = false;
   try {
     for await (const chunk of composeAnswer(message, passages, {
@@ -512,11 +554,25 @@ export async function* runTurn(
       conversational,
       mediaNote,
       peopleNote,
+      tools,
+      onToolCall: (toolName) => {
+        pendingToolCalls.push(toolName);
+      },
       onThinking: (snippet) => {
         const line = snippet.replace(/\s+/g, " ").trim().slice(0, 140);
         if (line) pendingThoughts.push(line);
       },
     })) {
+      while (pendingToolCalls.length) {
+        const toolName = pendingToolCalls.shift();
+        if (toolName) {
+          yield {
+            type: "activity",
+            state: "researching",
+            label: `Running ${toolName.replace(/_/g, ".")}…`,
+          };
+        }
+      }
       while (pendingThoughts.length) {
         const thought = pendingThoughts.shift();
         if (thought) {
@@ -567,6 +623,90 @@ export async function* runTurn(
 
   yield { type: "activity", state: "idle", label: "Ready" };
   yield { type: "done" };
+}
+
+function scenarioActivityLabel(ask: ScenarioAsk): string {
+  if (ask.kind === "save") return "Saving that what-if…";
+  if (ask.kind === "load") return "Loading that what-if…";
+  return "Comparing what-ifs…";
+}
+
+async function runScenarioAsk(
+  ask: ScenarioAsk,
+  toolActor: Actor,
+  traceId: string,
+): Promise<{ note: string; preface?: string }> {
+  if (ask.kind === "save") {
+    await invokeAgentTool(
+      "model.saveScenario",
+      { name: ask.name },
+      toolActor,
+      traceId,
+    );
+    return {
+      note: `Saved this live case as "${ask.name}". Sensitivity grids and unsaved form edits are not in it. Your working set is unchanged.`,
+    };
+  }
+
+  const listed = (await invokeAgentTool(
+    "model.listScenarios",
+    {},
+    toolActor,
+    traceId,
+  )) as { scenarios: Array<{ id: string; name: string }> };
+  const scenarios = listed.scenarios ?? [];
+
+  if (ask.kind === "load") {
+    const match = matchScenarioByName(scenarios, ask.name);
+    if (!match) {
+      return {
+        note: `I don't have a what-if named "${ask.name}". I will not create one.`,
+      };
+    }
+    await invokeAgentTool(
+      "model.applyScenario",
+      { scenarioId: match.id },
+      toolActor,
+      traceId,
+    );
+    const latestNote =
+      namedScenarioCount(scenarios, ask.name) > 1
+        ? `Loaded the latest "${match.name}" onto your personal case.`
+        : `Loaded "${match.name}" onto your personal case.`;
+    return {
+      note: `${latestNote} That replaces the live case. Reset returns to the company case, not the previous one.`,
+    };
+  }
+
+  const matchA = matchScenarioByName(scenarios, ask.nameA);
+  const matchB = matchScenarioByName(scenarios, ask.nameB);
+  if (!matchA || !matchB) {
+    const missing = [
+      !matchA ? `"${ask.nameA}"` : null,
+      !matchB ? `"${ask.nameB}"` : null,
+    ]
+      .filter(Boolean)
+      .join(" and ");
+    return {
+      note: `I don't have a what-if named ${missing}. I will not create one.`,
+    };
+  }
+  const diff = (await invokeAgentTool(
+    "model.diffScenarios",
+    { scenarioA: matchA.id, scenarioB: matchB.id },
+    toolActor,
+    traceId,
+  )) as {
+    scenarioA: { name: string };
+    scenarioB: { name: string };
+    changed: ScenarioDiffGlanceRow[];
+    totalChanged: number;
+  };
+  const preface = formatScenarioDiffGlance(diff);
+  return {
+    preface,
+    note: "Glance is the input deltas plus FY cash when it moved. Not the book. Do not reprint the table.",
+  };
 }
 
 function icpActivityLabel(ask: IcpAsk): string {

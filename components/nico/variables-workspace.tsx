@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { WhatIfShelf } from "@/components/nico/what-if-shelf";
 import { fromDraftValue, toDraftValue } from "@/lib/model/variable-display";
 import { DEFAULT_OPEN_SECTIONS, sectionForGroup } from "@/lib/model/variable-groups";
 import type { CaseSource, CashflowModel, ModelVariableView, VariableValue } from "@/lib/model/types";
@@ -136,9 +137,9 @@ export function VariablesWorkspace({
       values[row.key] = fromDraftValue(row.type, raw);
     }
     const res = await fetch("/api/nico/model", {
-      method: "PATCH",
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ values, publishShared: true }),
+      body: JSON.stringify({ values }),
     });
     const json = (await res.json()) as {
       ok?: boolean;
@@ -263,6 +264,18 @@ export function VariablesWorkspace({
       ) : (
         <p className="mt-6 text-sm text-muted-foreground">View only — members can save a case.</p>
       )}
+      {canEdit ? (
+        <WhatIfShelf
+          saving={saving}
+          setSaving={setSaving}
+          setError={setError}
+          onApplied={async (result) => {
+            if (result.model) setSummary(result.model.summary);
+            if (result.caseSource) setCaseSource(result.caseSource);
+            await load();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

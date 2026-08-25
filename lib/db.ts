@@ -39,9 +39,10 @@ export function resolveDatabaseUrl(): string | undefined {
 }
 
 function getPrisma(): PrismaClient {
-  if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = createPrisma(resolveDatabaseUrl());
-  }
+  const existing = globalForPrisma.prisma;
+  // A long-lived `next dev` can keep a client from before the last generate.
+  if (existing?.modelScenario) return existing;
+  globalForPrisma.prisma = createPrisma(resolveDatabaseUrl());
   return globalForPrisma.prisma;
 }
 
@@ -50,9 +51,9 @@ function getPrisma(): PrismaClient {
  * First model access constructs the pg adapter (Hyperdrive-ready).
  */
 export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
-  get(_target, prop, receiver) {
+  get(_target, prop) {
     const client = getPrisma();
-    const value = Reflect.get(client, prop, receiver);
+    const value = Reflect.get(client, prop, client);
     return typeof value === "function" ? value.bind(client) : value;
   },
 });

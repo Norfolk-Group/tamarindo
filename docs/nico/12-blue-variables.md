@@ -18,7 +18,12 @@ Seeds live in code. The **shared company case** is the legacy
 they get a **personal case** (`__tamarindo_model_variables__:{profileId}`).
 Reports, chat, and export for that session use their case. Reset drops
 the personal row and they inherit the company case again. Admin **Publish**
-writes the shared company case. Percents are typed as 40, not 0.40.
+writes the shared company case (human-only `model.publishShared`). Percents
+are typed as 40, not 0.40.
+
+**Named what-ifs** are snapshots of the live case, not a second working set.
+Assumptions: Save as / Load / Compare. Chat uses the same procedures. Deal
+Terms stay off this shelf.
 
 The left rail is **Assumptions** (inputs) and **Statements** (the book).
 Assumption groups are collapsible. Statement sections fold the same way.
@@ -76,10 +81,16 @@ frozen in the template.
 - “Sensitivity on residual / down payment”
 - “Set down to 35%” (writes that person’s case)
 - “Show my assumptions” — meeting levers (funding, lease, fees), not the full book
+- “Save this as Rate shock” — snapshot the live case; live case unchanged (`model.saveScenario`, not Publish)
+- “Load Rate shock” / “Apply Rate shock” — copy that snapshot onto the personal case
+- “Compare Rate shock and Base” — input deltas plus FY cash glance, not the book
 
 ## Limits
 
 - Will not invent Deal Terms
-- Sensitivity shocks do **not** save unless the user says save
+- Sensitivity shocks do **not** save unless the user says “save this as …”
+- Named what-ifs are not a second live case
+- Load replaces the live case; Reset returns to the company case, not the previous one
+- `model.explain` only walks this profile’s graph. Auto `"Base case (auto)"` stays off the picker.
 - Vehicle warehouse is not OpCo equity
 - Unlabeled salaries stay blank
