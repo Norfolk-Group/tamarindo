@@ -13,7 +13,12 @@ const nextConfig: NextConfig = {
   },
   // Driver adapter + pg (Hyperdrive). Do not ship the native Prisma engine.
   // pg-cloudflare must be listed or OpenNext copies only dist/empty.js.
+  // @prisma/client and .prisma/client must stay external so the bundler
+  // resolves their `workerd` export condition (the WASM query compiler)
+  // instead of the Node entry, which reads the .wasm off disk.
   serverExternalPackages: [
+    "@prisma/client",
+    ".prisma/client",
     "@prisma/adapter-pg",
     "pg",
     "pg-cloudflare",
@@ -29,7 +34,6 @@ const nextConfig: NextConfig = {
       "./docs/**/*",
       "./workers/**/*",
       "./node_modules/@prisma/engines/**/*",
-      "./lib/generated/prisma/**/*.node",
     ],
   },
 };

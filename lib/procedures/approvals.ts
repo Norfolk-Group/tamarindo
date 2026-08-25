@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Prisma } from "@/lib/generated/prisma";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { hashApprovalInput } from "@/lib/procedures/approval-payload";
 import { profileIdFor } from "@/lib/procedures/profile";

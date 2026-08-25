@@ -7,6 +7,17 @@ compatibility_date = "2026-08-22"
 compatibility_flags = [ "nodejs_compat", "global_fetch_strictly_public" ]
 minify = true
 
+# AuthKit defaults the session cookie to 400 days, which means nobody is ever
+# asked to sign in again. 15 minutes, refreshed on activity, so returning to
+# the app after a break requires a real sign-in. Keep in sync with
+# `sessionMaxAgeSeconds()` in lib/auth/env.ts, which sends the matching
+# OIDC max_age so Google re-prompts instead of silently reusing its session.
+[vars]
+WORKOS_COOKIE_MAX_AGE = "900"
+
+[observability]
+enabled = true
+
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"

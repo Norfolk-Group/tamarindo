@@ -1,10 +1,15 @@
 import type { Actor, Role } from "@/lib/contracts/procedure";
 import { applyPendingInvitation } from "@/lib/auth/accept-invite";
 import { prisma } from "@/lib/db";
-import { allowDevActor, workosConfigState } from "@/lib/auth/env";
+import { allowDevActor, isOwnerEmail, workosConfigState } from "@/lib/auth/env";
 
 export type { WorkosConfigState } from "@/lib/auth/env";
-export { allowDevActor, workosConfigState } from "@/lib/auth/env";
+export {
+  allowDevActor,
+  isOwnerEmail,
+  sessionMaxAgeSeconds,
+  workosConfigState,
+} from "@/lib/auth/env";
 
 /**
  * Identity boundary. Nothing outside this file may know which auth
@@ -24,16 +29,23 @@ export async function getSessionActor(): Promise<Actor | null> {
   const identity = await resolveIdentity();
   if (!identity) return null;
   const firstRole: Role =
-    identity.id === "dev-local" && allowDevActor() ? "admin" : "guest";
+    isOwnerEmail(identity.email) ||
+    (identity.id === "dev-local" && allowDevActor())
+      ? "admin"
+      : "guest";
   const profile = await ensureProfile(identity, firstRole);
   if (!profile) return null;
   let role = profile.role;
   if (identity.email) {
-    const accepted = await applyPendingInvitation({
-      email: identity.email,
-      authSubject: identity.id,
-    });
-    if (accepted) role = accepted.role;
+    try {
+      const accepted = await applyPendingInvitation({
+        email: identity.email,
+        authSubject: identity.id,
+      });
+      if (accepted) role = accepted.role;
+    } catch (err) {
+      console.warn("[auth] invite apply skipped", err);
+    }
   }
   return {
     kind: "user",
@@ -94,19 +106,12 @@ function displayNameFromWorkos(user: {
   return "WorkOS user";
 }
 
-function isNonDev(): boolean {
-  return process.env.NODE_ENV !== "development";
-}
-
 export async function ensureProfile(
   identity: AuthIdentity,
   firstRole: Role,
 ): Promise<{ displayName: string; role: Role } | null> {
   try {
     if (!prisma.profile) {
-      if (isNonDev()) {
-        throw new Error("Prisma Profile delegate missing — generate the client");
-      }
       return { displayName: identity.displayName, role: firstRole };
     }
     const row = await prisma.profile.upsert({
@@ -120,11 +125,14 @@ export async function ensureProfile(
       update: {
         displayName: identity.displayName,
         ...(identity.email ? { email: identity.email } : {}),
+        // Promote an existing row too — the owner allowlist has to reach
+        // accounts that already signed in as guests. Never written when
+        // firstRole is "guest", so members and investors are not demoted.
+        ...(firstRole === "admin" ? { role: firstRole } : {}),
       },
     });
     return { displayName: row.displayName, role: row.role };
   } catch (err) {
-    if (isNonDev()) throw err;
     console.warn("[auth] profile upsert skipped", err);
     return { displayName: identity.displayName, role: firstRole };
   }

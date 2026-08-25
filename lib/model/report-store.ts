@@ -1,4 +1,4 @@
-import type { Prisma } from "@/lib/generated/prisma";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { ReportWorkbook } from "@/lib/model/report-workbook";
 

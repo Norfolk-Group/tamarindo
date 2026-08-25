@@ -15,7 +15,13 @@ vi.mock("@workos-inc/authkit-nextjs", () => ({
   withAuth,
 }));
 
-import { allowDevActor, getSessionActor, workosConfigState } from "@/lib/auth";
+import {
+  allowDevActor,
+  getSessionActor,
+  isOwnerEmail,
+  sessionMaxAgeSeconds,
+  workosConfigState,
+} from "@/lib/auth";
 
 function setEnv(name: string, value: string | undefined) {
   if (value === undefined) delete process.env[name];
@@ -91,6 +97,7 @@ describe("workosConfigState", () => {
     DATABASE_URL: process.env.DATABASE_URL,
     NODE_ENV: process.env.NODE_ENV,
     ALLOW_DEV_LOCAL: process.env.ALLOW_DEV_LOCAL,
+    ADMIN_EMAILS: process.env.ADMIN_EMAILS,
   };
 
   afterEach(() => {
@@ -100,6 +107,7 @@ describe("workosConfigState", () => {
     setEnv("DATABASE_URL", previous.DATABASE_URL);
     setEnv("NODE_ENV", previous.NODE_ENV);
     setEnv("ALLOW_DEV_LOCAL", previous.ALLOW_DEV_LOCAL);
+    setEnv("ADMIN_EMAILS", previous.ADMIN_EMAILS);
     withAuth.mockReset();
     upsert.mockReset();
     findFirstInvite.mockReset();
@@ -197,5 +205,65 @@ describe("workosConfigState", () => {
         },
       }),
     );
+  });
+
+  it("makes an allowlisted owner admin, including one already stored as guest", async () => {
+    process.env.WORKOS_API_KEY = "sk_test";
+    process.env.WORKOS_CLIENT_ID = "client_test";
+    process.env.WORKOS_COOKIE_PASSWORD = VALID_COOKIE;
+    setEnv("ADMIN_EMAILS", "ada@example.com");
+    withAuth.mockResolvedValue({
+      user: { id: "user_workos_1", firstName: "Ada", email: "ada@example.com" },
+    });
+    upsert.mockResolvedValue({ displayName: "Ada", role: "admin" });
+
+    const actor = await getSessionActor();
+    expect(actor?.role).toBe("admin");
+    expect(upsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: expect.objectContaining({ role: "admin" }),
+        update: expect.objectContaining({ role: "admin" }),
+      }),
+    );
+  });
+});
+
+describe("sessionMaxAgeSeconds", () => {
+  const previous = process.env.WORKOS_COOKIE_MAX_AGE;
+
+  afterEach(() => setEnv("WORKOS_COOKIE_MAX_AGE", previous));
+
+  it("uses the configured window", () => {
+    setEnv("WORKOS_COOKIE_MAX_AGE", "900");
+    expect(sessionMaxAgeSeconds()).toBe(900);
+  });
+
+  it("never inherits AuthKit's 400-day default when unset or unparseable", () => {
+    setEnv("WORKOS_COOKIE_MAX_AGE", undefined);
+    expect(sessionMaxAgeSeconds()).toBe(900);
+    setEnv("WORKOS_COOKIE_MAX_AGE", "forever");
+    expect(sessionMaxAgeSeconds()).toBe(900);
+    setEnv("WORKOS_COOKIE_MAX_AGE", "0");
+    expect(sessionMaxAgeSeconds()).toBe(900);
+  });
+});
+
+describe("isOwnerEmail", () => {
+  const previous = process.env.ADMIN_EMAILS;
+
+  afterEach(() => setEnv("ADMIN_EMAILS", previous));
+
+  it("matches case-insensitively across a comma separated list", () => {
+    setEnv("ADMIN_EMAILS", " Owner@Example.com , second@example.com ");
+    expect(isOwnerEmail("owner@example.com")).toBe(true);
+    expect(isOwnerEmail("SECOND@example.com")).toBe(true);
+  });
+
+  it("is false for anyone not listed, and for everyone when unset", () => {
+    setEnv("ADMIN_EMAILS", "owner@example.com");
+    expect(isOwnerEmail("someone@example.com")).toBe(false);
+    expect(isOwnerEmail(undefined)).toBe(false);
+    setEnv("ADMIN_EMAILS", undefined);
+    expect(isOwnerEmail("owner@example.com")).toBe(false);
   });
 });

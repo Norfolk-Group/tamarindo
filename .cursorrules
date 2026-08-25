@@ -35,12 +35,14 @@ Clone this repo to start a new project with the full Norfolk stack pre-configure
 
 ### TypeScript & Prisma
 - Strict typing always
-- Prisma generates types to `lib/generated/prisma` (gitignored)
-- `@prisma/client` aliased to `./lib/generated/prisma` in tsconfig.json
 - Run `npm run db:generate` after schema changes
-- Always import the Prisma client from the aliased path, never from `@prisma/client` directly:
-  - ✅ `import { PrismaClient } from "./lib/generated/prisma";`
-  - ❌ `import { PrismaClient } from "@prisma/client";`
+- **Tamarindo override:** the Prisma generator has no `output`. The client
+ generates to its default location and is imported from `@prisma/client`.
+ The starter's `lib/generated/prisma` convention breaks on Cloudflare Workers —
+ OpenNext can only patch the WASM query compiler loader when the client sits
+ where it expects it. See "Prisma on Workers" in `docs/nico/02-tech-stack.md`.
+ - ✅ `import { PrismaClient } from "@prisma/client";`
+ - ❌ `import { PrismaClient } from "./lib/generated/prisma";`
 
 ### Styling
 - Tailwind CSS v4 — imports via `app/globals.css`

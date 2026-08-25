@@ -11,8 +11,7 @@
     "isolatedModules": true,
     "baseUrl": "../..",
     "paths": {
-      "@/*": ["./*"],
-      "@prisma/client": ["./lib/generated/prisma"]
+      "@/*": ["./*"]
     }
   },
   "include": ["src/**/*.ts", "../../lib/**/*.ts"]

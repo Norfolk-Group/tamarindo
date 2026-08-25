@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
-import { workosConfigState } from "@/lib/auth/env";
+import { sessionMaxAgeSeconds, workosConfigState } from "@/lib/auth/env";
 import {
   INVITE_EMAIL_COOKIE,
   readInviteEmail,
@@ -35,7 +35,13 @@ export async function GET(request: Request) {
   const { getSignInUrl, getSignUpUrl } = await import(
     "@workos-inc/authkit-nextjs"
   );
-  const options = loginHint ? { loginHint } : {};
+  // OIDC max_age: WorkOS re-prompts when the last real authentication is
+  // older than the session window, so an expired cookie cannot be silently
+  // restored from a still-signed-in Google account.
+  const options = {
+    maxAge: sessionMaxAgeSeconds(),
+    ...(loginHint ? { loginHint } : {}),
+  };
   return redirect(
     fromInvite ? await getSignUpUrl(options) : await getSignInUrl(options),
   );

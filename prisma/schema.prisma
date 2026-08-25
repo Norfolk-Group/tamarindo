@@ -1,7 +1,12 @@
 generator client {
   provider        = "prisma-client-js"
-  output          = "../lib/generated/prisma"
   previewFeatures = ["postgresqlExtensions"]
+  // Engine-less client (GA since 6.16). Workers cannot run the Rust
+  // query-engine binary; the PrismaPg driver adapter carries the connection.
+  engineType      = "client"
+  // No `output`: OpenNext patches the generated client in place so the WASM
+  // query compiler loads as a module. A custom output dir escapes that patch
+  // and the Worker falls back to reading the .wasm off a filesystem it lacks.
 }
 
 datasource db {

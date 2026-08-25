@@ -40,12 +40,12 @@ for (const [name, value] of Object.entries({
 
 const API_URL = `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/ai/run/@cf/baai/bge-m3`;
 
-// Client is generated to lib/generated/prisma (see tsconfig alias); the
-// default @prisma/client path is never initialized in this repo.
-const { PrismaClient } = await import(
-  new URL("../lib/generated/prisma/index.js", import.meta.url).href
-);
-const prisma = new PrismaClient();
+// Engine-less client: the pg driver adapter carries the connection.
+const { PrismaClient } = await import("@prisma/client");
+const { PrismaPg } = await import("@prisma/adapter-pg");
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: DATABASE_URL, maxUses: 1 }),
+});
 
 async function embedBatch(texts) {
   let lastError;

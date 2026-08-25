@@ -1,4 +1,4 @@
-import type { Prisma } from "@/lib/generated/prisma";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { CaseSource } from "@/lib/model/types";
 import { defaultValues, mergeValues, type VariableValue } from "@/lib/model/variables";
