@@ -145,7 +145,7 @@ describe("workosConfigState", () => {
   });
 
   it("falls back to dev-local on loopback when WorkOS is ready but there is no cookie", async () => {
-    process.env.NODE_ENV = "development";
+    setEnv("NODE_ENV", "development");
     process.env.WORKOS_API_KEY = "sk_test";
     process.env.WORKOS_CLIENT_ID = "client_test";
     process.env.WORKOS_COOKIE_PASSWORD = VALID_COOKIE;

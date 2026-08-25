@@ -10,7 +10,7 @@ files, and security; best-of-breed elsewhere.
 | Hosting | Cloudflare Workers (Next.js via OpenNext) | Single platform with the agent runtime; edge latency |
 | Agent runtime | Cloudflare Agents SDK on Durable Objects | Purpose-built for long-lived stateful agents: WebSocket streaming, resumable streams, human-in-the-loop approvals, scheduling, per-agent SQLite state |
 | Durable jobs | Cloudflare Workflows | Multi-step pipelines with retries (ingestion, podcast render, deck build) |
-| Database | Neon Postgres + pgvector, via Hyperdrive | Relational data and vector memory side by side in one query. Cloudflare D1 is SQLite (no pgvector) — wrong tool |
+| Database | Neon Postgres + pgvector, via Hyperdrive | Hosted system of record for cells, formulas, memory. Laptop `next dev` stays on Docker Postgres (`DATABASE_URL`). Workers use Hyperdrive. Do not create a second Neon project. D1 is SQLite (no pgvector) — wrong tool |
 | ORM | Prisma (client generated to `lib/generated/prisma`) | Already configured in the starter; strict types |
 | Files | Cloudflare R2 | S3-compatible, zero egress fees — matters for a data room with repeated downloads |
 | Identity | WorkOS AuthKit | Consistency with all other portfolio apps; orgs, roles, invitations, MFA; free to 1M MAU. Authorization stays in our procedures, so swapping later is cheap |
@@ -45,11 +45,15 @@ canonical Nico voice. Text pipelines are unaffected either way.
 
 ## Artifact engines (libraries)
 
-- **Excel:** HyperFormula (server-side formula computation) + ExcelJS
-  (writes `.xlsx` with live formulas)
-- **Decks:** PptxGenJS (`.pptx` with Tamarindo template) + React preview
+- **Excel:** TypeScript cash-flow engine (`decimal.js`) materializes
+  `ModelCell` / `ReportCell` on Neon. Downloadable `.xlsx` is hand-rolled
+  OOXML (`lib/artifacts/excel.ts` + `zip-store.ts`) with formulas that
+  recompute in Excel. No HyperFormula or ExcelJS package.
+- **Decks:** Hand-rolled OOXML PPTX (`lib/artifacts/pptx.ts`) plus HTML /
+  PDF preview. No PptxGenJS package.
 - **PDF:** pdf-lib (NDA merge + signature embed), Browser Rendering (render)
-- **Parsing:** unpdf (PDF), SheetJS/ExcelJS (Excel), mammoth (DOCX)
+- **Parsing:** extract scripts on ingest (PDF / DOCX / XLSX → knowledge
+  extracts). Do not assume SheetJS or ExcelJS are installed.
 
 ## Secrets and environment variables
 

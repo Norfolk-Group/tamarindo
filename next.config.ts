@@ -20,6 +20,18 @@ const nextConfig: NextConfig = {
     "puppeteer",
     "pdf-lib",
   ],
+  // Prisma's generated runtime does path.join(process.cwd(), …) which traces
+  // the whole repo (knowledge dumps, scripts, native engines) into the Worker.
+  outputFileTracingExcludes: {
+    "/*": [
+      "./knowledge/**/*",
+      "./scripts/**/*",
+      "./docs/**/*",
+      "./workers/**/*",
+      "./node_modules/@prisma/engines/**/*",
+      "./lib/generated/prisma/**/*.node",
+    ],
+  },
 };
 
 export default nextConfig;

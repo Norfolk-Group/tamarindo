@@ -104,7 +104,7 @@ describe("agentToolSet", () => {
     invoke.mockResolvedValueOnce({ passages: [] });
     const result = await tools.knowledge_search.execute?.(
       { query: "thesis" },
-      { toolCallId: "call_1", messages: [] },
+      { toolCallId: "call_1", messages: [], context: undefined },
     );
     expect(result).toEqual({ passages: [] });
     expect(invoke).toHaveBeenLastCalledWith(
@@ -125,7 +125,7 @@ describe("agentToolSet", () => {
     );
     const result = await tools.communications_send.execute?.(
       {},
-      { toolCallId: "call_2", messages: [] },
+      { toolCallId: "call_2", messages: [], context: undefined },
     );
     expect(result).toEqual({
       error: "approval_required",

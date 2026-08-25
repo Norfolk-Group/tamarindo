@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { CaseSource } from "@/lib/model/types";
 import { renderWorkbookXlsx } from "@/lib/artifacts/excel";
 import {
   AUTO_BASE_SCENARIO_NAME,
@@ -102,7 +103,7 @@ export const modelSetVariables = defineProcedure({
         variables: viewsForRole(described.values, ctx.actor.role),
         canEditAdmin: ctx.actor.role === "admin",
         canEdit: true,
-        caseSource: described.source,
+        caseSource: described.source as CaseSource,
         applied: [],
       };
     }
@@ -120,7 +121,7 @@ export const modelSetVariables = defineProcedure({
       variables: viewsForRole(saved, ctx.actor.role),
       canEditAdmin: ctx.actor.role === "admin",
       canEdit: true,
-      caseSource: "personal",
+      caseSource: "personal" as const,
       applied,
     };
   },
@@ -158,7 +159,7 @@ export const modelPublishShared = defineProcedure({
       variables: viewsForRole(saved, ctx.actor.role),
       canEditAdmin: true,
       canEdit: true,
-      caseSource: "shared",
+      caseSource: "shared" as const,
       applied: ["__shared__"],
     };
   },
@@ -325,7 +326,7 @@ export const modelApplyScenario = defineProcedure({
       variables: viewsForRole(saved, ctx.actor.role),
       canEditAdmin: ctx.actor.role === "admin",
       canEdit: true,
-      caseSource: "personal",
+      caseSource: "personal" as const,
       applied,
     };
   },
@@ -378,7 +379,7 @@ export const modelExplain = defineProcedure({
     if (scenarioId) {
       await getOwnedScenario(scenarioId, createdById);
     } else {
-      scenarioId = await latestScenarioId(createdById);
+      scenarioId = (await latestScenarioId(createdById)) ?? undefined;
     }
     if (!scenarioId) {
       const values = await loadValuesForActor(ctx.actor);

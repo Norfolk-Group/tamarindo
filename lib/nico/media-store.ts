@@ -48,7 +48,7 @@ export async function verifyMediaToken(
 ): Promise<MediaClaims> {
   const secret = handshakeSecret();
   const [body, sig] = token.split(".");
-  if (!body || !sig) throw new Error("bad media token");
+  if (!secret || !body || !sig) throw new Error("bad media token");
   const expect = await hmacHex(secret, body);
   if (expect !== sig) throw new Error("bad media token");
   const claims = JSON.parse(atob(body)) as MediaClaims;
