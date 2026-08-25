@@ -9,6 +9,11 @@ WORKOS_API_KEY=
 WORKOS_CLIENT_ID=
 WORKOS_COOKIE_PASSWORD=
 NEXT_PUBLIC_WORKOS_REDIRECT_URI=http://localhost:3000/callback
+# Session idle window in seconds — without it AuthKit keeps you signed in
+# for 400 days. Also sent as OIDC max_age so Google re-prompts.
+WORKOS_COOKIE_MAX_AGE=900
+# Comma separated emails that get admin on sign-in (owner allowlist).
+ADMIN_EMAILS=
 NICO_HANDSHAKE_SECRET=
 NICO_AGENT_URL=http://127.0.0.1:8788
 # Wrangler-only. Next.js does not load this file into the browser bundle —

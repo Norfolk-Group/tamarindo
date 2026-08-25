@@ -3,7 +3,7 @@ import { buildCellGraph } from "@/lib/model/cell-graph";
 import { runCashflowModel } from "@/lib/model/engine";
 import type { VariableValue } from "@/lib/model/types";
 import { VARIABLE_DEFS } from "@/lib/model/variables";
-import type { Prisma } from "@/lib/generated/prisma";
+import type { Prisma } from "@prisma/client";
 
 /** Auto-saved by model.explain — hidden from the what-if picker. */
 export const AUTO_BASE_SCENARIO_NAME = "Base case (auto)";

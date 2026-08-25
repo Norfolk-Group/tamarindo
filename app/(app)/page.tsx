@@ -12,24 +12,30 @@ export default async function CopilotPage() {
   if (!actor) redirect("/sign-in");
 
   let capabilities: Capability[] = [];
-  if (actor.role === "admin") {
-    const listed = (await registry.invoke(
-      "capabilities.list",
-      {},
-      { actor, traceId: crypto.randomUUID() },
-    )) as { capabilities: Capability[] };
-    capabilities = listed.capabilities;
+  let profile: { org: string | null; bio: string | null; email: string | null } | null =
+    null;
+  let needsNda = false;
+  try {
+    if (actor.role === "admin") {
+      const listed = (await registry.invoke(
+        "capabilities.list",
+        {},
+        { actor, traceId: crypto.randomUUID() },
+      )) as { capabilities: Capability[] };
+      capabilities = listed.capabilities;
+    }
+    profile = await prisma.profile.findUnique({
+      where: { authSubject: actor.id },
+      select: { org: true, bio: true, email: true },
+    });
+    needsNda =
+      (actor.role === "investor" || actor.role === "guest") &&
+      !(await hasCurrentNdaForSubject(actor.id));
+  } catch (err) {
+    console.error("[copilot] profile bootstrap failed", err);
   }
-
-  const profile = await prisma.profile.findUnique({
-    where: { authSubject: actor.id },
-    select: { org: true, bio: true, email: true },
-  });
   const needsIntake =
     actor.role !== "admin" && (!profile?.org || !profile.bio);
-  const needsNda =
-    (actor.role === "investor" || actor.role === "guest") &&
-    !(await hasCurrentNdaForSubject(actor.id));
 
   return (
     <Copilot
