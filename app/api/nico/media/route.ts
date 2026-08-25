@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     if (!obj) {
       return NextResponse.json({ ok: false, error: { message: "not found" } }, { status: 404 });
     }
-    return new NextResponse(obj.bytes, {
+    return new NextResponse(Buffer.from(obj.bytes), {
       headers: {
         "Content-Type": claims.mimeType,
         "Cache-Control": "private, max-age=60",

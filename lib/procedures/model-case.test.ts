@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProcedureError } from "@/lib/procedures/registry";
+import type { ScenarioSummary } from "@/lib/model/cell-store";
 import { defaultValues, mergeValues } from "@/lib/model/variables";
 
 const publishSharedCase = vi.fn(async (overrides: Record<string, number | string>) =>
@@ -34,7 +35,7 @@ const saveScenario = vi.fn(async () => ({
   cellCount: 10,
   depCount: 4,
 }));
-const listScenarios = vi.fn(async () => []);
+const listScenarios = vi.fn(async (): Promise<ScenarioSummary[]> => []);
 const diffScenarios = vi.fn(async () => ({
   scenarioA: { id: "a", name: "A" },
   scenarioB: { id: "b", name: "B" },
