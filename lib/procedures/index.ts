@@ -25,11 +25,13 @@ import { invitationsSend } from "@/lib/procedures/invitations";
 import { conversationsGet } from "@/lib/procedures/conversations";
 import { meetingsJoin } from "@/lib/procedures/meetings";
 import {
+  modelApplyScenario,
   modelDiffScenarios,
   modelExplain,
   modelExport,
   modelGet,
   modelListScenarios,
+  modelPublishShared,
   modelSaveScenario,
   modelSetVariables,
 } from "@/lib/procedures/model";
@@ -81,6 +83,7 @@ export const registry = new ProcedureRegistry()
   .register(meetingsJoin)
   .register(modelGet)
   .register(modelSetVariables)
+  .register(modelPublishShared)
   .register(modelReport)
   .register(modelExport)
   .register(icpList)
@@ -89,6 +92,7 @@ export const registry = new ProcedureRegistry()
   .register(icpVintages)
   .register(modelSaveScenario)
   .register(modelListScenarios)
+  .register(modelApplyScenario)
   .register(modelExplain)
   .register(modelDiffScenarios)
   .register(tickerList)

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const invokeAgentTool = vi.hoisted(() => vi.fn());
+const agentToolSet = vi.hoisted(() => vi.fn());
 const composeAnswer = vi.hoisted(() => vi.fn());
 const profileIdFor = vi.hoisted(() => vi.fn());
 const ensureConversation = vi.hoisted(() => vi.fn());
@@ -9,7 +10,7 @@ const recallLearned = vi.hoisted(() => vi.fn());
 const learnFromTurn = vi.hoisted(() => vi.fn());
 const loadWho = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/nico/registry-tools", () => ({ invokeAgentTool }));
+vi.mock("@/lib/nico/registry-tools", () => ({ invokeAgentTool, agentToolSet }));
 vi.mock("@/lib/nico/composer", () => ({ composeAnswer }));
 vi.mock("@/lib/procedures/profile", () => ({ profileIdFor }));
 vi.mock("@/lib/nico/session", () => ({ ensureConversation, appendMessage }));
@@ -774,6 +775,305 @@ describe("runTurn", () => {
     ).toBe(true);
     expect(invokeAgentTool).not.toHaveBeenCalledWith(
       "knowledge.search",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it("saves a named what-if without publishing", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "model.saveScenario") {
+        return { scenarioId: "scen_1", cellCount: 10, depCount: 4 };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    for await (const event of runTurn("save this as Rate shock", actor, {
+      conversationId: "conv_save_as",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.saveScenario",
+      { name: "Rate shock" },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "model.publishShared",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "model.setVariables",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it("loads a named what-if onto the personal case", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "model.listScenarios") {
+        return { scenarios: [{ id: "scen_1", name: "Rate shock" }] };
+      }
+      if (name === "model.applyScenario") {
+        return { applied: ["downPaymentPct"], caseSource: "personal" };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    for await (const event of runTurn("load Rate shock", actor, {
+      conversationId: "conv_load",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.listScenarios",
+      {},
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.applyScenario",
+      { scenarioId: "scen_1" },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "model.publishShared",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it("compares two named what-ifs and yields a compact table", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "model.listScenarios") {
+        return {
+          scenarios: [
+            { id: "id_a", name: "A" },
+            { id: "id_b", name: "B" },
+          ],
+        };
+      }
+      if (name === "model.diffScenarios") {
+        return {
+          scenarioA: { id: "id_a", name: "A" },
+          scenarioB: { id: "id_b", name: "B" },
+          changed: [
+            {
+              key: "input.downPaymentPct",
+              label: "Client down",
+              kind: "input",
+              fy: null,
+              a: 0.4,
+              b: 0.35,
+              delta: -0.05,
+            },
+            {
+              key: "summary.fy1ClosingCashUsd",
+              label: "FY1 closing cash",
+              kind: "derived",
+              fy: null,
+              a: 100,
+              b: 80,
+              delta: -20,
+            },
+          ],
+          totalChanged: 2,
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    const events = [];
+    for await (const event of runTurn("compare A and B", actor, {
+      conversationId: "conv_compare",
+    })) {
+      events.push(event);
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.diffScenarios",
+      { scenarioA: "id_a", scenarioB: "id_b" },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    const table = events.find(
+      (event) =>
+        event.type === "token" &&
+        typeof event.text === "string" &&
+        event.text.includes("| Input |"),
+    );
+    expect(table).toBeTruthy();
+    expect((table as { text: string }).text).toContain("Client down");
+    expect((table as { text: string }).text).toContain("FY1 closing cash");
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "compare A and B",
+      expect.anything(),
+      expect.objectContaining({
+        artifactNote: expect.stringMatching(/do not reprint the table/i),
+      }),
+    );
+  });
+
+  it("does not treat a report load as a what-if", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "model.report") {
+        return {
+          kind: "statements",
+          fromFy: 1,
+          toFy: 10,
+          consolidated: { years: [] },
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* () {
+      yield "";
+    });
+
+    for await (const event of runTurn("load the financial statements", actor, {
+      conversationId: "conv_load_report",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.report",
+      expect.objectContaining({ kind: "statements" }),
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "model.listScenarios",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it("does not save a sensitivity shock", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "model.report") {
+        return {
+          kind: "sensitivity",
+          fromFy: 1,
+          toFy: 10,
+          consolidated: { years: [] },
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* () {
+      yield "";
+    });
+
+    for await (const event of runTurn("sensitivity on down", actor, {
+      conversationId: "conv_sens",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.report",
+      { kind: "sensitivity", fromFy: undefined, toFy: undefined },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "model.saveScenario",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+
+  it("writes set-down onto the personal case only", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "model.setVariables") {
+        return {
+          applied: ["downPaymentPct"],
+          model: { summary: { fy1ClosingCashUsd: 1, fy10ClosingCashUsd: 2 } },
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    for await (const event of runTurn("set down to 35%", actor, {
+      conversationId: "conv_set_down",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.setVariables",
+      { values: { downPaymentPct: expect.closeTo(0.35) } },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "model.saveScenario",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "model.publishShared",
       expect.anything(),
       expect.anything(),
       expect.anything(),

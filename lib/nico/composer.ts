@@ -1,5 +1,5 @@
 import { createAnthropic } from "@ai-sdk/anthropic";
-import { streamText } from "ai";
+import { stepCountIs, streamText, type ToolSet } from "ai";
 import type { KnowledgePassage } from "@/lib/procedures/knowledge-search";
 import { HUMAN_TEST_TURN } from "@/lib/nico/human-test";
 import { nicoSystemPrompt, type NicoChannel } from "@/lib/nico/prompts";
@@ -37,6 +37,13 @@ export type ComposeContext = {
   channel?: NicoChannel;
   /** Real model reasoning, not a fake ticker. */
   onThinking?: (snippet: string) => void;
+  /**
+   * Registry procedures the model may call this turn (built by
+   * `agentToolSet`). Absent means narrate-only, exactly as before.
+   */
+  tools?: ToolSet;
+  /** Fired when the model actually calls a tool, for the activity ticker. */
+  onToolCall?: (toolName: string) => void;
   /** Image/video the server just made. */
   mediaNote?: string;
   /** Named Tamarindo seats when the user asked who someone is. */
@@ -173,6 +180,12 @@ async function* streamAnthropic(
       ],
       abortSignal: controller.signal,
       maxRetries: 0,
+      // The tool loop: the model composes across registry procedures instead
+      // of narrating a single pre-routed result. Bounded so a confused model
+      // cannot spin tools forever inside one turn.
+      ...(context.tools && Object.keys(context.tools).length > 0
+        ? { tools: context.tools, stopWhen: stepCountIs(5) }
+        : {}),
       ...(strong
         ? {
             providerOptions: {
@@ -202,6 +215,16 @@ async function* streamAnthropic(
           firstTokenTimer = undefined;
         }
         if (part.text) yield part.text;
+        continue;
+      }
+      if (part.type === "tool-call") {
+        // A tool call proves the provider is alive; a slow tool must not
+        // trip the first-token abort meant for a silent socket.
+        if (firstTokenTimer !== undefined) {
+          clearTimeout(firstTokenTimer);
+          firstTokenTimer = undefined;
+        }
+        context.onToolCall?.(part.toolName);
         continue;
       }
       if (part.type === "error") {

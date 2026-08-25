@@ -65,6 +65,14 @@ export class ProcedureRegistry {
       }));
   }
 
+  /**
+   * Zod input schema for one procedure, so the agent tool loop can hand the
+   * model real parameter schemas. Validation still happens in `invoke`.
+   */
+  inputSchema(name: string): z.ZodTypeAny | undefined {
+    return this.procedures.get(name)?.input;
+  }
+
   async invoke(
     name: string,
     rawInput: unknown,

@@ -51,6 +51,9 @@ describe("humanOnly capability map (KTD4 / AE3)", () => {
     expect(names).toContain("icp.vintages");
     expect(names).not.toContain("approvals.decide");
     expect(names).not.toContain("dealTerms.publish");
+    expect(names).not.toContain("model.publishShared");
+    expect(names).toContain("model.applyScenario");
+    expect(names).toContain("model.listScenarios");
   });
 
   it("lets an investor agent read period reports and ICPs but not icp.set", () => {
@@ -63,6 +66,8 @@ describe("humanOnly capability map (KTD4 / AE3)", () => {
     expect(names).toContain("icp.vintages");
     expect(names).not.toContain("icp.set");
     expect(names).not.toContain("model.setVariables");
+    expect(names).not.toContain("model.listScenarios");
+    expect(names).not.toContain("model.publishShared");
   });
 
   it("shows approvals.decide and nda.sign to a human admin, not to an admin agent", () => {
@@ -134,6 +139,20 @@ describe("humanOnly capability map (KTD4 / AE3)", () => {
         { approvalId: "x", decision: "approved" },
         memberAgent,
       ),
+    ).rejects.toMatchObject({ code: "forbidden" });
+  });
+
+  it("hides model.publishShared from agents and forbids a direct invoke", async () => {
+    const agentNames = registry
+      .capabilities({ role: "admin", kind: "agent" })
+      .map((c) => c.name);
+    const userNames = registry
+      .capabilities({ role: "admin", kind: "user" })
+      .map((c) => c.name);
+    expect(userNames).toContain("model.publishShared");
+    expect(agentNames).not.toContain("model.publishShared");
+    await expect(
+      registry.invoke("model.publishShared", {}, adminAgent),
     ).rejects.toMatchObject({ code: "forbidden" });
   });
 });
