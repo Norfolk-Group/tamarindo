@@ -3,6 +3,7 @@ import {
   activePrimary,
   goHome,
   isAdminOpen,
+  railLevel,
   selectAdminSection,
   selectPrimary,
   toggleAdmin,
@@ -52,6 +53,17 @@ describe("activePrimary", () => {
       "conversation",
     );
     expect(activePrimary({ type: "primary", id: "dataroom" })).toBe("dataroom");
+  });
+});
+
+describe("railLevel", () => {
+  it("keeps the first-level rail only when no second-level menu is open", () => {
+    expect(railLevel({ type: "none" })).toBe("first");
+  });
+
+  it("replaces the first-level rail when Admin or a workspace is open", () => {
+    expect(railLevel({ type: "admin", section: "approvals" })).toBe("second");
+    expect(railLevel({ type: "primary", id: "model" })).toBe("second");
   });
 });
 

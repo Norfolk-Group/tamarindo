@@ -8,7 +8,7 @@ export function SecondLevelRail({
   id,
   title,
   label,
-  widthClass = "w-96",
+  widthClass = "w-60",
   onHome,
   commands,
   children,
@@ -25,7 +25,7 @@ export function SecondLevelRail({
     <aside
       id={id}
       className={cn(
-        "flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground",
+        "flex h-full shrink-0 flex-col border-r border-border bg-card/40",
         widthClass,
       )}
       aria-label={label}
@@ -39,7 +39,7 @@ export function SecondLevelRail({
         <button
           type="button"
           onClick={onHome}
-          className="transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <House className="size-4 shrink-0" />
           <span className="flex-1 text-left">Home</span>

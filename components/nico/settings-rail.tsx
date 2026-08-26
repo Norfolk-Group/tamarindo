@@ -117,7 +117,7 @@ export function SettingsRail({
             "transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm",
             active === item.id
               ? "bg-primary/15 text-primary"
-              : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              : "text-muted-foreground hover:bg-accent hover:text-foreground",
           )}
           aria-current={active === item.id ? "page" : undefined}
         >
