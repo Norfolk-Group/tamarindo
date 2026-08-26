@@ -1,0 +1,54 @@
+"use client";
+
+import type { ReactNode } from "react";
+import { House } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export function SecondLevelRail({
+  id,
+  title,
+  label,
+  widthClass = "w-96",
+  onHome,
+  commands,
+  children,
+}: {
+  id?: string;
+  title: string;
+  label: string;
+  widthClass?: string;
+  onHome: () => void;
+  commands?: ReactNode;
+  children?: ReactNode;
+}) {
+  return (
+    <aside
+      id={id}
+      className={cn(
+        "flex h-full shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground",
+        widthClass,
+      )}
+      aria-label={label}
+    >
+      <div className="flex h-14 shrink-0 items-center px-3">
+        <p className="text-sm font-semibold tracking-widest text-muted-foreground">
+          {title}
+        </p>
+      </div>
+      <nav className="flex flex-col gap-1 px-2 pb-2" aria-label={`${label} menu`}>
+        <button
+          type="button"
+          onClick={onHome}
+          className="transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <House className="size-4 shrink-0" />
+          <span className="flex-1 text-left">Home</span>
+        </button>
+        {commands}
+      </nav>
+      {children ? (
+        <div className="min-h-0 flex-1 overflow-auto">{children}</div>
+      ) : null}
+    </aside>
+  );
+}
