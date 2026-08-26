@@ -1,7 +1,7 @@
 /**
  * Named Tamarindo seats. FACT from the Aug 18 debrief, Aug 19 call,
- * and thesis 06/09/11. Not a cap table — thesis 11 still has five
- * equal partners with names unassigned.
+ * Aug 26 Granola, and thesis 06/09/11/20. Not a cap table — thesis 11
+ * still has five equal partners with names unassigned.
  */
 
 export type Person = {
@@ -56,7 +56,7 @@ export const TAMARINDO_PEOPLE: Person[] = [
     name: "Tom Herman",
     role: "CTO",
     aliases: ["tom", "herman", "tom herman"],
-    line: "Tom Herman — CTO / platform lead. Time box from the sources: 5–10 hours/week. Equity funds this seat, not the Intervest warehouse.",
+    line: "Tom Herman — CTO / platform lead. Time box from the sources: 5–10 hours/week. Equity funds this seat, not the Intervest warehouse. Aug 26: confirm the app shows 12–84 month vehicle terms; UX sync with Natalia.",
     slide: "Tom Herman — CTO. Platform and credit-stack build (part-time at launch).",
     onPayroll: true,
   },
@@ -74,7 +74,7 @@ export const TAMARINDO_PEOPLE: Person[] = [
     name: "Natalia Carvajal",
     role: "Marketing Director (interim)",
     aliases: ["natalia", "carvajal", "natalia carvajal"],
-    line: "Natalia Carvajal — Marketing Director (for now). Brand, design, and the competitor map (direct banks, bank brokers, Volvé, Tamarindo). FACT — Ricardo 24 Aug 2026.",
+    line: "Natalia Carvajal — Marketing Director (for now). Brand, design, and the competitor map. Aug 26: covering brand and deck while Rosario is on vacation; sync with Tom on app UX. FACT — Granola 26 Aug 2026.",
     slide: "Natalia Carvajal — Marketing Director. Brand and the competitive frame.",
     onPayroll: true,
   },
@@ -109,8 +109,15 @@ export const TAMARINDO_PEOPLE: Person[] = [
     id: "mike",
     name: "Michael Gontar",
     role: "Intervest counterpart",
-    aliases: ["mike", "gontar", "mike gontar", "michael gontar"],
-    line: "Michael (Mike) Gontar — Intervest counterpart / CEO in the Aug 18 brief. Not Tamarindo payroll. Not on the OpCo cap table unless a later term sheet says so.",
+    aliases: [
+      "mike",
+      "gontar",
+      "gunther",
+      "mike gontar",
+      "mike gunther",
+      "michael gontar",
+    ],
+    line: "Michael (Mike) Gontar — Intervest counterpart. Notes sometimes say Gunther; same seat. Aug 26 box: $20M both asset classes at once, 780+, ~500 bps over IBOR, 2+20, aviation out of this warehouse. Not Tamarindo payroll.",
     slide: "Michael Gontar — Intervest (capital partner). Not Tamarindo payroll.",
     onPayroll: false,
   },
@@ -133,9 +140,9 @@ export const TAMARINDO_PEOPLE: Person[] = [
     id: "jesse",
     name: "Jesse Gomez",
     role: "Aviation / high-value assets",
-    aliases: ["jesse", "gomez", "jesse gomez"],
-    line: "Jesse Gomez — aviation pilot and consultant; boats, planes, real-estate sales. New on the Aug 19 call. 24 Aug: if a client stays current and rents the home, keep the same interest; Tamarindo stays owner — rentals feel more like Dulcinea. FACT — Launch Team WhatsApp.",
-    slide: "Jesse Gomez — Aviation and high-value assets. New.",
+    aliases: ["jesse", "jesi", "gomez", "jesse gomez", "jesi gomez"],
+    line: "Jesse / Jesi Gomez — high-value assets and commercial. New on the Aug 19 call. Aug 26: on the Tamarindo call; rental-fee framing (insurance vs explicit fee). Aviation is out of the Intervest-pilot model — that is a product decision, not a seat change. FACT — Granola 26 Aug 2026.",
+    slide: "Jesse Gomez — High-value assets and commercial. Aviation is not in this warehouse.",
     onPayroll: true,
   },
 ];
@@ -160,7 +167,7 @@ export function peopleNoteFor(message: string): string | undefined {
   const hits = namedPeopleIn(message);
   if (hits.length === 0) return undefined;
   return [
-    "Tamarindo people (FACT from the Aug 18 debrief and Aug 19 call — not a cap table):",
+    "Tamarindo people (FACT from the Aug 18 debrief, Aug 19 call, and Aug 26 Granola — not a cap table):",
     ...hits.map((p) => `- ${p.line}`),
     "Thesis 11: five equal partners at t=0; names not assigned to the 20% seats.",
     "Norfolk AI builds Nico. It is not Tamarindo and is not a capital partner.",

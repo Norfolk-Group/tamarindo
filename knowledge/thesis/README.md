@@ -1,7 +1,7 @@
 # Tamarindo Thesis — Knowledge Base
 
 An opinionated synthesis of everything ingested (founding thesis, Aug 18
-debrief, Aug 19 call, Granola Jun 8–Aug 20, tech cost model) into a working
+debrief, Aug 19 call, Granola Jun 8–Aug 26, tech cost model) into a working
 view of what Tamarindo should be and how it operates over a 10-year run.
 
 **Discipline:** facts cite a source; everything else is labeled OPINION or
@@ -29,6 +29,7 @@ should be pasted into an investor deck without its validation step.
 | [17-end-of-lease-title.md](17-end-of-lease-title.md) | How the lessee actually buys: US balloon vs Colombian *escritura*/RUNT, foreigners, POA, BanRep, walk-away |
 | [18-kyc-aml.md](18-kyc-aml.md) | US CIP/OFAC/8300/CTA vs Colombian notary SIPLAFT and sucursal SAGRILAFT — do not invent licenses |
 | [19-platform-economics.md](19-platform-economics.md) | WhatsApp/slide seeds vs research 1% / 75 bps; dollars are calculated; not a broker fee |
+| [20-aug-26-decisions.md](20-aug-26-decisions.md) | Live Intervest-pilot box: both classes at once, 780+, 12–84 / 2–15, aviation out, week of 8 Sep |
 | [../qa/README.md](../qa/README.md) | Simulated conversational Q&As (work + life), including Spanish investor register |
 
 ## The thesis in one paragraph
