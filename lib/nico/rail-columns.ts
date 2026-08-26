@@ -37,3 +37,7 @@ export function isAdminOpen(flyout: RailFlyout): boolean {
 export function goHome(): RailFlyout {
   return { type: "none" };
 }
+
+export function railLevel(flyout: RailFlyout): "first" | "second" {
+  return flyout.type === "none" ? "first" : "second";
+}

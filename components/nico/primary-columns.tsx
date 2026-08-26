@@ -10,18 +10,11 @@ import {
 } from "@/components/nico/workspace-panels";
 import type { PrimaryColumnId } from "@/lib/nico/rail-columns";
 
-const COLUMN_META: Record<
-  PrimaryColumnId,
-  { title: string; label: string; widthClass: string }
-> = {
-  model: { title: "STATEMENTS", label: "Statements", widthClass: "w-[40rem]" },
-  variables: {
-    title: "ASSUMPTIONS",
-    label: "Assumptions",
-    widthClass: "w-[28rem]",
-  },
-  artifacts: { title: "ARTIFACTS", label: "Artifacts", widthClass: "w-96" },
-  dataroom: { title: "DATA ROOM", label: "Data Room", widthClass: "w-96" },
+const COLUMN_META: Record<PrimaryColumnId, { title: string; label: string }> = {
+  model: { title: "STATEMENTS", label: "Statements" },
+  variables: { title: "ASSUMPTIONS", label: "Assumptions" },
+  artifacts: { title: "ARTIFACTS", label: "Artifacts" },
+  dataroom: { title: "DATA ROOM", label: "Data Room" },
 };
 
 export function PrimaryColumn({
@@ -36,7 +29,6 @@ export function PrimaryColumn({
     <SecondLevelRail
       title={meta.title}
       label={meta.label}
-      widthClass={meta.widthClass}
       onHome={onHome}
     >
       {id === "model" && <ModelWorkspace />}

@@ -19,6 +19,7 @@ import {
   activePrimary,
   goHome as homeFlyout,
   isAdminOpen,
+  railLevel,
   selectAdminSection,
   selectPrimary,
   toggleAdmin,
@@ -58,6 +59,7 @@ export function Copilot({
   const agentHost = nicoAgentHost(agentUrl);
   const primary = activePrimary(flyout);
   const adminOpen = isAdminOpen(flyout);
+  const level = railLevel(flyout);
 
   function goHome() {
     setFlyout(homeFlyout());
@@ -83,21 +85,23 @@ export function Copilot({
 
   return (
     <div className="flex h-dvh overflow-hidden">
-      <LeftRail
-        isAdmin={isAdmin}
-        userName={userName}
-        userRole={userRole}
-        ndaExecuted={!showNda}
-        primary={primary}
-        onPrimary={handlePrimary}
-        adminOpen={adminOpen}
-        onAdminOpen={handleAdminOpen}
-        onNewConversation={startNewConversation}
-      />
-      {flyout.type === "primary" && (
+      {level === "first" && (
+        <LeftRail
+          isAdmin={isAdmin}
+          userName={userName}
+          userRole={userRole}
+          ndaExecuted={!showNda}
+          primary={primary}
+          onPrimary={handlePrimary}
+          adminOpen={adminOpen}
+          onAdminOpen={handleAdminOpen}
+          onNewConversation={startNewConversation}
+        />
+      )}
+      {level === "second" && flyout.type === "primary" && (
         <PrimaryColumn id={flyout.id} onHome={goHome} />
       )}
-      {flyout.type === "admin" && (
+      {level === "second" && flyout.type === "admin" && (
         <SettingsRail
           isAdmin={isAdmin}
           section={flyout.section}
