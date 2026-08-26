@@ -39,7 +39,8 @@ describe("model.export", () => {
     vi.clearAllMocks();
   });
 
-  it("builds HTML, CSV, Excel, and PDF for each live report kind", async () => {
+  // 13 full model runs + workbook builds; CI runners need ~40s.
+  it("builds HTML, CSV, Excel, and PDF for each live report kind", { timeout: 120_000 }, async () => {
     const kinds = ["statements", "returns", "sensitivity", "income"] as const;
     for (const kind of kinds) {
       const html = await modelExport.handler({ format: "html", kind }, ctx);
