@@ -6,7 +6,7 @@ import { productQuotes } from "@/lib/model/products";
 import { loadValuesForActor, saveModelValues } from "@/lib/model/store";
 import type { CatalogIcpId, IcpComputed, IcpId, Vintage } from "@/lib/model/types";
 import { CATALOG_ICP_IDS, ICP_IDS } from "@/lib/model/types";
-import { VARIABLE_DEFS, VARIABLE_KEYS } from "@/lib/model/variables";
+import { num, VARIABLE_DEFS, VARIABLE_KEYS } from "@/lib/model/variables";
 import { buildPlannedVintages } from "@/lib/model/vintages";
 import { profileIdFor } from "@/lib/procedures/profile";
 import { defineProcedure } from "@/lib/procedures/registry";
@@ -103,6 +103,7 @@ function toProductCatalog(
     clientRate: number;
     mixWeight: number;
   },
+  values: Parameters<typeof computeContracts>[0],
 ): IcpCatalog {
   const profile = CATALOG_BY_ID[id];
   return {
@@ -122,7 +123,7 @@ function toProductCatalog(
     downPaymentUsd: quote.ticketUsd - quote.fundedUsd,
     residualUsd: quote.residualUsd,
     clientRate: quote.clientRate,
-    baseClientRate: profile.clientRate,
+    baseClientRate: num(values, `icp.${id}.clientRate`),
     termMonths: quote.termMonths,
     monthlyLeaseUsd: quote.monthlyLeaseUsd,
     mixWeight: quote.mixWeight,
@@ -135,10 +136,10 @@ export function computeCatalog(
 ): IcpCatalog[] {
   const homes = computeContracts(values).map(toIcpCatalog);
   const autos = productQuotes("auto", values).map((quote) =>
-    toProductCatalog(quote.id, quote),
+    toProductCatalog(quote.id, quote, values),
   );
   const aircraft = productQuotes("aircraft", values).map((quote) =>
-    toProductCatalog(quote.id, quote),
+    toProductCatalog(quote.id, quote, values),
   );
   return [...homes, ...autos, ...aircraft];
 }

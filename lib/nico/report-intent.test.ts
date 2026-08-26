@@ -35,8 +35,13 @@ describe("report intent", () => {
   it("maps investor returns and sensitivity", () => {
     expect(parseReportAsk("show investor returns")).toEqual({ kind: "returns" });
     expect(parseReportAsk("vehicle IRR please")).toEqual({ kind: "returns" });
+    expect(parseReportAsk("what's the IRR")).toEqual({ kind: "returns" });
     expect(parseReportAsk("sensitivity on residual")).toEqual({
       kind: "sensitivity",
+    });
+    expect(parseReportAsk("run a stress test")).toEqual({ kind: "sensitivity" });
+    expect(parseReportAsk("show me the books")).toMatchObject({
+      kind: "statements",
     });
     expect(parseReportAsk("financial statements")).toEqual({
       kind: "statements",

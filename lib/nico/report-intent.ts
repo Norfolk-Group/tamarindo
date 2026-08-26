@@ -12,16 +12,16 @@ export type ReportAsk = {
 };
 
 const RETURNS_RE =
-  /\b(investor returns?|returns? report|vehicle irr|unit irr|moic|cash[- ]on[- ]cash)\b/i;
+  /\b(investor returns?|returns? report|vehicle irr|unit irr|irr|moic|cash[- ]on[- ]cash|what (are|is) (the )?(investor )?returns)\b/i;
 
 const SENS_RE =
-  /\b(sensitivity|tornado|what[- ]if grid|shock (the )?(residual|balloon|down|ltv))\b/i;
+  /\b(sensitivity( analysis)?|tornado|stress tests?|what[- ]if grid|shock (the )?(model|residual|balloon|down|ltv))\b/i;
 
 const INCOME_RE =
   /\b(income statement|p&l|p and l|profit and loss|operating p&l)\b/i;
 
 const STATEMENTS_RE =
-  /\b(financial statements?|statement of cash|scf|ias 7|period report|cash ?flow)\b/i;
+  /\b(financial statements?|statement of cash|scf|ias 7|period report|cash ?flow|show (me )?(the )?(live )?books?)\b/i;
 
 const FY_RANGE_RE =
   /\b(?:fy|fiscal years?|years?)\s*(\d{1,2})\s*(?:to|-|–|—|through|thru)\s*(?:fy|fiscal year|year)?\s*(\d{1,2})\b/i;

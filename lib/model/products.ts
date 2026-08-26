@@ -92,18 +92,33 @@ export function productQuote(
   };
 }
 
+function mixCounts(weights: number[], n: number): number[] {
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  const quotas = weights.map((weight) => (weight / total) * n);
+  const floors = quotas.map((quota) => Math.floor(quota));
+  let remain = n - floors.reduce((sum, count) => sum + count, 0);
+  const order = quotas
+    .map((quota, i) => ({ i, frac: quota - floors[i]! }))
+    .sort((a, b) => b.frac - a.frac || a.i - b.i);
+  const counts = [...floors];
+  for (let k = 0; k < remain; k += 1) {
+    const seat = order[k];
+    if (!seat) break;
+    counts[seat.i] = (counts[seat.i] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/** Largest-remainder mix so a 20% ICP still originates in a short book. */
 export function pickProductQuote(quotes: ProductQuote[], originatedIndex: number): ProductQuote {
   if (quotes.length === 0) throw new Error("No product ICP");
   const weights = quotes.map((row) => Math.max(0, row.mixWeight));
   const total = weights.reduce((sum, weight) => sum + weight, 0);
   if (total <= 0) return quotes[originatedIndex % quotes.length]!;
-  const slot = originatedIndex % 100;
-  let cumulative = 0;
-  for (let i = 0; i < quotes.length; i += 1) {
-    cumulative += (weights[i]! / total) * 100;
-    if (slot < cumulative) return quotes[i]!;
-  }
-  return quotes[quotes.length - 1]!;
+  const before = mixCounts(weights, originatedIndex);
+  const after = mixCounts(weights, originatedIndex + 1);
+  const i = after.findIndex((count, j) => count > (before[j] ?? 0));
+  return quotes[i] ?? quotes[quotes.length - 1]!;
 }
 
 export function autoOriginationsThisMonth(

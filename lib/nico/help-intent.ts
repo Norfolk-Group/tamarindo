@@ -1,3 +1,4 @@
+import { parseBusinessExplainAsk } from "@/lib/nico/business-intent";
 import {
   HELP_TOPICS,
   scoreHelpTopic,
@@ -21,6 +22,7 @@ export function parseHelpAsk(message: string): HelpAsk | null {
   const text = message.trim();
   if (!text) return null;
   if (HELP_ME_TASK_RE.test(text)) return null;
+  if (parseBusinessExplainAsk(text)) return null;
 
   if (/^(help|\?|how does this (app|work))\b/i.test(text) && text.length < 40) {
     return { kind: "list" };

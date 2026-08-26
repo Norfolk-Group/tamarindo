@@ -31,6 +31,10 @@ import {
   formatHelpTopic,
   parseHelpAsk,
 } from "@/lib/nico/help-intent";
+import {
+  formatBusinessBrief,
+  parseBusinessExplainAsk,
+} from "@/lib/nico/business-intent";
 import { parseIcpAsk, type IcpAsk } from "@/lib/nico/icp-intent";
 import {
   entitiesForWorkbook,
@@ -121,11 +125,13 @@ export async function* runTurn(
   const reportAsk = parseReportAsk(message);
   const icpAsk = parseIcpAsk(message);
   const helpAsk = parseHelpAsk(message);
+  const businessAsk = parseBusinessExplainAsk(message);
   const modelAction =
     Boolean(scenarioAsk) ||
     Boolean(variableSet) ||
     Boolean(icpAsk) ||
     Boolean(helpAsk) ||
+    Boolean(businessAsk) ||
     Boolean(reportAsk) ||
     isCashflowModelRequest(message) ||
     isWorkbookRequest(message) ||
@@ -412,6 +418,35 @@ export async function* runTurn(
           err instanceof Error ? err.message : "unknown error"
         }.`;
       }
+    }
+  } else if (businessAsk) {
+    yield {
+      type: "activity",
+      state: "drafting",
+      label: "Reading the live book…",
+    };
+    try {
+      const data = (await invokeAgentTool(
+        "model.get",
+        {},
+        toolActor,
+        traceId,
+      )) as {
+        model: {
+          summary: {
+            homesOriginated: number;
+            autosOriginated: number;
+            aircraftOriginated: number;
+            fy1ClosingCashUsd: number;
+            fy10ClosingCashUsd: number;
+          };
+        };
+      };
+      artifactNote = formatBusinessBrief(data.model.summary);
+    } catch (err) {
+      artifactNote = `I tried to read the live book and hit: ${
+        err instanceof Error ? err.message : "unknown error"
+      }.`;
     }
   } else if (helpAsk) {
     yield {

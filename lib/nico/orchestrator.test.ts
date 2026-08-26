@@ -639,6 +639,62 @@ describe("runTurn", () => {
     );
   });
 
+  it("briefs the live business without dumping the thesis", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "model.get") {
+        return {
+          model: {
+            summary: {
+              homesOriginated: 12,
+              autosOriginated: 30,
+              aircraftOriginated: 4,
+              fy1ClosingCashUsd: 1_000_000,
+              fy10ClosingCashUsd: 8_000_000,
+            },
+          },
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    for await (const event of runTurn("how does Tamarindo work", actor, {
+      conversationId: "conv_biz",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.get",
+      {},
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "knowledge.search",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "how does Tamarindo work",
+      expect.anything(),
+      expect.objectContaining({
+        artifactNote: expect.stringMatching(/Live book: 12 homes/),
+      }),
+    );
+  });
+
   it("queues a structure deck when asked for the entity map", async () => {
     profileIdFor.mockResolvedValue("prof_1");
     ensureConversation.mockResolvedValue(undefined);

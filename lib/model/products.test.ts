@@ -27,7 +27,20 @@ describe("product quotes", () => {
   it("keeps two named auto ICPs and picks by mix", () => {
     const quotes = productQuotes("auto", defaultValues());
     expect(quotes.map((row) => row.id)).toEqual(["auto1", "auto2"]);
-    expect(pickProductQuote(quotes, 0).id).toBe("auto1");
+    const firstFive = [0, 1, 2, 3, 4].map((i) => pickProductQuote(quotes, i).id);
+    expect(firstFive).toContain("auto1");
+    expect(firstFive).toContain("auto2");
+    expect(firstFive.filter((id) => id === "auto2").length).toBeGreaterThan(
+      firstFive.filter((id) => id === "auto1").length,
+    );
+  });
+
+  it("originates the minority aircraft ICP inside a short book", () => {
+    const quotes = productQuotes("aircraft", defaultValues());
+    const first36 = Array.from({ length: 36 }, (_, i) => pickProductQuote(quotes, i).id);
+    expect(first36).toContain("air1");
+    expect(first36).toContain("air2");
+    expect(first36.filter((id) => id === "air2").length).toBeGreaterThanOrEqual(6);
   });
 
   it("spreads aircraft originations after the start month", () => {
