@@ -2,6 +2,7 @@ import type { Actor } from "@/lib/contracts/procedure";
 import type { StreamEvent } from "@/lib/contracts/events";
 import { asAgent } from "@/lib/nico/agent-actor";
 import { agentToolSet, invokeAgentTool } from "@/lib/nico/registry-tools";
+import { isLiveWriteTurn, LIVE_READ_PROCEDURE_SET } from "@/lib/nico/live-tools";
 import { appendMessage, ensureConversation } from "@/lib/nico/session";
 import { composeAnswer } from "@/lib/nico/composer";
 import { learnFromTurn, recallLearned } from "@/lib/nico/memory";
@@ -35,6 +36,13 @@ import {
   formatBusinessBrief,
   parseBusinessExplainAsk,
 } from "@/lib/nico/business-intent";
+import { parseUnitCalcAsk } from "@/lib/nico/unit-intent";
+import { detectReplyLanguage } from "@/lib/nico/reply-language";
+import {
+  calcTicketEconomics,
+  formatTicketNote,
+  formatTicketTable,
+} from "@/lib/model/unit-economics";
 import { parseIcpAsk, type IcpAsk } from "@/lib/nico/icp-intent";
 import {
   entitiesForWorkbook,
@@ -116,6 +124,7 @@ export async function* runTurn(
     };
   }
 
+  const language = detectReplyLanguage(message);
   let artifactNote: string | undefined;
   let reportPreface = "";
   let waitPreface = "";
@@ -126,12 +135,14 @@ export async function* runTurn(
   const icpAsk = parseIcpAsk(message);
   const helpAsk = parseHelpAsk(message);
   const businessAsk = parseBusinessExplainAsk(message);
+  const unitAsk = parseUnitCalcAsk(message);
   const modelAction =
     Boolean(scenarioAsk) ||
     Boolean(variableSet) ||
     Boolean(icpAsk) ||
     Boolean(helpAsk) ||
     Boolean(businessAsk) ||
+    Boolean(unitAsk) ||
     Boolean(reportAsk) ||
     isCashflowModelRequest(message) ||
     isWorkbookRequest(message) ||
@@ -305,7 +316,7 @@ export async function* runTurn(
         yield { type: "token", text: reportPreface };
       }
       const preview =
-        " Glance is already on screen — Summary first, Extended is every line. Same numbers. Do not reprint the fence. Full book opens in a new tab; PDF and CSV export from that tab.";
+        " Glance is already on screen — Summary first, Extended is every line. Same numbers. Do not reprint the fence. Full book opens in a new tab; PDF, CSV, and Excel export from that glance.";
       if (data.kind === "income") {
         artifactNote = `I built a cash-basis OpCo income statement from the live model — receipts, payments, cash from operations. It is not an accrual accountant's P&L.${preview}`;
       } else if (data.kind === "returns") {
@@ -382,7 +393,7 @@ export async function* runTurn(
         toolActor,
         traceId,
       )) as { id: string };
-      artifactNote = `Queued a 10-year Excel covering ${entities.join(", ")}. Artifact ${created.id}. Open Artifacts in the left rail. Cited fees and Y1–2 headcount are filled; salaries and unlabeled rates stay blank for us to load together.`;
+      artifactNote = `Queued a 10-year Excel covering ${entities.join(", ")}. File ${created.id}. Open Files in the left rail. Cited fees and Y1–2 headcount are filled; salaries and unlabeled rates stay blank for us to load together.`;
     } catch (err) {
       artifactNote = `I tried to queue the worksheet and hit: ${
         err instanceof Error ? err.message : "unknown error"
@@ -419,6 +430,52 @@ export async function* runTurn(
         }.`;
       }
     }
+  } else if (unitAsk) {
+    yield {
+      type: "activity",
+      state: "drafting",
+      label:
+        unitAsk.kind === "quote"
+          ? "Reading live fee seeds…"
+          : "Calculating the ticket…",
+    };
+    try {
+      const data = (await invokeAgentTool(
+        "model.get",
+        {},
+        toolActor,
+        traceId,
+      )) as {
+        variables?: Array<{ key: string; value?: unknown }>;
+      };
+      const views = data.variables ?? [];
+      const seeds = {
+        originationFeePct: variableNum(views, "originationFeePct", 0.01),
+        servicingBps: variableNum(views, "servicingBps", 0.0075),
+        activationFeePct: variableNum(views, "activationFeePct", 0.02),
+        spreadSharePct: variableNum(views, "spreadSharePct", 0.2),
+        clientRate: variableNum(views, "icp.icp1.clientRate", 0.115),
+      };
+      if (unitAsk.kind === "quote") {
+        artifactNote = [
+          `Live fee seeds: origination ${(seeds.originationFeePct * 100).toFixed(2)}% of funded, servicing ${(seeds.servicingBps * 10_000).toFixed(0)} bps of outstanding, activation ${(seeds.activationFeePct * 100).toFixed(0)}% of draw, spread ${(seeds.spreadSharePct * 100).toFixed(0)}% of interest.`,
+          "WhatsApp 1.50% / 40 bps is a complementary ask. Dollars = funded × rate. Give me a ticket size and I will calculate year one.",
+        ].join(" ");
+      } else {
+        const calc = calcTicketEconomics({
+          ...seeds,
+          fundedUsd: unitAsk.fundedUsd,
+          drawUsd: unitAsk.drawUsd ?? unitAsk.fundedUsd,
+        });
+        reportPreface = `\n${formatTicketTable(calc)}\n`;
+        yield { type: "token", text: reportPreface };
+        artifactNote = formatTicketNote(calc);
+      }
+    } catch (err) {
+      artifactNote = `I tried to calculate that ticket and hit: ${
+        err instanceof Error ? err.message : "unknown error"
+      }.`;
+    }
   } else if (businessAsk) {
     yield {
       type: "activity",
@@ -441,8 +498,16 @@ export async function* runTurn(
             fy10ClosingCashUsd: number;
           };
         };
+        variables?: Array<{ key: string; value?: unknown }>;
       };
-      artifactNote = formatBusinessBrief(data.model.summary);
+      const views = data.variables ?? [];
+      artifactNote = formatBusinessBrief({
+        ...data.model.summary,
+        originationFeePct: variableNum(views, "originationFeePct", 0.01),
+        servicingBps: variableNum(views, "servicingBps", 0.0075),
+        activationFeePct: variableNum(views, "activationFeePct", 0.02),
+        spreadSharePct: variableNum(views, "spreadSharePct", 0.2),
+      });
     } catch (err) {
       artifactNote = `I tried to read the live book and hit: ${
         err instanceof Error ? err.message : "unknown error"
@@ -583,7 +648,11 @@ export async function* runTurn(
     console.warn("[nico] who skipped", err);
   }
 
-  yield { type: "activity", state: "drafting", label: "Drafting a reply…" };
+  yield {
+    type: "activity",
+    state: "thinking",
+    label: "Nico is thinking…",
+  };
 
   // Routing signal for the composer's fast tier. A world check (weather,
   // markets) still counts as conversation; grounded or model work does not.
@@ -597,14 +666,24 @@ export async function* runTurn(
     !mediaNote &&
     !peopleNote;
 
-  // Registry procedures as model tools — only on turns no regex route already
-  // executed, so the model cannot re-run a variable set or media job the
-  // switchboard just performed. Approval-gated procedures stay blocked inside
-  // registry.invoke until a durable Approval row is approved.
+  // Writes the switchboard already performed stay off the model. Read
+  // turns keep live tools so the spoken answer can refresh numbers, tape,
+  // and headlines instead of reciting a canned brief.
+  const liveWrite = isLiveWriteTurn({
+    variableSet,
+    workbook: isWorkbookRequest(message),
+    deck: deckAsk,
+    scenarioKind: scenarioAsk?.kind,
+    media: Boolean(mediaNote),
+  });
   let tools: Awaited<ReturnType<typeof agentToolSet>> | undefined;
-  if (!modelAction && !mediaNote) {
+  if (!liveWrite) {
     try {
-      tools = await agentToolSet(toolActor, traceId);
+      tools = await agentToolSet(
+        toolActor,
+        traceId,
+        modelAction ? { allow: LIVE_READ_PROCEDURE_SET } : undefined,
+      );
     } catch (err) {
       console.warn("[nico] agent tool set skipped", err);
     }
@@ -623,6 +702,7 @@ export async function* runTurn(
       givenName,
       askGivenName,
       conversational,
+      language,
       mediaNote,
       peopleNote,
       tools,
@@ -654,6 +734,7 @@ export async function* runTurn(
           };
         }
       }
+      if (!chunk) continue;
       if (!speaking) {
         speaking = true;
         yield { type: "activity", state: "speaking", label: "Answering…" };
@@ -671,7 +752,7 @@ export async function* runTurn(
       type: "error",
       message: err instanceof Error ? err.message : "Model failed",
     };
-    yield { type: "activity", state: "idle", label: "Ready" };
+    yield { type: "activity", state: "idle", label: "Here to help" };
     yield { type: "done" };
     return;
   }
@@ -692,7 +773,7 @@ export async function* runTurn(
     });
   });
 
-  yield { type: "activity", state: "idle", label: "Ready" };
+  yield { type: "activity", state: "idle", label: "Here to help" };
   yield { type: "done" };
 }
 
@@ -869,15 +950,26 @@ function deckTitle(ask: DeckAsk): string {
 
 function deckQueuedNote(ask: DeckAsk, id: string): string {
   if (ask.kind === "memo") {
-    return `Queued the entity / Ashoka memo. Artifact ${id}. Open Artifacts in the left rail.`;
+    return `Queued the entity / Ashoka memo. File ${id}. Open Files in the left rail.`;
   }
   if (ask.variant === "raise-draft") {
-    return `Queued an admin working raise deck. Artifact ${id}. The ask slide stays unpublished — I did not invent a number.`;
+    return `Queued an admin working raise deck. File ${id}. The ask slide stays unpublished — I did not invent a number.`;
   }
   if (ask.variant === "structure") {
-    return `Queued the corporate-structure deck. Artifact ${id}. No raise amount on this one.`;
+    return `Queued the corporate-structure deck. File ${id}. No raise amount on this one.`;
   }
-  return `Queued the investor raise deck. Artifact ${id}. Open Artifacts in the left rail.`;
+  return `Queued the investor raise deck. File ${id}. Open Files in the left rail.`;
+}
+
+function variableNum(
+  views: Array<{ key: string; value?: unknown }>,
+  key: string,
+  fallback: number,
+): number {
+  const row = views.find((item) => item.key === key);
+  return typeof row?.value === "number" && Number.isFinite(row.value)
+    ? row.value
+    : fallback;
 }
 
 async function persistSafely(fn: () => Promise<void>): Promise<void> {

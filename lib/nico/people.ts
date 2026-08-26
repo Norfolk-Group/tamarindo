@@ -164,7 +164,7 @@ export function peopleNoteFor(message: string): string | undefined {
     ...hits.map((p) => `- ${p.line}`),
     "Thesis 11: five equal partners at t=0; names not assigned to the 20% seats.",
     "Norfolk AI builds Nico. It is not Tamarindo and is not a capital partner.",
-    "Do not discuss anyone's legal history or prior-company controversies. Stay on the Tamarindo brief.",
+    "Do not discuss anyone's personal or legal matters — history, litigation, family, health, finances. Role and seat only. Stay on the Tamarindo brief.",
   ].join("\n");
 }
 

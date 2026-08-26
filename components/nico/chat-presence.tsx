@@ -34,21 +34,38 @@ export function ChatPresenceBar({ presence }: { presence: AppliedTurn }) {
   );
 }
 
-export function ChatThinkingRow({ presence }: { presence: AppliedTurn }) {
-  if (!isLivePresence(presence.avatarState) || presence.avatarState === "speaking") {
-    return null;
-  }
+export function ChatThinkingRow({
+  presence,
+  hasStreamText = false,
+}: {
+  presence: AppliedTurn;
+  hasStreamText?: boolean;
+}) {
+  if (!isLivePresence(presence.avatarState)) return null;
+  if (presence.avatarState === "speaking" && hasStreamText) return null;
   return (
     <div
-      className="nico-msg-enter flex items-center gap-2 text-xs text-muted-foreground"
+      className="nico-stream-live nico-msg-enter"
+      data-state={presence.avatarState}
       aria-live="polite"
     >
-      <span className="nico-think-dots" data-state={presence.avatarState}>
+      <span className="nico-stream-live-rail" aria-hidden />
+      <div className="flex items-center gap-2">
+        <span className="nico-think-dots" data-state={presence.avatarState}>
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {presence.activityLabel}
+        </span>
+      </div>
+      <div className="nico-stream-bars" aria-hidden>
         <i />
         <i />
         <i />
-      </span>
-      <span>{presence.activityLabel}</span>
+        <i />
+      </div>
     </div>
   );
 }

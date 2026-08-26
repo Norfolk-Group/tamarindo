@@ -48,14 +48,24 @@ describe("report intent", () => {
       fromFy: 1,
       toFy: 10,
     });
+    expect(parseReportAsk("muéstrame los libros")?.kind).toBe("statements");
+    expect(parseReportAsk("flujo de caja")?.kind).toBe("statements");
+    expect(parseReportAsk("cuál es la TIR")?.kind).toBe("returns");
+    expect(parseReportAsk("prueba de estrés")?.kind).toBe("sensitivity");
+    expect(parseReportAsk("estado de resultados")?.kind).toBe("income");
+    expect(parseReportAsk("estado de resultados")?.waitLine).toMatch(/momento/);
     expect(parseReportAsk("detailed cash flow")).toMatchObject({
       kind: "statements",
       depth: "extended",
     });
   });
 
-  it("leaves the full 10-year ask to model.get", () => {
-    expect(parseReportAsk("show the 10-year cash flow")).toBeNull();
+  it("maps a 10-year cash-flow ask to the live statements book", () => {
+    expect(parseReportAsk("show the 10-year cash flow")).toEqual({
+      kind: "statements",
+      fromFy: 1,
+      toFy: 10,
+    });
     expect(parseReportAsk("10-year plan")).toBeNull();
   });
 

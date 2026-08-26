@@ -33,15 +33,20 @@ Terms stay off this shelf.
 The left rail is **Assumptions** (inputs) and **Statements** (the book).
 Assumption groups are collapsible. Statement sections fold the same way.
 
-Key blue levers (meetings + thesis):
+Key blue levers (meetings + thesis) — the member kit is ~14 keys, deliberately
+small so a what-if session is a comfortable range, not the full book:
 
 - Client down / LTV (`downPaymentPct`, seed 40% → 60% LTV)
 - Purchase-option floor (`minResidualOfAssetPct`, seed 20% of asset)
-- Activation and origination fees
-- Volume and lease terms (ICP prices live under Admin → ICPs, not as blue member inputs)
-- Published opex lumps
+- Activation, origination, servicing, and US share of interest — the same
+  four levers sensitivity shocks
+- Warehouse tranches and second-tranche month
+- Rental pricing share, post-pilot growth, auto / aircraft start months
 
-Ask and pre-money are **not** blue. They come from published Deal Terms.
+Everything else — payroll and department seats, equity rounds and pre-money,
+year-10 targets, FICO internals, opex lumps, Ashoka detail, ramp, horizon —
+is grey (admin-only). Ask and pre-money are **not** blue. They come from
+published Deal Terms.
 
 ## Reports Nico builds on demand
 

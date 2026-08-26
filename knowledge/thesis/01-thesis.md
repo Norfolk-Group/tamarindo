@@ -15,11 +15,18 @@ the borrower's quality does.
 
 ## What Tamarindo is
 
-**A credit translation layer.** Tamarindo converts US creditworthiness
-into purchasing power for Colombian hard assets through a lease-to-own
-structure: a US funding vehicle buys the property through its Colombian
-sucursal, the client gets immediate use rights (comodato) plus a purchase
-option, and pays a US-law lease over ~10 years with a residual balloon.
+**A US-law lease-to-own origination and servicing platform.** Tamarindo
+turns a prime US credit file into the right to use a Colombian hard asset
+(homes first) while a replaceable funding vehicle holds title. InterVest
+is the first warehouse, not the product. The client signs a US-law lease,
+~40% down, occupies under comodato; title sits in the vehicle’s Colombian
+sucursal; a material balloon remains at term. Not a Colombian hipotecario,
+not a US mortgage, not *leasing habitacional*, not a broker.
+
+**A credit translation layer** is the one-line mechanism: a US funding
+vehicle buys the property through its Colombian sucursal, the client gets
+immediate use rights plus a purchase option, and pays a US-law lease over
+~10 years with a residual balloon.
 
 **OPINION — the three identities, in order of importance:**
 

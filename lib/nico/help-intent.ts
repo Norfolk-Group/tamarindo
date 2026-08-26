@@ -1,4 +1,5 @@
 import { parseBusinessExplainAsk } from "@/lib/nico/business-intent";
+import { parseUnitCalcAsk } from "@/lib/nico/unit-intent";
 import {
   HELP_TOPICS,
   scoreHelpTopic,
@@ -11,9 +12,9 @@ export type HelpAsk =
   | { kind: "get"; id: string };
 
 const LIST_RE =
-  /\b(how does (this|the) (app|screen|menu) work|what can i do here|show (me )?(the )?help|open help)\b/i;
+  /\b(how does (this|the) (app|screen|menu) work|what can i do here|show (me )?(the )?help|open help|c[oó]mo funciona (esta|la) (app|pantalla|aplicaci[oó]n|men[uú])|abre (la )?ayuda)\b/i;
 
-const HOW_RE = /\b(how do i|how to|where (do i|can i)|what does|what is|what's|whats|explain)\b/i;
+const HOW_RE = /\b(how do i|how to|where (do i|can i)|what does|what is|what's|whats|explain|c[oó]mo (hago|abro)|d[oó]nde (est[aá]|queda))\b/i;
 
 const HELP_ME_TASK_RE =
   /\bhelp me\b(?!\s+(understand|use|find|navigate|with (the )?(app|screen|menu|help)))/i;
@@ -23,8 +24,9 @@ export function parseHelpAsk(message: string): HelpAsk | null {
   if (!text) return null;
   if (HELP_ME_TASK_RE.test(text)) return null;
   if (parseBusinessExplainAsk(text)) return null;
+  if (parseUnitCalcAsk(text)) return null;
 
-  if (/^(help|\?|how does this (app|work))\b/i.test(text) && text.length < 40) {
+  if (/^(help|ayuda|\?|how does this (app|work))\b/i.test(text) && text.length < 40) {
     return { kind: "list" };
   }
 
@@ -63,11 +65,11 @@ export function isHelpRequest(message: string): boolean {
   return parseHelpAsk(message) !== null;
 }
 
-export function formatHelpTopic(topic: HelpTopic): string {
+export function formatHelpTopic(topic: Pick<HelpTopic, "title" | "body">): string {
   return `${topic.title}. ${topic.body}`;
 }
 
-export function formatHelpList(topics: HelpTopic[]): string {
+export function formatHelpList(topics: Array<Pick<HelpTopic, "title" | "tip">>): string {
   const lines = topics
     .slice(0, 8)
     .map((row) => `${row.title}: ${row.tip}`)

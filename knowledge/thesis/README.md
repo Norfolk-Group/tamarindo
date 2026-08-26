@@ -17,7 +17,7 @@ should be pasted into an investor deck without its validation step.
 | [05-fee-engine.md](05-fee-engine.md) | Revenue lines, take rate, OpCo breakeven, the raise |
 | [06-numbers-explained.md](06-numbers-explained.md) | Every working number, graded, with US/Colombia CONTEXT |
 | [07-markets-legal-math.md](07-markets-legal-math.md) | Comodato, true lease, balloon math, Intervest, cities |
-| [08-nico-voice.md](08-nico-voice.md) | Nico as a person: voice, small talk, live-world kit (weather, markets, headlines), charts |
+| [08-nico-voice.md](08-nico-voice.md) | Nico as a person: EN/ES consultant register, Files (not Artifacts), live-world kit, charts |
 | [09-ops-capital-assumptions.md](09-ops-capital-assumptions.md) | Named payroll, CS/WhatsApp, autos/aircraft, partner yields |
 | [10-capital-curve.md](10-capital-curve.md) | KPI path to $100M / $30M / $20M; Intervest 50% |
 | [11-equity.md](11-equity.md) | $6.5M across three rounds (smallest first), five equal partners, half pay 8 months |
@@ -28,20 +28,21 @@ should be pasted into an investor deck without its validation step.
 | [16-lease-characterization.md](16-lease-characterization.md) | True lease vs mortgage, comodato vs Ley 820, captación, fiducia, foreign title — CONTEXT for counsel |
 | [17-end-of-lease-title.md](17-end-of-lease-title.md) | How the lessee actually buys: US balloon vs Colombian *escritura*/RUNT, foreigners, POA, BanRep, walk-away |
 | [18-kyc-aml.md](18-kyc-aml.md) | US CIP/OFAC/8300/CTA vs Colombian notary SIPLAFT and sucursal SAGRILAFT — do not invent licenses |
-| [../qa/README.md](../qa/README.md) | Simulated conversational Q&As (work + life) |
+| [19-platform-economics.md](19-platform-economics.md) | WhatsApp/slide seeds vs research 1% / 75 bps; dollars are calculated; not a broker fee |
+| [../qa/README.md](../qa/README.md) | Simulated conversational Q&As (work + life), including Spanish investor register |
 
 ## The thesis in one paragraph
 
-Tamarindo is a **cross-border credit translation platform** that converts
-prime US creditworthiness into purchasing power for Colombian hard assets —
-starting with homes in Medellín and Cartagena. It never lends from its own
-balance sheet: replaceable funding vehicles (Tamarindo-Intervest first) own
-the assets through Colombian sucursales, clients get use rights and a
-purchase option, and Tamarindo earns layered fees on origination, servicing,
-spread, and — through sister company Ashoka — the property's entire service
-life, including rental operation while the home is not in use. The 10-year
-arc: prove ~45 homes with $20M (Years 1–2), reach OpCo breakeven near $60M
-AUM (Year 3), multiply capital partners into a funding marketplace
-(Years 3–5), expand corridors (Years 5–10), and end as the default rails for
-financing foreign hard assets with domestic credit — earning ~3% of a
-multi-hundred-million-dollar asset base annually in fees and services.
+Tamarindo is a **US-law lease-to-own origination and servicing platform**.
+A prime US credit file becomes the right to use a Colombian hard asset
+(homes first) while a **replaceable funding vehicle holds title**. The
+client signs a US lease, puts ~40% down, occupies under comodato, and
+faces a material balloon. InterVest is the **first warehouse**, not the
+product — they already fund leased physical assets and specialty-finance
+platforms. OpCo never owns the house; it originates, underwrites, bills,
+and services. Not a mortgage, not Colombian *leasing habitacional*, not a
+broker. The 10-year arc: prove ~45 homes with $20M (Years 1–2), reach OpCo
+breakeven near $60M AUM (Year 3), multiply capital partners into a funding
+marketplace (Years 3–5), expand corridors (Years 5–10), and earn layered
+fees — origination, servicing, spread, and later rental/PM through Ashoka —
+on a multi-hundred-million-dollar asset base.

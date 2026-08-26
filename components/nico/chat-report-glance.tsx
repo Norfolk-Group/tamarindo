@@ -128,6 +128,14 @@ export function ChatReportGlance({ spec }: { spec: ReportGlance }) {
           </Button>
           <InfoTip topic="statements.csv" />
         </span>
+        {spec.xlsxPath ? (
+          <span className="inline-flex items-center gap-0.5">
+            <Button type="button" size="sm" variant="outline" asChild>
+              <a href={spec.xlsxPath}>Excel</a>
+            </Button>
+            <InfoTip topic="statements.excel" />
+          </span>
+        ) : null}
       </div>
     </figure>
   );

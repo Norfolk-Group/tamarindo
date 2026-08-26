@@ -3,6 +3,7 @@ import { stepCountIs, streamText, type ToolSet } from "ai";
 import type { KnowledgePassage } from "@/lib/procedures/knowledge-search";
 import { HUMAN_TEST_TURN } from "@/lib/nico/human-test";
 import { nicoSystemPrompt, type NicoChannel } from "@/lib/nico/prompts";
+import type { ReplyLanguage } from "@/lib/nico/reply-language";
 
 /**
  * The model seam. Everything above this file is model-agnostic.
@@ -35,6 +36,8 @@ export type ComposeContext = {
   conversational?: boolean;
   /** chat (default) or voice — voice drops markdown so TTS does not read fences. */
   channel?: NicoChannel;
+  /** Match the user's language this turn. Default English. */
+  language?: ReplyLanguage;
   /** Real model reasoning, not a fake ticker. */
   onThinking?: (snippet: string) => void;
   /**
@@ -52,10 +55,14 @@ export type ComposeContext = {
 
 /** A provider that never writes leaves the user staring at an empty bubble. */
 const FIRST_TOKEN_TIMEOUT_MS = 6_000;
+/** Financing turns think before they speak — give the first token more leash. */
+const STRONG_FIRST_TOKEN_TIMEOUT_MS = 25_000;
 /** A long analytical answer may legitimately stream for a while. */
 const STREAM_TIMEOUT_MS = 90_000;
+const STRONG_STREAM_TIMEOUT_MS = 180_000;
+const STRONG_THINKING_BUDGET = 8_192;
 
-const STRONG_MODEL = "claude-sonnet-4-5";
+const STRONG_MODEL = "claude-opus-4-6";
 const FAST_MODEL = "claude-haiku-4-5";
 
 export async function* composeAnswer(
@@ -120,10 +127,13 @@ function userContent(
     )
     .join("\n\n");
   const artifact = context.artifactNote
-    ? `\n\nArtifact just queued:\n${context.artifactNote}\nTell the user it is in the left-rail Artifacts list. Do not invent blank salary or unlabeled fee cells.\n`
+    ? `\n\nLive snapshot for this turn (engine, fees, book, or a just-queued file):\n${context.artifactNote}\nCompose the spoken answer now. Do not paste this note as the reply. Numbers, news, and tape go stale — refresh with tools if the question needs current data. If a file was queued, point at Files in the left rail. Do not invent blank salary or unlabeled fee cells.\n`
     : "";
   const world = context.worldNote
-    ? `\n\nWorld check (share this naturally, no thesis dump):\n${context.worldNote}\n`
+    ? `\n\nWorld check this turn (share naturally, no thesis dump):\n${context.worldNote}\n`
+    : "";
+  const toolsHint = context.tools && Object.keys(context.tools).length > 0
+    ? `\n\nLive tools are on. Call model_get, model_report, ticker_list, news_headlines, markets_get, weather_get, or knowledge_search if a number or headline may have moved. Then speak. Do not narrate tool names.\n`
     : "";
   const memory = context.memoryNote
     ? `\n\n${context.memoryNote}\n`
@@ -133,10 +143,14 @@ function userContent(
     ? `\n\nMedia just made (already on screen — talk about it, do not reprint the fence):\n${context.mediaNote}\n`
     : "";
   const people = context.peopleNote ? `\n\n${context.peopleNote}\n` : "";
+  const languageHint =
+    (context.language ?? "en") === "es"
+      ? `\n\nReply in Spanish this turn. Usted unless they used tú. Investment-principal register. Point at Files in the left rail — never say Artifacts.\n`
+      : `\n\nReply in English this turn. Credit and leasing principal. Point at Files in the left rail — never say Artifacts.\n`;
   if (!sources) {
-    return `You are in conversation. No binder excerpt.${artifact}${world}${memory}${who}${media}${people}\nTalk like Nico the person. Do not apologize for missing the knowledge base unless they asked a Tamarindo fact. If a people note is present, that is a Tamarindo fact — answer it.\n\nUser:\n${message}\n\n${HUMAN_TEST_TURN}`;
+    return `You are in conversation. No binder excerpt.${artifact}${world}${memory}${who}${media}${people}${toolsHint}${languageHint}\nTalk like Nico the person. Do not apologize for missing the knowledge base unless they asked a Tamarindo fact. If a people note is present, that is a Tamarindo fact — answer it.\n\nUser:\n${message}\n\n${HUMAN_TEST_TURN}`;
   }
-  return `Knowledge passages:\n\n${sources}${artifact}${world}${memory}${who}${media}${people}\n\nUser:\n${message}\n\n${HUMAN_TEST_TURN}`;
+  return `Knowledge passages (may be older than the live snapshot):\n\n${sources}${artifact}${world}${memory}${who}${media}${people}${toolsHint}${languageHint}\n\nUser:\n${message}\n\n${HUMAN_TEST_TURN}`;
 }
 
 async function* streamAnthropic(
@@ -147,13 +161,19 @@ async function* streamAnthropic(
   // Two budgets, not one. A provider that accepts the socket and then goes
   // quiet has to be dropped in seconds, but an answer that is already
   // streaming has earned a far longer leash.
+  const modelId = selectModel(passages, context);
+  const strong = modelId === (process.env.NICO_MODEL ?? STRONG_MODEL);
   const firstTokenMs = budgetMs(
     process.env.NICO_FIRST_TOKEN_TIMEOUT_MS,
-    FIRST_TOKEN_TIMEOUT_MS,
+    strong ? STRONG_FIRST_TOKEN_TIMEOUT_MS : FIRST_TOKEN_TIMEOUT_MS,
   );
   const ceilingMs = budgetMs(
     process.env.NICO_STREAM_TIMEOUT_MS,
-    STREAM_TIMEOUT_MS,
+    strong ? STRONG_STREAM_TIMEOUT_MS : STREAM_TIMEOUT_MS,
+  );
+  const thinkingBudget = budgetMs(
+    process.env.NICO_THINKING_BUDGET_TOKENS,
+    STRONG_THINKING_BUDGET,
   );
   const controller = new AbortController();
   const ceilingTimer = setTimeout(() => controller.abort(), ceilingMs);
@@ -170,11 +190,9 @@ async function* streamAnthropic(
   });
 
   try {
-    const modelId = selectModel(passages, context);
-    const strong = modelId === (process.env.NICO_MODEL ?? STRONG_MODEL);
     const result = streamText({
       model: anthropic(modelId),
-      system: nicoSystemPrompt(context.channel ?? "chat"),
+      system: nicoSystemPrompt(context.channel ?? "chat", context.language ?? "en"),
       messages: [
         { role: "user", content: userContent(message, passages, context) },
       ],
@@ -190,7 +208,7 @@ async function* streamAnthropic(
         ? {
             providerOptions: {
               anthropic: {
-                thinking: { type: "enabled", budgetTokens: 2_048 },
+                thinking: { type: "enabled", budgetTokens: thinkingBudget },
               },
             },
           }
@@ -207,6 +225,9 @@ async function* streamAnthropic(
           firstTokenTimer = undefined;
         }
         context.onThinking?.(thinkingText);
+        // Kick the orchestrator so the room can say Nico is thinking
+        // before the first spoken token.
+        yield "";
         continue;
       }
       if (part.type === "text-delta") {

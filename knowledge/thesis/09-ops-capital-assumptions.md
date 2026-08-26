@@ -28,8 +28,10 @@ stated otherwise. Research current through 2026-08-23.*
   charge those fees on top of the stated yield.
 - **ASSUMPTION — model Tamarindo US:** collect 2% once when capital is drawn;
   collect 20% of the interest component billed to the customer; collect a
-  separate **75 bps annual servicing fee on outstanding principal** only until
-  a contract supplies the actual rate.
+  separate **75 bps annual servicing fee on outstanding principal** (research
+  seed; market check below is 75–200 bps). WhatsApp / slide 40 bps is a
+  complementary ask, not the live default
+  ([19-platform-economics.md](19-platform-economics.md)).
 - **FACT — market check:** 2025–26 equipment-finance benchmarks put starter
   warehouses at SOFR +225–450 bps, scaling lines at SOFR +150–350 bps, and
   forward-flow servicing at 75–200 bps. Forward-flow asset yields commonly

@@ -129,15 +129,16 @@ the whole pilot matches **spread share**, not the full stack.
 
 | # | Line | Number | Grade | Plain English |
 |---|---|---|---|---|
-| 1 | Origination | ~1% of funded; payer TBD | ASSUMPTION | US brokers often 0–2% of amount. |
+| 1 | Origination | **~1% of funded** (live seed); WhatsApp ask 1.50% | ASSUMPTION | [19-platform-economics.md](19-platform-economics.md). Dollars = funded × rate. |
 | 2 | Activation | **2% of drawdown** | FACT | $450k draw → $9k. |
-| 3 | Servicing | ~75 bps outstanding | ASSUMPTION | US residential servicing often 25–50+ bps; 75 is a placeholder. |
+| 3 | Servicing | **75 bps outstanding** (live seed); WhatsApp ask 40 bps | ASSUMPTION | 09 market 75–200 bps. Revenue ≠ margin. |
 | 4 | Spread share | **~20% of interest billings** | FACT | 11.84% client rate → ~237 bps of outstanding to Tamarindo on this line. |
 | 5 | PM | market + possible markup | MIXED | STR PM often 15–25% of gross; mid-term 8–12%. |
 | 6 | Rental share | **~20% of net** if pooled | FACT | After PM and opex. |
 
-**Take on $1 funded AUM at ~11.84% (OPINION):** 237 + 75 + 40–60 bps ≈
-**3.5–3.7% recurring**, plus ~3% one-time in the deploy year.
+**Take on $1 funded AUM at ~11.84% (OPINION):** 237 + **75** + 40–60 bps ≈
+**3.5–3.7% recurring**, plus ~3% one-time in the deploy year. WhatsApp 40 bps
+servicing is a scenario, not the live seed.
 
 **Dov sketch (FACT as sketch):** ~$30k/mo on $20M ≈ 237 bps × $15M funded.
 Full stack modeled ~3×.

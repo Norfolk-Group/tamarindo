@@ -12,17 +12,27 @@ describe("business explain intent", () => {
     expect(parseBusinessExplainAsk("explain the business model")).toBe(true);
     expect(parseBusinessExplainAsk("walk me through the structure")).toBe(true);
     expect(parseBusinessExplainAsk("what does Tamarindo do")).toBe(true);
+    expect(parseBusinessExplainAsk("what is the product")).toBe(true);
+    expect(parseBusinessExplainAsk("cómo funciona Tamarindo")).toBe(true);
+    expect(parseBusinessExplainAsk("qué es Tamarindo")).toBe(true);
+    expect(parseBusinessExplainAsk("cuál es el producto")).toBe(true);
+    expect(parseBusinessExplainAsk("explícame Tamarindo")).toBe(true);
   });
 
   it("does not steal reports, ICPs, or worksheets", () => {
     expect(parseBusinessExplainAsk("what is ICP-1")).toBe(false);
     expect(parseBusinessExplainAsk("show investor returns")).toBe(false);
     expect(parseBusinessExplainAsk("Help me build a worksheet")).toBe(false);
+    expect(parseBusinessExplainAsk("what do we make on a $500k lease")).toBe(
+      false,
+    );
   });
 
   it("wins over Help for a business-model ask", () => {
     expect(parseHelpAsk("explain the business model")).toBeNull();
     expect(parseReportAsk("explain the business model")).toBeNull();
+    expect(parseHelpAsk("cómo funciona Tamarindo")).toBeNull();
+    expect(parseHelpAsk("cómo funciona esta pantalla")?.kind).toBe("list");
   });
 
   it("keeps the brief short and points at the live doors", () => {
@@ -33,8 +43,13 @@ describe("business explain intent", () => {
       fy1ClosingCashUsd: 1,
       fy10ClosingCashUsd: 2,
     });
-    expect(note.length).toBeLessThan(900);
-    expect(note).toMatch(/Intervest/);
+    expect(note.length).toBeLessThan(1600);
+    expect(note).toMatch(/LIVE SNAPSHOT/);
+    expect(note).toMatch(/lease-to-own/i);
+    expect(note).toMatch(/warehouse/i);
+    expect(note).toMatch(/Intervest/i);
+    expect(note).toMatch(/Excel/);
+    expect(note).toMatch(/Files/);
     expect(note).toMatch(/do not invent/i);
   });
 });

@@ -15,6 +15,8 @@ describe("help catalog", () => {
 
   it("returns the short tip used by (i) helpers", () => {
     expect(helpTip("nav.statements")).toMatch(/cash-flow book/i);
+    expect(helpTopic("nav.artifacts")?.title).toBe("Files");
+    expect(helpTopic("artifacts.list")?.title).toBe("Files list");
     expect(helpTopic("glossary.icp")?.title).toBe("Ideal Contract Profile");
   });
 

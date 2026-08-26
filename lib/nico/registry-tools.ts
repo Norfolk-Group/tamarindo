@@ -47,12 +47,14 @@ export function toolWireName(procedureName: string): string {
 export async function agentToolSet(
   actor: Actor,
   traceId: string,
+  options?: { allow?: ReadonlySet<string> },
 ): Promise<ToolSet> {
   const capabilities = await listAgentTools(actor, traceId);
   const tools: ToolSet = {};
   for (const cap of capabilities) {
     // The model does not need to introspect its own tool list.
     if (cap.name === "capabilities.list") continue;
+    if (options?.allow && !options.allow.has(cap.name)) continue;
     const inputSchema = registry.inputSchema(cap.name);
     if (!inputSchema) continue;
     const description = cap.requiresApproval

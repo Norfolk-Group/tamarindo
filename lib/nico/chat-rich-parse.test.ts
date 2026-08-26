@@ -69,11 +69,18 @@ describe("parseChat", () => {
           previewPath: "/api/nico/model/export?format=html&kind=statements",
           pdfPath: "/api/nico/model/export?format=pdf&kind=statements",
           csvPath: "/api/nico/model/export?format=csv&kind=statements",
+          xlsxPath: "/api/nico/model/export?format=xlsx&kind=statements",
         }),
         "```",
       ].join("\n"),
     );
-    expect(segments.some((s) => s.kind === "report")).toBe(true);
+    const report = segments.find((s) => s.kind === "report");
+    expect(report).toMatchObject({
+      kind: "report",
+      spec: {
+        xlsxPath: "/api/nico/model/export?format=xlsx&kind=statements",
+      },
+    });
   });
 
   it("parses a line chart and an image fence", () => {

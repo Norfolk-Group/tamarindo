@@ -329,7 +329,9 @@
 }
 .nico-caret {
   animation: nico-caret 0.9s step-end infinite;
-  box-shadow: 0 0 10px oklch(0.68 0.105 205 / 0.7);
+  box-shadow:
+    0 0 10px oklch(0.68 0.105 205 / 0.85),
+    0 0 22px oklch(0.68 0.105 205 / 0.35);
 }
 
 @keyframes nico-msg-enter {

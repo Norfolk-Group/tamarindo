@@ -36,7 +36,7 @@ function ArtifactsWorkspace() {
       error?: { message: string };
     };
     if (!json.ok) {
-      setError(json.error?.message ?? "Could not load artifacts");
+      setError(json.error?.message ?? "Could not load files");
       return;
     }
     setError(null);

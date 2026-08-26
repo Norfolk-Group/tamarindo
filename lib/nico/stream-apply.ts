@@ -27,7 +27,7 @@ export function emptyAppliedTurn(): AppliedTurn {
     reply: "",
     sources: [],
     avatarState: "idle",
-    activityLabel: "Ready",
+    activityLabel: "Here to help",
     media: [],
     done: false,
   };
@@ -83,10 +83,10 @@ export function applyStreamEvent(
         ...prev,
         error: event.message,
         avatarState: "idle",
-        activityLabel: "Ready",
+        activityLabel: "Here to help",
       };
     case "done":
-      return { ...prev, done: true, avatarState: "idle", activityLabel: "Ready" };
+      return { ...prev, done: true, avatarState: "idle", activityLabel: "Here to help" };
     default:
       return prev;
   }

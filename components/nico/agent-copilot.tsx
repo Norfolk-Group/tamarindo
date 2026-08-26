@@ -8,6 +8,7 @@ import {
   issueHandshake,
   type HandshakeBundle,
 } from "@/lib/nico/attach";
+import { useChatFollow } from "@/lib/nico/chat-follow";
 import { sessionKey } from "@/lib/nico/session-key";
 import { ChatRichText } from "@/components/nico/chat-rich-text";
 import { ChatThinkingRow } from "@/components/nico/chat-presence";
@@ -33,6 +34,7 @@ export function AgentSession({
 }) {
   const url = new URL(host);
   const [input, setInput] = useState("");
+  const [pinNonce, setPinNonce] = useState(0);
   const [live, setLive] = useState(emptyAppliedTurn);
   const agent = useAgent({
     agent: "NicoAgent",
@@ -52,22 +54,37 @@ export function AgentSession({
     },
   });
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  const lastText =
+    lastAssistant?.parts
+      .map((part) => (part.type === "text" ? part.text : ""))
+      .join("") ?? "";
   const streaming =
     live.avatarState === "speaking" || live.avatarState === "drafting";
+  const { scrollerRef, onScroll } = useChatFollow(
+    `${messages.length}:${lastText.length}:${live.avatarState}:${live.activityLabel}`,
+    pinNonce,
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 overflow-y-auto px-5 py-6">
+      <div
+        ref={scrollerRef}
+        onScroll={onScroll}
+        className="min-h-0 flex-1 overflow-y-auto px-5 py-6"
+      >
         <div className="mx-auto flex max-w-3xl flex-col gap-4">
           {messages.map((message) => {
             const isLastAssistant = message.id === lastAssistant?.id;
+            const liveStream = streaming && isLastAssistant;
             return (
               <div
                 key={message.id}
                 className={
                   message.role === "user"
-                    ? "nico-msg-enter self-end rounded-2xl rounded-br-sm bg-primary/15 px-4 py-2.5 text-sm"
-                    : "nico-msg-enter text-sm leading-relaxed"
+                    ? "nico-msg-enter nico-msg-user self-end rounded-2xl rounded-br-sm px-4 py-2.5 text-sm"
+                    : liveStream
+                      ? "nico-msg-enter nico-msg-stream text-sm leading-relaxed"
+                      : "nico-msg-enter text-sm leading-relaxed"
                 }
               >
                 {message.role === "user" ? (
@@ -76,7 +93,7 @@ export function AgentSession({
                     .join("")
                 ) : (
                   <ChatRichText
-                    streaming={streaming && isLastAssistant}
+                    streaming={liveStream}
                     text={message.parts
                       .map((part) => (part.type === "text" ? part.text : ""))
                       .join("")}
@@ -86,7 +103,7 @@ export function AgentSession({
             );
           })}
           <ChatReportSkeleton presence={live} />
-          <ChatThinkingRow presence={live} />
+          <ChatThinkingRow presence={live} hasStreamText={lastText.length > 0} />
         </div>
       </div>
       <form
@@ -96,6 +113,14 @@ export function AgentSession({
           const text = input.trim();
           if (!text) return;
           setInput("");
+          setPinNonce((n) => n + 1);
+          const heard: AppliedTurn = {
+            ...emptyAppliedTurn(),
+            avatarState: "listening",
+            activityLabel: "Heard you…",
+          };
+          setLive(heard);
+          onPresence?.(() => heard);
           void sendMessage({
             role: "user",
             parts: [{ type: "text", text }],

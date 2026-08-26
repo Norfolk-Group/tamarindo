@@ -129,24 +129,26 @@ export function Copilot({
         </header>
         <NewsTicker />
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {flyout.type === "primary" ? (
             <PrimaryWorkspace id={flyout.id} />
           ) : flyout.type === "admin" && flyout.section === "icps" && isAdmin ? (
             <IcpCatalogWorkspace />
           ) : (
             <>
-              <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-5 py-8">
-                {showIntake && (
-                  <IntakeCard
-                    initialName={userName}
-                    onDone={() => setShowIntake(false)}
-                  />
-                )}
-                {showNda && !showIntake && (
-                  <NdaCard onSigned={() => setShowNda(false)} />
-                )}
-              </div>
+              {(showIntake || showNda) && (
+                <div className="mx-auto w-full max-w-3xl shrink-0 px-5 pt-6">
+                  {showIntake && (
+                    <IntakeCard
+                      initialName={userName}
+                      onDone={() => setShowIntake(false)}
+                    />
+                  )}
+                  {showNda && !showIntake && (
+                    <NdaCard onSigned={() => setShowNda(false)} />
+                  )}
+                </div>
+              )}
               {agentHost ? (
                 <AgentAttach
                   key={conversationId}
@@ -179,7 +181,7 @@ function conversationStorageKey(userId: string): string {
 
 function mintConversationId(userId: string): string {
   const id = crypto.randomUUID();
-  if (typeof window === "undefined") {
+  if (typeof window !== "undefined") {
     window.localStorage.setItem(conversationStorageKey(userId), id);
   }
   return id;

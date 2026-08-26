@@ -22,7 +22,7 @@ describe("applyStreamEvent", () => {
     const afterReload = applyStreamEvents(
       [
         { type: "token", text: ", Rossi" },
-        { type: "activity", state: "idle", label: "Ready" },
+        { type: "activity", state: "idle", label: "Here to help" },
         { type: "done" },
       ],
       beforeReload,

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { CaseSource } from "@/lib/model/types";
 import { renderWorkbookXlsx } from "@/lib/artifacts/excel";
+import { reportWorkbookToSpec } from "@/lib/model/report-xlsx";
 import {
   AUTO_BASE_SCENARIO_NAME,
   diffScenarios,
@@ -219,14 +220,19 @@ export const modelExport = defineProcedure({
       };
     }
     if (format === "xlsx") {
-      const bytes = renderWorkbookXlsx(
-        cashflowWorkbookSpec(model, {
-          admin: ctx.actor.role === "admin",
-          values,
-        }),
-      );
+      const spec =
+        kind === "statements"
+          ? cashflowWorkbookSpec(model, {
+              admin: ctx.actor.role === "admin",
+              values,
+            })
+          : reportWorkbookToSpec(workbookForDepth(workbook, depth));
+      const bytes = renderWorkbookXlsx(spec);
       return {
-        filename: "tamarindo-cashflow.xlsx",
+        filename:
+          kind === "statements"
+            ? "tamarindo-cashflow.xlsx"
+            : `${stem}${depthTag}.xlsx`,
         contentType:
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         base64: bytes.toString("base64"),

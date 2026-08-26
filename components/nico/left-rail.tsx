@@ -34,7 +34,7 @@ const PRIMARY_NAV: {
   { id: "conversation", label: "Conversation", icon: MessageSquare, topic: "nav.conversation" },
   { id: "model", label: "Statements", icon: Table2, topic: "nav.statements" },
   { id: "variables", label: "Assumptions", icon: SlidersHorizontal, topic: "nav.assumptions" },
-  { id: "artifacts", label: "Artifacts", icon: FileSpreadsheet, topic: "nav.artifacts" },
+  { id: "artifacts", label: "Files", icon: FileSpreadsheet, topic: "nav.artifacts" },
   { id: "dataroom", label: "Data Room", icon: FolderLock, topic: "nav.dataroom" },
   { id: "help", label: "Help", icon: CircleHelp, topic: "nav.help" },
 ];

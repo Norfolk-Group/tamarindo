@@ -9,9 +9,9 @@ the raise math are OPINION/ASSUMPTION for the financial model to confirm
 
 | # | Line | Earner | Type | Level (ASSUMPTION where unset) |
 |---|------|--------|------|-------------------------------|
-| 1 | Origination fee | Tamarindo US | one-time | TBD; assume ~1% of funded |
+| 1 | Origination fee | Tamarindo US | one-time | **~1% of funded** (research seed); WhatsApp ask 1.50% — see 19 |
 | 2 | Activation fee | Tamarindo US | one-time | 2% of capital drawdown (sourced) |
-| 3 | Servicing fee | Tamarindo US | recurring | assume 75 bps of outstanding |
+| 3 | Servicing fee | Tamarindo US | recurring | **75 bps of outstanding** (research seed); WhatsApp ask 40 bps — see 19 |
 | 4 | Interest spread share | Tamarindo US | recurring | ~20% of interest billings (sourced) |
 | 5 | Property mgmt charge-through | Ashoka | recurring | market rate + markup |
 | 6 | Rental revenue share | Tamarindo US / Ashoka | recurring | ~20% of net rental (sourced) |
@@ -21,11 +21,12 @@ the raise math are OPINION/ASSUMPTION for the financial model to confirm
 On funded AUM at a ~11.84% blended client rate:
 
 - Spread share: 20% × ~11.84% ≈ **237 bps**
-- Servicing: ≈ **75 bps**
+- Servicing: ≈ **75 bps** (research seed; market 75–200 bps). WhatsApp ask
+  40 bps is a leaner scenario — see [19-platform-economics.md](19-platform-economics.md).
 - Rental share + mgmt economics (blended across ICPs, ~55% of units
   pooled): ≈ **40–60 bps**
 - **Recurring take ≈ 3.5–3.7% of funded AUM**, plus ~3% one-time
-  (activation + origination) in the year a dollar is deployed.
+  (activation 2% + origination 1%) in the year a dollar is deployed.
 
 Sanity check against sources: Dov's Aug 19 sketch of ~$30k/mo on the $20M
 pilot (~$360k/yr) matches the spread-share line alone (237 bps × $15M

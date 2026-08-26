@@ -6,6 +6,7 @@ import { runTurn } from "../../../lib/nico/orchestrator";
 import { bindTurnEnv, handleSiblingWorkerFetch } from "../../../lib/nico/sibling-http";
 import { isTurnPath } from "../../../lib/nico/agent-http";
 import { turnToUiResponse } from "../../../lib/nico/ui-stream";
+import { lastUserText } from "../../../lib/nico/last-user-text";
 
 type AgentEnv = {
   NICO_HANDSHAKE_SECRET?: string;
@@ -73,7 +74,7 @@ export class NicoAgent extends AIChatAgent<AgentEnv, NicoState> {
     if (!claims) {
       return new Response("Missing handshake claims", { status: 401 });
     }
-    const text = lastUserText(this.messages.at(-1));
+    const text = lastUserText(this.messages);
     if (!text.trim()) return new Response("Empty message", { status: 400 });
     const actor = await agentActorForSubject(claims.authSubject);
     return turnToUiResponse(
@@ -108,7 +109,7 @@ export class NicoAgent extends AIChatAgent<AgentEnv, NicoState> {
             type: "error",
             message: err instanceof Error ? err.message : "Turn failed",
           });
-          send({ type: "activity", state: "idle", label: "Ready" });
+          send({ type: "activity", state: "idle", label: "Here to help" });
           send({ type: "done" });
         } finally {
           controller.close();
@@ -134,19 +135,3 @@ const worker = {
 };
 
 export default worker;
-
-function lastUserText(message: unknown): string {
-  if (!message || typeof message !== "object") return "";
-  const row = message as { role?: string; content?: unknown; parts?: unknown };
-  if (row.role && row.role !== "user") return "";
-  if (typeof row.content === "string") return row.content;
-  if (!Array.isArray(row.parts)) return "";
-  return row.parts
-    .map((part) => {
-      if (part && typeof part === "object" && "text" in part) {
-        return String((part as { text?: unknown }).text ?? "");
-      }
-      return "";
-    })
-    .join("");
-}

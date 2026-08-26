@@ -49,10 +49,10 @@ export const HELP_TOPICS: HelpTopic[] = [
   },
   {
     id: "nav.artifacts",
-    title: "Artifacts",
+    title: "Files",
     family: "nav",
-    tip: "Decks, workbooks, and files Nico or you queued. Open from here or from chat.",
-    body: "Artifacts are generated documents — raise drafts, structure decks, Excel. They are not the live statements book. Refresh if a job is still building.",
+    tip: "Decks, workbooks, and downloads Nico or you queued. Open from here or from chat.",
+    body: "Files are generated documents — raise drafts, structure decks, Excel. They are not the live statements book. Refresh if a job is still building.",
   },
   {
     id: "nav.dataroom",
@@ -100,8 +100,8 @@ export const HELP_TOPICS: HelpTopic[] = [
     id: "conversation.nico",
     title: "Who Nico is",
     family: "conversation",
-    tip: "Tamarindo’s in-house person. He can talk about the work and ordinary life.",
-    body: "Nico is not a help desk. Ask him like a colleague. He grounds Tamarindo claims in the thesis and labels FACT / OPINION / ASSUMPTION. For “how does this screen work?”, Help or an (i) is faster than a long chat.",
+    tip: "Tamarindo’s in-house person. He talks like a credit colleague — English or Spanish.",
+    body: "Nico is not a help desk. Ask him like a colleague. He answers in the language you used. Numbers come from the live model, not from memory. Queued workbooks land in Files. For “how does this screen work?”, Help or an (i) is faster than a long chat.",
   },
   {
     id: "statements.live",
@@ -371,7 +371,7 @@ export const HELP_TOPICS: HelpTopic[] = [
   },
   {
     id: "artifacts.list",
-    title: "Artifacts list",
+    title: "Files list",
     family: "nav",
     tip: "Queued files. A kind plus a title. Not the live book.",
     body: "If chat just built a deck or workbook, it appears here. Confidential legal history never goes in this list.",
