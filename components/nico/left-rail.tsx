@@ -20,7 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { helpTip } from "@/lib/nico/help-catalog";
-import type { PrimaryPanel } from "@/lib/nico/rail-columns";
+import { canShowPanel, type PrimaryPanel } from "@/lib/nico/rail-columns";
 import { cn } from "@/lib/utils";
 
 export type { PrimaryPanel };
@@ -123,7 +123,9 @@ export function LeftRail({
             )}
           </button>
         </RailRow>
-        {PRIMARY_NAV.map((item) => {
+        {PRIMARY_NAV.filter((item) =>
+          canShowPanel(item.id, { isAdmin, ndaExecuted }),
+        ).map((item) => {
           const current = !adminOpen && primary === item.id;
           return (
             <RailRow

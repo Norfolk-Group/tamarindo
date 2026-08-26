@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   activePrimary,
+  canShowPanel,
   goHome,
   isAdminOpen,
   railLevel,
@@ -8,6 +9,23 @@ import {
   selectPrimary,
   toggleAdmin,
 } from "@/lib/nico/rail-columns";
+
+describe("canShowPanel", () => {
+  it("hides confidential panels before the NDA", () => {
+    const viewer = { isAdmin: false, ndaExecuted: false };
+    expect(canShowPanel("conversation", viewer)).toBe(true);
+    expect(canShowPanel("dataroom", viewer)).toBe(true);
+    expect(canShowPanel("help", viewer)).toBe(true);
+    expect(canShowPanel("model", viewer)).toBe(false);
+    expect(canShowPanel("variables", viewer)).toBe(false);
+    expect(canShowPanel("artifacts", viewer)).toBe(false);
+  });
+
+  it("shows everything once the NDA is executed or for admins", () => {
+    expect(canShowPanel("model", { isAdmin: false, ndaExecuted: true })).toBe(true);
+    expect(canShowPanel("variables", { isAdmin: true, ndaExecuted: false })).toBe(true);
+  });
+});
 
 describe("selectPrimary", () => {
   it("opens one workspace column and replaces any other flyout", () => {
