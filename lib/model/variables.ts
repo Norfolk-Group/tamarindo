@@ -1,3 +1,4 @@
+import { ICP_CATALOG, icpVariableMaxUsd } from "@/lib/model/icp-catalog";
 import type { VariableDef, VariableValue } from "@/lib/model/types";
 import { EQUITY_VARIABLE_DEFS } from "@/lib/model/variables-equity";
 import { OPS_VARIABLE_DEFS } from "@/lib/model/variables-ops";
@@ -555,135 +556,80 @@ export const VARIABLE_DEFS: VariableDef[] = [
   },
 ];
 
-const ICP_META: Array<{
-  id: string;
-  price: number;
-  term: number;
-  rate: number;
-  rentFactor: number;
-  weight: number;
-  label: string;
-  path: string;
-  cite: "FACT" | "OPINION" | "ASSUMPTION";
-  note: string;
-}> = [
-  {
-    id: "icp1",
-    price: 420_000,
-    term: 120,
-    rate: 0.115,
-    rentFactor: 1,
-    weight: 0.25,
-    label: "ICP-1 Poblado",
-    path: THESIS_04,
-    cite: "ASSUMPTION",
-    note: "Thesis ICP-1 anchors",
-  },
-  {
-    id: "icp2",
-    price: 650_000,
-    term: 120,
-    rate: 0.115,
-    rentFactor: 1,
-    weight: 0.18,
-    label: "ICP-2 Cartagena Heritage",
-    path: THESIS_04,
-    cite: "ASSUMPTION",
-    note: "Thesis ICP-2 anchors",
-  },
-  {
-    id: "icp3",
-    price: 750_000,
-    term: 144,
-    rate: 0.11,
-    rentFactor: 0.4,
-    weight: 0.12,
-    label: "ICP-3 Llanogrande",
-    path: THESIS_04,
-    cite: "ASSUMPTION",
-    note: "Longer 12-year retiree term",
-  },
-  {
-    id: "icp4",
-    price: 480_000,
-    term: 84,
-    rate: 0.125,
-    rentFactor: 1,
-    weight: 0.18,
-    label: "ICP-4 Bocagrande",
-    path: "lib/model/contracts.ts",
-    cite: "ASSUMPTION",
-    note: "7-year lifestyle term",
-  },
-  {
-    id: "icp5",
-    price: 310_000,
-    term: 96,
-    rate: 0.12,
-    rentFactor: 1,
-    weight: 0.17,
-    label: "ICP-5 Envigado",
-    path: "lib/model/contracts.ts",
-    cite: "ASSUMPTION",
-    note: "8-year smaller ticket",
-  },
-  {
-    id: "icp6",
-    price: 580_000,
-    term: 108,
-    rate: 0.115,
-    rentFactor: 1,
-    weight: 0.1,
-    label: "ICP-6 Castillo Grande",
-    path: "lib/model/contracts.ts",
-    cite: "ASSUMPTION",
-    note: "9-year coastal",
-  },
-];
+const ICP_ADMIN_NOTE = "Admin-only Ideal Contract Profile — edit under Admin → ICPs";
 
-const ICP_USER_NOTE = "Ricardo 2026-08-23 — every ICP number is a user what-if";
-
-for (const icp of ICP_META) {
+for (const icp of ICP_CATALOG) {
+  const label = `${icp.code} ${icp.name}`;
   VARIABLE_DEFS.push(
     {
       key: `icp.${icp.id}.purchasePriceUsd`,
-      label: `${icp.label} purchase price`,
+      label: `${label} purchase price`,
       group: "ICP contracts",
       type: "usd",
-      visibility: "user",
-      defaultValue: icp.price,
-      min: 100_000,
-      max: 2_000_000,
-      citation: { label: icp.cite, path: icp.path, note: `${icp.note}. ${ICP_USER_NOTE}` },
+      visibility: "admin",
+      defaultValue: icp.purchasePriceUsd,
+      min: icp.assetClass === "property" ? 100_000 : 5_000,
+      max: icpVariableMaxUsd(icp.assetClass),
+      citation: {
+        label: icp.citation.label,
+        path: icp.citation.path,
+        note: `${icp.citation.note}. ${ICP_ADMIN_NOTE}`,
+      },
     },
     {
       key: `icp.${icp.id}.termMonths`,
-      label: `${icp.label} term (months)`,
+      label: `${label} term (months)`,
       group: "ICP contracts",
       type: "integer",
-      visibility: "user",
-      defaultValue: icp.term,
-      min: 36,
+      visibility: "admin",
+      defaultValue: icp.termMonths,
+      min: 12,
       max: 180,
-      citation: { label: icp.cite, path: icp.path, note: `${icp.note}. ${ICP_USER_NOTE}` },
+      citation: {
+        label: icp.citation.label,
+        path: icp.citation.path,
+        note: `${icp.citation.note}. ${ICP_ADMIN_NOTE}`,
+      },
     },
     {
       key: `icp.${icp.id}.clientRate`,
-      label: `${icp.label} client rate`,
+      label: `${label} client rate`,
       group: "ICP contracts",
       type: "percent",
-      visibility: "user",
-      defaultValue: icp.rate,
+      visibility: "admin",
+      defaultValue: icp.clientRate,
       min: 0.05,
-      max: 0.2,
-      citation: { label: icp.cite, path: icp.path, note: `${icp.note}. ${ICP_USER_NOTE}` },
+      max: 0.25,
+      citation: {
+        label: icp.citation.label,
+        path: icp.citation.path,
+        note: `${icp.citation.note}. ${ICP_ADMIN_NOTE}`,
+      },
     },
     {
-      key: `icp.${icp.id}.rentedTimePct`,
-      label: `${icp.label} share of time rented`,
+      key: `icp.${icp.id}.mixWeight`,
+      label: `${label} mix weight`,
       group: "ICP contracts",
       type: "percent",
-      visibility: "user",
+      visibility: "admin",
+      defaultValue: icp.mixWeight,
+      min: 0,
+      max: 1,
+      citation: {
+        label: "OPINION",
+        path: icp.citation.path,
+        note: `Mix inside this asset class. ${ICP_ADMIN_NOTE}`,
+      },
+    },
+  );
+  if (icp.assetClass !== "property") continue;
+  VARIABLE_DEFS.push(
+    {
+      key: `icp.${icp.id}.rentedTimePct`,
+      label: `${label} share of time rented`,
+      group: "ICP contracts",
+      type: "percent",
+      visibility: "admin",
       defaultValue: 0.3,
       min: 0,
       max: 1,
@@ -691,38 +637,23 @@ for (const icp of ICP_META) {
       citation: {
         label: "OPINION",
         path: THESIS_04,
-        note: "Ricardo 2026-08-23 — people enjoy their homes; per-ICP what-if",
+        note: `People enjoy their homes; per-ICP. ${ICP_ADMIN_NOTE}`,
       },
     },
     {
       key: `icp.${icp.id}.rentFactor`,
-      label: `${icp.label} rental strength vs standard pricing`,
+      label: `${label} rental strength vs standard pricing`,
       group: "ICP contracts",
       type: "percent",
-      visibility: "user",
+      visibility: "admin",
       defaultValue: icp.rentFactor,
       min: 0,
       max: 2,
       step: 0.05,
       citation: {
         label: "ASSUMPTION",
-        path: icp.path,
-        note: `1 = standard %-of-value rule; ICP-3 rents weakly. ${ICP_USER_NOTE}`,
-      },
-    },
-    {
-      key: `icp.${icp.id}.mixWeight`,
-      label: `${icp.label} mix weight`,
-      group: "ICP contracts",
-      type: "percent",
-      visibility: "user",
-      defaultValue: icp.weight,
-      min: 0,
-      max: 1,
-      citation: {
-        label: "OPINION",
-        path: THESIS_04,
-        note: `Portfolio mix. ${ICP_USER_NOTE}`,
+        path: icp.citation.path,
+        note: `1 = standard %-of-value rule; ICP-3 rents weakly. ${ICP_ADMIN_NOTE}`,
       },
     },
   );

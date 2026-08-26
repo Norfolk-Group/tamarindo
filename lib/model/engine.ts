@@ -18,7 +18,9 @@ import { cents, d, monthlyRate } from "@/lib/model/money";
 import {
   aircraftOriginationsThisMonth,
   autoOriginationsThisMonth,
+  pickProductQuote,
   productQuote,
+  productQuotes,
 } from "@/lib/model/products";
 import type { CashflowModel, IcpComputed, IcpId, Vintage } from "@/lib/model/types";
 import { ICP_IDS } from "@/lib/model/types";
@@ -173,7 +175,8 @@ export function runCashflowModel(
       originatedVintages.push(next);
     }
 
-    const autoQuote = productQuote("auto", values);
+    const autoBlend = productQuote("auto", values);
+    const autoBook = productQuotes("auto", values);
     const autoStart = Math.round(num(values, "autoStartMonth"));
     const autoCap = Math.max(0, Math.round(num(values, "autoMaxPerMonth")));
     const autoMix = autoOriginationsThisMonth(values, m, acc.originated);
@@ -182,11 +185,12 @@ export function runCashflowModel(
       productAumTargetUsd("auto", m, values) - bookOutstanding(live, "auto"),
     );
     const autoByAum =
-      m >= autoStart && autoQuote.fundedUsd > 0
-        ? Math.floor(autoHeadroom / autoQuote.fundedUsd)
+      m >= autoStart && autoBlend.fundedUsd > 0
+        ? Math.floor(autoHeadroom / autoBlend.fundedUsd)
         : 0;
     const autoWanted = Math.min(autoCap, Math.max(autoMix, autoByAum));
     for (let i = 0; i < autoWanted; i += 1) {
+      const autoQuote = pickProductQuote(autoBook, autosTotal + i);
       const ok = tryOriginate(
         {
           kind: "auto",
@@ -212,9 +216,10 @@ export function runCashflowModel(
       acc.insurance += cents(d(autoQuote.fundedUsd).times(insurancePct));
     }
 
-    const airQuote = productQuote("aircraft", values);
+    const airBook = productQuotes("aircraft", values);
     const airWanted = aircraftOriginationsThisMonth(values, m);
     for (let i = 0; i < airWanted; i += 1) {
+      const airQuote = pickProductQuote(airBook, aircraftTotal + i);
       const ok = tryOriginate(
         {
           kind: "aircraft",

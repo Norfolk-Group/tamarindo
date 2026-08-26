@@ -1,8 +1,13 @@
-export type PrimaryColumnId = "artifacts" | "dataroom" | "model" | "variables";
+export type PrimaryColumnId =
+  | "artifacts"
+  | "dataroom"
+  | "help"
+  | "model"
+  | "variables";
 
 export type PrimaryPanel = "conversation" | PrimaryColumnId;
 
-export type AdminSectionId = "approvals" | "capabilities" | "variables";
+export type AdminSectionId = "approvals" | "capabilities" | "icps" | "variables";
 
 export type RailFlyout =
   | { type: "none" }
@@ -39,5 +44,5 @@ export function goHome(): RailFlyout {
 }
 
 export function railLevel(flyout: RailFlyout): "first" | "second" {
-  return flyout.type === "none" ? "first" : "second";
+  return flyout.type === "admin" ? "second" : "first";
 }

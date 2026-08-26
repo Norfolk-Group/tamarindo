@@ -2,15 +2,18 @@ import { describe, expect, it } from "vitest";
 import {
   aircraftOriginationsThisMonth,
   autoOriginationsThisMonth,
+  pickProductQuote,
   productQuote,
+  productQuotes,
 } from "@/lib/model/products";
 import { defaultValues } from "@/lib/model/variables";
 
 describe("product quotes", () => {
-  it("prices an auto below the ticket with a residual", () => {
+  it("prices a mix-weighted auto book from the two ICPs", () => {
     const quote = productQuote("auto", defaultValues());
-    expect(quote.fundedUsd).toBe(44_000);
-    expect(quote.residualUsd).toBe(11_000);
+    expect(quote.ticketUsd).toBe(60_600);
+    expect(quote.fundedUsd).toBe(48_480);
+    expect(quote.residualUsd).toBe(12_120);
     expect(quote.monthlyLeaseUsd).toBeGreaterThan(0);
     expect(quote.monthlyLeaseUsd).toBeLessThan(quote.fundedUsd / 12);
   });
@@ -19,6 +22,12 @@ describe("product quotes", () => {
     const values = defaultValues();
     expect(autoOriginationsThisMonth(values, 5, 4)).toBe(0);
     expect(autoOriginationsThisMonth(values, 6, 4)).toBe(12);
+  });
+
+  it("keeps two named auto ICPs and picks by mix", () => {
+    const quotes = productQuotes("auto", defaultValues());
+    expect(quotes.map((row) => row.id)).toEqual(["auto1", "auto2"]);
+    expect(pickProductQuote(quotes, 0).id).toBe("auto1");
   });
 
   it("spreads aircraft originations after the start month", () => {

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { House } from "lucide-react";
+import { InfoTip } from "@/components/nico/info-tip";
 import { cn } from "@/lib/utils";
 
 export function SecondLevelRail({
@@ -36,14 +37,17 @@ export function SecondLevelRail({
         </p>
       </div>
       <nav className="flex flex-col gap-1 px-2 pb-2" aria-label={`${label} menu`}>
-        <button
-          type="button"
-          onClick={onHome}
-          className="transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          <House className="size-4 shrink-0" />
-          <span className="flex-1 text-left">Home</span>
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={onHome}
+            className="transition-interactive flex min-w-0 flex-1 items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+          >
+            <House className="size-4 shrink-0" />
+            <span className="flex-1 text-left">Home</span>
+          </button>
+          <InfoTip topic="nav.home" label="About Home" side="right" />
+        </div>
         {commands}
       </nav>
       {children ? (

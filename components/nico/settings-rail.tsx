@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ListTree, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { ListTree, ShieldCheck, SlidersHorizontal, Target } from "lucide-react";
+import { InfoTip } from "@/components/nico/info-tip";
 import { VariablesWorkspace } from "@/components/nico/variables-workspace";
 import type { Capability } from "@/lib/contracts/procedure";
 import { ApprovalsPanel } from "@/components/nico/approvals-panel";
@@ -16,17 +17,20 @@ type SectionNavItem = {
   id: AdminSection;
   label: string;
   icon: typeof ShieldCheck;
+  topic: string;
 };
 
 const VARIABLES_NAV: SectionNavItem = {
   id: "variables",
   label: "Assumptions",
   icon: SlidersHorizontal,
+  topic: "nav.assumptions",
 };
 
 const ADMIN_NAV: SectionNavItem[] = [
-  { id: "approvals", label: "Approvals", icon: ShieldCheck },
-  { id: "capabilities", label: "Capabilities", icon: ListTree },
+  { id: "approvals", label: "Approvals", icon: ShieldCheck, topic: "admin.approvals" },
+  { id: "capabilities", label: "Capabilities", icon: ListTree, topic: "admin.capabilities" },
+  { id: "icps", label: "ICPs", icon: Target, topic: "admin.icps" },
   VARIABLES_NAV,
 ];
 
@@ -109,21 +113,23 @@ export function SettingsRail({
       label={isAdmin ? "Admin" : "Preferences"}
       onHome={onHome}
       commands={sections.map((item) => (
-        <button
-          key={item.id}
-          type="button"
-          onClick={() => onSection(item.id)}
-          className={cn(
-            "transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm",
-            active === item.id
-              ? "bg-primary/15 text-primary"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground",
-          )}
-          aria-current={active === item.id ? "page" : undefined}
-        >
-          <item.icon className="size-4 shrink-0" />
-          <span className="flex-1 text-left">{item.label}</span>
-        </button>
+        <div key={item.id} className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={() => onSection(item.id)}
+            className={cn(
+              "transition-interactive flex min-w-0 flex-1 items-center gap-3 rounded-md px-2.5 py-2 text-sm",
+              active === item.id
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+            )}
+            aria-current={active === item.id ? "page" : undefined}
+          >
+            <item.icon className="size-4 shrink-0" />
+            <span className="flex-1 text-left">{item.label}</span>
+          </button>
+          <InfoTip topic={item.topic} label={`About ${item.label}`} side="right" />
+        </div>
       ))}
     >
       {isAdmin && active === "approvals" && (

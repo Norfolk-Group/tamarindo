@@ -597,6 +597,48 @@ describe("runTurn", () => {
     );
   });
 
+  it("opens the help catalog when asked how the app works", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "help.list") {
+        return {
+          topics: [{ title: "Help", tip: "Hover any (i).", body: "Same catalog." }],
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    for await (const event of runTurn("help", actor, {
+      conversationId: "conv_help",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "help.list",
+      { query: undefined },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "help",
+      expect.anything(),
+      expect.objectContaining({
+        artifactNote: expect.stringContaining("(i) buttons"),
+      }),
+    );
+  });
+
   it("queues a structure deck when asked for the entity map", async () => {
     profileIdFor.mockResolvedValue("prof_1");
     ensureConversation.mockResolvedValue(undefined);

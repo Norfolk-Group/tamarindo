@@ -1,5 +1,7 @@
 "use client";
 
+import { InfoTip } from "@/components/nico/info-tip";
+
 type ArtifactRow = { id: string; kind: string; title: string; createdAt: string };
 type DocumentRow = {
   id: string;
@@ -20,7 +22,7 @@ export function ArtifactsPanel({
 }) {
   return (
     <section className="p-3">
-      <PanelHead label="ARTIFACTS" onRefresh={onRefresh} />
+      <PanelHead label="ARTIFACTS" topic="artifacts.list" onRefresh={onRefresh} />
       {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
       <ul className="mt-2 space-y-2">
         {rows.map((row) => (
@@ -48,7 +50,7 @@ export function DataRoomPanel({
 }) {
   return (
     <section className="p-3">
-      <PanelHead label="DATA ROOM" onRefresh={onRefresh} />
+      <PanelHead label="DATA ROOM" topic="dataroom.list" onRefresh={onRefresh} />
       {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
       <ul className="mt-2 space-y-2">
         {rows.map((row) => (
@@ -70,11 +72,20 @@ export function DataRoomPanel({
   );
 }
 
-function PanelHead({ label, onRefresh }: { label: string; onRefresh: () => void }) {
+function PanelHead({
+  label,
+  topic,
+  onRefresh,
+}: {
+  label: string;
+  topic: string;
+  onRefresh: () => void;
+}) {
   return (
     <div className="flex items-center justify-between">
-      <p className="text-[11px] font-medium tracking-wide text-muted-foreground">
+      <p className="flex items-center gap-1 text-[11px] font-medium tracking-wide text-muted-foreground">
         {label}
+        <InfoTip topic={topic} />
       </p>
       <button
         type="button"

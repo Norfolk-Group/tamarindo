@@ -16,6 +16,7 @@ describe("selectPrimary", () => {
       type: "primary",
       id: "artifacts",
     });
+    expect(selectPrimary("help")).toEqual({ type: "primary", id: "help" });
   });
 
   it("closes the flyout when conversation is selected", () => {
@@ -43,6 +44,10 @@ describe("selectAdminSection", () => {
       type: "admin",
       section: "variables",
     });
+    expect(selectAdminSection("icps")).toEqual({
+      type: "admin",
+      section: "icps",
+    });
   });
 });
 
@@ -61,9 +66,9 @@ describe("railLevel", () => {
     expect(railLevel({ type: "none" })).toBe("first");
   });
 
-  it("replaces the first-level rail when Admin or a workspace is open", () => {
+  it("replaces the first-level rail only for Admin, not for workspaces", () => {
     expect(railLevel({ type: "admin", section: "approvals" })).toBe("second");
-    expect(railLevel({ type: "primary", id: "model" })).toBe("second");
+    expect(railLevel({ type: "primary", id: "model" })).toBe("first");
   });
 });
 

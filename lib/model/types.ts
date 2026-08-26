@@ -9,6 +9,20 @@ export const ICP_IDS = [
 
 export type IcpId = (typeof ICP_IDS)[number];
 
+export const AUTO_ICP_IDS = ["auto1", "auto2"] as const;
+export const AIRCRAFT_ICP_IDS = ["air1", "air2"] as const;
+
+export const CATALOG_ICP_IDS = [
+  ...ICP_IDS,
+  ...AUTO_ICP_IDS,
+  ...AIRCRAFT_ICP_IDS,
+] as const;
+
+export type AutoIcpId = (typeof AUTO_ICP_IDS)[number];
+export type AircraftIcpId = (typeof AIRCRAFT_ICP_IDS)[number];
+export type CatalogIcpId = (typeof CATALOG_ICP_IDS)[number];
+export type AssetClass = "property" | "auto" | "aircraft";
+
 export type CitationLabel = "FACT" | "OPINION" | "ASSUMPTION";
 
 export type VariableType = "percent" | "usd" | "integer" | "month" | "text";
@@ -37,14 +51,22 @@ export type VariableDef = {
   };
 };
 
+export type IcpSource = {
+  label: string;
+  url: string;
+};
+
 export type IcpTemplate = {
   id: IcpId;
   code: string;
   name: string;
-  city: "Medellín" | "Cartagena" | "Rionegro";
+  city: string;
   neighborhood: string;
   property: string;
   persona: string;
+  explanation: string;
+  researchNote: string;
+  sources: IcpSource[];
   purchasePriceUsd: number;
   termMonths: number;
   clientRate: number;

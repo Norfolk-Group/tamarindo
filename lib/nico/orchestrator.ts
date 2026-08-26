@@ -26,6 +26,11 @@ import type { ModelVariableView } from "@/lib/model/types";
 import { parseReportAsk } from "@/lib/nico/report-intent";
 import { buildReportGlance, formatReportFence } from "@/lib/model/report-glance";
 import type { ReportKind, ReportWorkbook } from "@/lib/model/report-workbook";
+import {
+  formatHelpList,
+  formatHelpTopic,
+  parseHelpAsk,
+} from "@/lib/nico/help-intent";
 import { parseIcpAsk, type IcpAsk } from "@/lib/nico/icp-intent";
 import {
   entitiesForWorkbook,
@@ -115,10 +120,12 @@ export async function* runTurn(
   const deckAsk = parseDeckAsk(message);
   const reportAsk = parseReportAsk(message);
   const icpAsk = parseIcpAsk(message);
+  const helpAsk = parseHelpAsk(message);
   const modelAction =
     Boolean(scenarioAsk) ||
     Boolean(variableSet) ||
     Boolean(icpAsk) ||
+    Boolean(helpAsk) ||
     Boolean(reportAsk) ||
     isCashflowModelRequest(message) ||
     isWorkbookRequest(message) ||
@@ -292,7 +299,7 @@ export async function* runTurn(
         yield { type: "token", text: reportPreface };
       }
       const preview =
-        " Glance is already on screen — Summary first, Extended is every line. Same numbers. Do not reprint the fence. Full book opens in a new tab; PDF is 16:9 for later print; CSV is the same tables.";
+        " Glance is already on screen — Summary first, Extended is every line. Same numbers. Do not reprint the fence. Full book opens in a new tab; PDF and CSV export from that tab.";
       if (data.kind === "income") {
         artifactNote = `I built a cash-basis OpCo income statement from the live model — receipts, payments, cash from operations. It is not an accrual accountant's P&L.${preview}`;
       } else if (data.kind === "returns") {
@@ -405,6 +412,35 @@ export async function* runTurn(
           err instanceof Error ? err.message : "unknown error"
         }.`;
       }
+    }
+  } else if (helpAsk) {
+    yield {
+      type: "activity",
+      state: "drafting",
+      label: "Opening help…",
+    };
+    try {
+      if (helpAsk.kind === "list") {
+        const data = (await invokeAgentTool(
+          "help.list",
+          { query: helpAsk.query },
+          toolActor,
+          traceId,
+        )) as { topics: Array<{ title: string; tip: string; body: string }> };
+        artifactNote = formatHelpList(data.topics);
+      } else {
+        const data = (await invokeAgentTool(
+          "help.get",
+          { id: helpAsk.id },
+          toolActor,
+          traceId,
+        )) as { topic: { title: string; body: string } };
+        artifactNote = formatHelpTopic(data.topic);
+      }
+    } catch (err) {
+      artifactNote = `I tried to open help and hit: ${
+        err instanceof Error ? err.message : "unknown error"
+      }.`;
     }
   }
 
@@ -728,7 +764,7 @@ async function runIcpAsk(
     const lines = data.icps
       .map((icp) => `${icp.code} ${icp.name} (${icp.city})`)
       .join("; ");
-    return `Six ICPs from the live engine: ${lines}. Ask for one by id to see lease, residual, and mix.`;
+    return `Ten Ideal Contract Profiles from the live engine: ${lines}. Ask for one by id to see lease, residual, and mix.`;
   }
   if (ask.kind === "get") {
     const data = (await invokeAgentTool(
@@ -762,7 +798,7 @@ async function runIcpAsk(
       icp: { code: string; purchasePriceUsd: number; monthlyLeaseUsd: number };
     };
     if (updated.applied.length === 0) {
-      return `No ${ask.id} variables were applied. Members can change the published ICP keys; ask an admin for the rest.`;
+      return `No ${ask.id} variables were applied. Only an admin can edit Ideal Contract Profiles (Admin → ICPs).`;
     }
     return `Updated ${updated.applied.join(", ")}. ${updated.icp.code} purchase ${updated.icp.purchasePriceUsd}, lease ${updated.icp.monthlyLeaseUsd}/mo. Open Model to see the rest of the book.`;
   }

@@ -47,7 +47,9 @@ describe("humanOnly capability map (KTD4 / AE3)", () => {
     expect(names).toContain("model.report");
     expect(names).toContain("icp.list");
     expect(names).toContain("icp.get");
-    expect(names).toContain("icp.set");
+    expect(names).toContain("help.list");
+    expect(names).toContain("help.get");
+    expect(names).not.toContain("icp.set");
     expect(names).toContain("icp.vintages");
     expect(names).not.toContain("approvals.decide");
     expect(names).not.toContain("dealTerms.publish");
@@ -63,6 +65,8 @@ describe("humanOnly capability map (KTD4 / AE3)", () => {
     expect(names).toContain("model.report");
     expect(names).toContain("icp.list");
     expect(names).toContain("icp.get");
+    expect(names).toContain("help.list");
+    expect(names).toContain("help.get");
     expect(names).toContain("icp.vintages");
     expect(names).not.toContain("icp.set");
     expect(names).not.toContain("model.setVariables");

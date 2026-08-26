@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChatChart } from "@/components/nico/chat-chart";
+import { InfoTip } from "@/components/nico/info-tip";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -72,8 +73,9 @@ export function ChatReportGlance({ spec }: { spec: ReportGlance }) {
     <figure className="nico-rich-enter overflow-hidden rounded-lg border border-border bg-card">
       <figcaption className="border-b border-border px-3 py-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#23a5b4]">
+          <p className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[#23a5b4]">
             Live model · {depth}
+            <InfoTip topic="statements.live" />
           </p>
           {extended ? (
             <Tabs
@@ -102,21 +104,30 @@ export function ChatReportGlance({ spec }: { spec: ReportGlance }) {
           <ChatChart spec={spec.chart} />
         </div>
       ) : null}
-      <div className="flex flex-wrap gap-2 border-t border-border px-3 py-2">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          onClick={() => window.open(spec.previewPath, "_blank", "noopener,noreferrer")}
-        >
-          Full book (new tab)
-        </Button>
-        <Button type="button" size="sm" variant="outline" asChild>
-          <a href={spec.pdfPath}>PDF 16:9</a>
-        </Button>
-        <Button type="button" size="sm" variant="outline" asChild>
-          <a href={spec.csvPath}>CSV</a>
-        </Button>
+      <div className="flex flex-wrap items-center gap-2 border-t border-border px-3 py-2">
+        <span className="inline-flex items-center gap-0.5">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => window.open(spec.previewPath, "_blank", "noopener,noreferrer")}
+          >
+            Full book
+          </Button>
+          <InfoTip topic="statements.book" />
+        </span>
+        <span className="inline-flex items-center gap-0.5">
+          <Button type="button" size="sm" variant="outline" asChild>
+            <a href={spec.pdfPath}>PDF</a>
+          </Button>
+          <InfoTip topic="statements.pdf" />
+        </span>
+        <span className="inline-flex items-center gap-0.5">
+          <Button type="button" size="sm" variant="outline" asChild>
+            <a href={spec.csvPath}>CSV</a>
+          </Button>
+          <InfoTip topic="statements.csv" />
+        </span>
       </div>
     </figure>
   );

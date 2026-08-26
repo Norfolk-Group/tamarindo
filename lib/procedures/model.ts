@@ -201,6 +201,7 @@ export const modelExport = defineProcedure({
           : kind === "income"
             ? "tamarindo-income"
             : "tamarindo-cashflow";
+    const depthTag = `-${depth}`;
     if (format === "html") {
       return {
         filename: `${stem}.html`,
@@ -210,7 +211,7 @@ export const modelExport = defineProcedure({
     }
     if (format === "csv") {
       return {
-        filename: `${stem}.csv`,
+        filename: `${stem}${depthTag}.csv`,
         contentType: "text/csv; charset=utf-8",
         base64: Buffer.from(renderReportCsv(workbookForDepth(workbook, depth)), "utf8").toString(
           "base64",
@@ -234,7 +235,7 @@ export const modelExport = defineProcedure({
     const html = renderReportHtml(workbook, { depth });
     const pdf = await renderCashflowPdf(html);
     return {
-      filename: `${stem}.pdf`,
+      filename: `${stem}${depthTag}.pdf`,
       contentType: "application/pdf",
       base64: pdf.toString("base64"),
     };

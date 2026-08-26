@@ -11,6 +11,11 @@ from `VARIABLE_DEFS` (`visibility: "user"`). Members may change every blue
 key; admins may change every key, including grey operating detail. The
 engine recalculates on the server.
 
+**Ideal Contract Profiles** (six property, two auto, two aircraft) are
+admin-only. They live under Admin → ICPs, not as blue member inputs.
+Seeds and explanations are in `lib/model/icp-catalog.ts`. The gate is
+[CONTRACT-admin-catalog.md](../contracts/CONTRACT-admin-catalog.md).
+
 This is the Excel convention: blue = typed by the analyst; black = formula.
 
 Seeds live in code. The **shared company case** is the legacy
@@ -33,7 +38,7 @@ Key blue levers (meetings + thesis):
 - Client down / LTV (`downPaymentPct`, seed 40% → 60% LTV)
 - Purchase-option floor (`minResidualOfAssetPct`, seed 20% of asset)
 - Activation and origination fees
-- ICP prices, terms, mix
+- Volume and lease terms (ICP prices live under Admin → ICPs, not as blue member inputs)
 - Published opex lumps
 
 Ask and pre-money are **not** blue. They come from published Deal Terms.

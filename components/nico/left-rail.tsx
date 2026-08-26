@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ChevronLeft,
+  CircleHelp,
   FileSpreadsheet,
   FolderLock,
   LogOut,
@@ -12,6 +13,13 @@ import {
   SlidersHorizontal,
   Table2,
 } from "lucide-react";
+import { InfoTip } from "@/components/nico/info-tip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { helpTip } from "@/lib/nico/help-catalog";
 import type { PrimaryPanel } from "@/lib/nico/rail-columns";
 import { cn } from "@/lib/utils";
 
@@ -21,12 +29,14 @@ const PRIMARY_NAV: {
   id: PrimaryPanel;
   label: string;
   icon: typeof MessageSquare;
+  topic: string;
 }[] = [
-  { id: "conversation", label: "Conversation", icon: MessageSquare },
-  { id: "model", label: "Statements", icon: Table2 },
-  { id: "variables", label: "Assumptions", icon: SlidersHorizontal },
-  { id: "artifacts", label: "Artifacts", icon: FileSpreadsheet },
-  { id: "dataroom", label: "Data Room", icon: FolderLock },
+  { id: "conversation", label: "Conversation", icon: MessageSquare, topic: "nav.conversation" },
+  { id: "model", label: "Statements", icon: Table2, topic: "nav.statements" },
+  { id: "variables", label: "Assumptions", icon: SlidersHorizontal, topic: "nav.assumptions" },
+  { id: "artifacts", label: "Artifacts", icon: FileSpreadsheet, topic: "nav.artifacts" },
+  { id: "dataroom", label: "Data Room", icon: FolderLock, topic: "nav.dataroom" },
+  { id: "help", label: "Help", icon: CircleHelp, topic: "nav.help" },
 ];
 
 const SIGN_OUT_HREF = "/logout?returnTo=/sign-in";
@@ -96,65 +106,85 @@ export function LeftRail({
       </div>
 
       <nav className="flex flex-col gap-1 px-2" aria-label="Workspace">
-        <button
-          type="button"
-          onClick={onNewConversation}
-          className="transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-          aria-label="New conversation"
+        <RailRow
+          collapsed={collapsed}
+          topic="conversation.nico"
+          label="New conversation"
         >
-          <MessageSquarePlus className="size-4 shrink-0" />
-          {!collapsed && (
-            <span className="flex-1 text-left">New conversation</span>
-          )}
-        </button>
+          <button
+            type="button"
+            onClick={onNewConversation}
+            className="transition-interactive flex min-w-0 flex-1 items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+            aria-label="New conversation"
+          >
+            <MessageSquarePlus className="size-4 shrink-0" />
+            {!collapsed && (
+              <span className="flex-1 text-left">New conversation</span>
+            )}
+          </button>
+        </RailRow>
         {PRIMARY_NAV.map((item) => {
           const current = !adminOpen && primary === item.id;
           return (
-            <button
+            <RailRow
               key={item.id}
-              type="button"
-              onClick={() => onPrimary(item.id)}
-              className={cn(
-                "transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm",
-                current
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
-              )}
-              aria-current={current ? "page" : undefined}
+              collapsed={collapsed}
+              topic={item.topic}
+              label={item.label}
             >
-              <item.icon className="size-4 shrink-0" />
-              {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
-            </button>
+              <button
+                type="button"
+                onClick={() => onPrimary(item.id)}
+                className={cn(
+                  "transition-interactive flex min-w-0 flex-1 items-center gap-3 rounded-md px-2.5 py-2 text-sm",
+                  current
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+                aria-current={current ? "page" : undefined}
+              >
+                <item.icon className="size-4 shrink-0" />
+                {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+              </button>
+            </RailRow>
           );
         })}
       </nav>
 
       <div className="mt-auto flex flex-col gap-1 border-t border-border px-2 py-2">
-        <button
-          type="button"
-          onClick={onAdminOpen}
-          className={cn(
-            "transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm",
-            adminOpen
-              ? "bg-primary/15 text-primary"
-              : "text-muted-foreground hover:bg-accent hover:text-foreground",
-          )}
-          aria-expanded={adminOpen}
-          aria-controls="nico-admin-rail"
+        <RailRow
+          collapsed={collapsed}
+          topic={isAdmin ? "nav.admin" : "nav.preferences"}
+          label={settingsLabel}
         >
-          <Settings className="size-4 shrink-0" />
-          {!collapsed && (
-            <span className="flex-1 text-left">{settingsLabel}</span>
-          )}
-        </button>
-        <a
-          href={SIGN_OUT_HREF}
-          className="transition-interactive flex items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-          aria-label="Sign out"
-        >
-          <LogOut className="size-4 shrink-0" />
-          {!collapsed && <span className="flex-1 text-left">Sign out</span>}
-        </a>
+          <button
+            type="button"
+            onClick={onAdminOpen}
+            className={cn(
+              "transition-interactive flex min-w-0 flex-1 items-center gap-3 rounded-md px-2.5 py-2 text-sm",
+              adminOpen
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground",
+            )}
+            aria-expanded={adminOpen}
+            aria-controls="nico-admin-rail"
+          >
+            <Settings className="size-4 shrink-0" />
+            {!collapsed && (
+              <span className="flex-1 text-left">{settingsLabel}</span>
+            )}
+          </button>
+        </RailRow>
+        <RailRow collapsed={collapsed} topic="nav.signout" label="Sign out">
+          <a
+            href={SIGN_OUT_HREF}
+            className="transition-interactive flex min-w-0 flex-1 items-center gap-3 rounded-md px-2.5 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+            aria-label="Sign out"
+          >
+            <LogOut className="size-4 shrink-0" />
+            {!collapsed && <span className="flex-1 text-left">Sign out</span>}
+          </a>
+        </RailRow>
       </div>
 
       <div
@@ -187,5 +217,33 @@ export function LeftRail({
         )}
       </div>
     </aside>
+  );
+}
+
+function RailRow({
+  collapsed,
+  topic,
+  label,
+  children,
+}: {
+  collapsed: boolean;
+  topic: string;
+  label: string;
+  children: ReactNode;
+}) {
+  const tip = helpTip(topic);
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent side="right">{tip || label}</TooltipContent>
+      </Tooltip>
+    );
+  }
+  return (
+    <div className="flex items-center gap-0.5">
+      {children}
+      <InfoTip topic={topic} label={`About ${label}`} side="right" />
+    </div>
   );
 }

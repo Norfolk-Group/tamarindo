@@ -1,7 +1,8 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
+import { InfoTip } from "@/components/nico/info-tip";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -117,10 +118,11 @@ export function ModelWorkspace() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground">
-            STATEMENTS · YOUR CASE
+            STATEMENTS · LIVE MODEL
           </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+          <h1 className="mt-1 flex items-center gap-2 text-2xl font-semibold tracking-tight">
             US · Colombia sucursal · Consolidated · Intervest vehicle
+            <InfoTip topic="statements.live" />
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             {s.homesOriginated} homes · {s.autosOriginated} autos ·{" "}
@@ -130,62 +132,76 @@ export function ModelWorkspace() {
             OpCo cash and not on the cap table. Colombia bills clients.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              window.open("/api/nico/model/export?format=html&kind=income", "_blank", "noopener,noreferrer")
-            }
-          >
-            Income (new tab)
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              window.open("/api/nico/model/export?format=html&kind=statements", "_blank", "noopener,noreferrer")
-            }
-          >
-            Statements (new tab)
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              window.open("/api/nico/model/export?format=html&kind=returns", "_blank", "noopener,noreferrer")
-            }
-          >
-            Returns (new tab)
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              window.open("/api/nico/model/export?format=html&kind=sensitivity", "_blank", "noopener,noreferrer")
-            }
-          >
-            Sensitivity (new tab)
-          </Button>
-          <Button type="button" variant="outline" size="sm" asChild>
-            <a href="/api/nico/model/export?format=csv&kind=statements">CSV</a>
-          </Button>
-          <Button type="button" variant="outline" size="sm" asChild>
-            <a href="/api/nico/model/export?format=pdf&kind=statements">PDF 16:9</a>
-          </Button>
-          <Button type="button" variant="outline" size="sm" asChild>
-            <a href="/api/nico/model/export?format=xlsx">Excel</a>
-          </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportTip topic="statements.income">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                window.open("/api/nico/model/export?format=html&kind=income", "_blank", "noopener,noreferrer")
+              }
+            >
+              Income
+            </Button>
+          </ExportTip>
+          <ExportTip topic="statements.book">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                window.open("/api/nico/model/export?format=html&kind=statements", "_blank", "noopener,noreferrer")
+              }
+            >
+              Statements
+            </Button>
+          </ExportTip>
+          <ExportTip topic="statements.returns">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                window.open("/api/nico/model/export?format=html&kind=returns", "_blank", "noopener,noreferrer")
+              }
+            >
+              Returns
+            </Button>
+          </ExportTip>
+          <ExportTip topic="statements.sensitivity">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                window.open("/api/nico/model/export?format=html&kind=sensitivity", "_blank", "noopener,noreferrer")
+              }
+            >
+              Sensitivity
+            </Button>
+          </ExportTip>
+          <ExportTip topic="statements.csv">
+            <Button type="button" variant="outline" size="sm" asChild>
+              <a href="/api/nico/model/export?format=csv&kind=statements">CSV</a>
+            </Button>
+          </ExportTip>
+          <ExportTip topic="statements.pdf">
+            <Button type="button" variant="outline" size="sm" asChild>
+              <a href="/api/nico/model/export?format=pdf&kind=statements">PDF</a>
+            </Button>
+          </ExportTip>
+          <ExportTip topic="statements.excel">
+            <Button type="button" variant="outline" size="sm" asChild>
+              <a href="/api/nico/model/export?format=xlsx">Excel</a>
+            </Button>
+          </ExportTip>
         </div>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-4">
-        <Stat label="FY1 cash" value={formatUsd(s.fy1ClosingCashUsd)} />
-        <Stat label="FY10 cash" value={formatUsd(s.fy10ClosingCashUsd)} />
+        <Stat label="FY1 cash" value={formatUsd(s.fy1ClosingCashUsd)} topic="statements.fy1" />
+        <Stat label="FY10 cash" value={formatUsd(s.fy10ClosingCashUsd)} topic="statements.fy10" />
         <Stat label="Property book, FY10" value={formatUsd(s.homeAumEndUsd)} />
         <Stat label="Auto book, FY10" value={formatUsd(s.autoAumEndUsd)} />
         <Stat label="Aircraft book, FY10" value={formatUsd(s.aircraftAumEndUsd)} />
@@ -255,8 +271,9 @@ function ProvenancePanel({
     <div className="mt-6 rounded-lg border border-border bg-muted/30 p-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground">
+          <p className="flex items-center gap-1 text-[11px] font-medium tracking-[0.18em] text-muted-foreground">
             WHERE THIS NUMBER COMES FROM
+            <InfoTip topic="statements.probe" />
           </p>
           <p className="mt-1 font-mono text-xs text-muted-foreground">{cellKey}</p>
         </div>
@@ -359,12 +376,38 @@ function CapTableBlock({ table }: { table: CapTableView }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  topic,
+}: {
+  label: string;
+  value: string;
+  topic?: string;
+}) {
   return (
     <div className="border-t border-border pt-3">
       <p className="text-lg font-semibold tracking-tight">{value}</p>
-      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+        {label}
+        {topic ? <InfoTip topic={topic} /> : null}
+      </p>
     </div>
+  );
+}
+
+function ExportTip({
+  topic,
+  children,
+}: {
+  topic: string;
+  children: ReactNode;
+}) {
+  return (
+    <span className="inline-flex items-center gap-0.5">
+      {children}
+      <InfoTip topic={topic} />
+    </span>
   );
 }
 

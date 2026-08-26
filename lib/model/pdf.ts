@@ -2,7 +2,7 @@ import { PDFDocument } from "pdf-lib";
 import { reportPdfBox } from "@/lib/model/report-page";
 
 const HEADER =
-  `<div style="font-size:8px;width:100%;padding:0 28px;color:#23a5b4;font-family:Helvetica,sans-serif;">Tamarindo · live model · tamarindo-sheet · 16:9</div>`;
+  `<div style="font-size:8px;width:100%;padding:0 28px;color:#23a5b4;font-family:Helvetica,sans-serif;">Tamarindo · live model</div>`;
 const FOOTER =
   `<div style="font-size:8px;width:100%;padding:0 28px;color:#93a8a5;font-family:Helvetica,sans-serif;display:flex;justify-content:space-between;"><span>Confidential · server-side model · print later</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>`;
 
@@ -18,7 +18,7 @@ async function stampMetadata(bytes: Uint8Array): Promise<Buffer> {
   const doc = await PDFDocument.load(bytes);
   doc.setTitle("Tamarindo — live financial report");
   doc.setAuthor("Tamarindo / Nico");
-  doc.setSubject("16:9 themed statements, returns, or sensitivity");
+  doc.setSubject("Statements, returns, or sensitivity");
   doc.setCreator("Tamarindo model engine");
   doc.setProducer("puppeteer + pdf-lib");
   const out = await doc.save();
