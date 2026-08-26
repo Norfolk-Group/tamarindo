@@ -7,6 +7,14 @@ compatibility_date = "2026-08-22"
 compatibility_flags = [ "nodejs_compat", "global_fetch_strictly_public" ]
 minify = true
 
+# Canonical public origin. Custom domains create their own DNS records in the
+# asknico.ai zone; workers.dev stays live as a fallback origin.
+workers_dev = true
+routes = [
+  { pattern = "asknico.ai", custom_domain = true },
+  { pattern = "www.asknico.ai", custom_domain = true },
+]
+
 # AuthKit defaults the session cookie to 400 days, which means nobody is ever
 # asked to sign in again. 15 minutes, refreshed on activity, so returning to
 # the app after a break requires a real sign-in. Keep in sync with
