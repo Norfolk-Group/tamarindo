@@ -11,7 +11,7 @@ should be pasted into an investor deck without its validation step.
 | File | Contents |
 |------|----------|
 | [01-thesis.md](01-thesis.md) | What Tamarindo should be — the opinion |
-| [02-entities.md](02-entities.md) | Sister entities: Tamarindo US, Tamarindo-Intervest, Tamarindo Colombia, Ashoka — roles and money flows |
+| [02-entities.md](02-entities.md) | Two US LLCs: Credit (OpCo, manages) + Intervest (100% Intervest-owned, each with a sucursal) |
 | [03-ten-year-plan.md](03-ten-year-plan.md) | Growth phases, capital deployment, use of funds |
 | [04-icp-deals.md](04-icp-deals.md) | The rotating 3-ICP framework + the three launch ICPs with rental ROI |
 | [05-fee-engine.md](05-fee-engine.md) | Revenue lines, take rate, OpCo breakeven, the raise |

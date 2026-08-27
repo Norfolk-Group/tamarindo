@@ -55,9 +55,16 @@ Mike's line on this call: **make the exotic vanilla.**
 - Colombia cost pack (title, notary, insurance, staffing) — due from the
   28 Aug Colombia sync.
 
-## Entities (unchanged, restated)
+## Entities (unchanged, restated — see thesis 02)
 
-Tamarindo Credit, LLC (Delaware OpCo, Rosario incorporating) + sucursal.
-Tamarindo Intervest, LLC (100% Intervest) + sucursal that holds title.
-OpCo manages the vehicle and earns 2 + 20. Intervest is named in fine
-print, not in retail marketing.
+Two **US** companies, each with its **own** Colombian sucursal:
+
+- **Tamarindo Credit, LLC** (Delaware OpCo, Rosario incorporating) —
+  originator / servicer. **Manages** the vehicle. Does **not** own it.
+  Owns the app, servicing, title studies, Formulario 4 admin, insurance.
+- **Tamarindo Intervest, LLC** (Delaware) — **100% Intervest-owned**.
+  The lease is signed here. The 40% deposit wires here. Its sucursal
+  **buys and holds title**.
+
+Intervest is named in fine print, not in retail marketing. The OpCo
+fundraise is against Credit, not the vehicle.
