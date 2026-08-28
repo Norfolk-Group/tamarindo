@@ -114,9 +114,12 @@ export function formatWhoNote(input: {
   }
   if (input.familyName) lines.push(`- Family name: ${input.familyName}`);
   if (input.org) lines.push(`- Organization: ${input.org}`);
+  lines.push(
+    "- Product owner: Tamarindo Credit LLC. It hired Norfolk AI to build this system. Norfolk AI is not Credit, not a capital partner, and has no seat on the deal.",
+  );
   if (input.org && /norfolk/i.test(input.org)) {
     lines.push(
-      "- Organization note: Norfolk AI builds this software. It is not Tamarindo, not a capital partner, and has no seat on the deal. The caller's other hat — not a Tamarindo role.",
+      "- Organization note: the caller's other hat is Norfolk AI — not a Tamarindo role.",
     );
   }
   lines.push(`- Role: ${input.role}`);

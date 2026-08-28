@@ -8,6 +8,7 @@ import {
 import { computeContracts, contractById } from "@/lib/model/contracts";
 import { monthDepartmentCash } from "@/lib/model/departments";
 import { emptyMonth } from "@/lib/model/engine-acc";
+import { applyAncillaryFees } from "@/lib/model/fees";
 import {
   buildConsolidated,
   buildSucursal,
@@ -246,6 +247,7 @@ export function runCashflowModel(
     }
 
     const stillLive: LiveBook[] = [];
+    let balloons = 0;
     for (const lease of live) {
       const age = m - lease.startIndex;
       const interest = cents(d(lease.outstanding).times(lease.rateMonthly));
@@ -256,7 +258,10 @@ export function runCashflowModel(
       const collected = last
         ? cents(d(interest).plus(principal).plus(lease.residual))
         : lease.payment;
-      if (last) acc.balloon += lease.residual;
+      if (last) {
+        acc.balloon += lease.residual;
+        balloons += 1;
+      }
       const usSpread = cents(d(interest).times(spreadShare));
       const usServicing = cents(d(lease.outstanding).times(servicingAnnual).div(12));
       const usKeep = usSpread + usServicing;
@@ -312,6 +317,15 @@ export function runCashflowModel(
     acc.coClosing = cents(d(coClosingFee).times(acc.originated));
     acc.coInspection = cents(d(coInspectionFee).times(acc.originated));
     acc.coAdmin = cents(d(coAdminFee).times(homes));
+    applyAncillaryFees(acc, values, {
+      newContracts: acc.originated + acc.autosOriginated + acc.aircraftOriginated,
+      fundedNew: acc.fundedNew,
+      active,
+      fundedAum: acc.fundedAum,
+      committedLine: acc.committedLine,
+      balloons,
+      servicingUsd: acc.servicing,
+    });
     if (acc.originated > 0) {
       const perNew = cents(d(coClosingFee).plus(coInspectionFee));
       for (const id of ICP_IDS) {

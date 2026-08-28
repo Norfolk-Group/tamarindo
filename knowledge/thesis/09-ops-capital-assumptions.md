@@ -87,6 +87,15 @@ stated otherwise. Research current through 2026-08-23.*
 - **ASSUMPTION:** budget WFH at **$200/person/month** for stipend, equipment
   amortization, and periodic meetings; budget flex office at
   **$350/person/month** including the desk and shared meeting-room overage.
+  The **$2.5M OpCo book** (thesis 21) puts all four US named seats at 100%
+  WFH — no US flex desk. Colombia keeps two small offices.
+- **ASSUMPTION — remote business expenses:** Dov, Rosario, and Ricardo at
+  **$2,000/person/month** (Ricardo's stated run-rate; not $2,000k). Tom at
+  **$500/month**. Separate from the $200 WFH stipend and from Colombia travel.
+- **ASSUMPTION — US benefits on top of §3 loaded:** 401k match **3% of cash
+  salary** and dental/vision **$150/person/month**. Medical and FICA stay
+  inside the loaded figures. Every US cash seat gets benefits. Family
+  medical remains the +$1,022/month sensitivity, not the base.
 
 ## 4. Colombia GM
 

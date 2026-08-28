@@ -29,7 +29,7 @@ mortgage” in the WhatsApp note is a funded-ticket analogy.
 | Calculated | `originationUsd = funded × originationFeePct` | $7,500 only if funded is $500k **and** the seed is 1.50% |
 | Calculated | year-1 servicing gross ≈ `funded × servicingBps`, then **declines** | Engine: `Σ monthly outstanding × servicingBps / 12` |
 | Calculated | year-1 origination + servicing (before cost) | WhatsApp ≈ $9,500 at 1.50% + 40 bps on $500k |
-| Off-model until scheduled | delinquent / foreclosure pay, early-payoff window, late fees, min fee/loan, MSR ownership | Speech and negotiation only |
+| Variable (complete book, default $0) | late, NSF, application, document, title, min servicing, unused line, FX hedge, referring-partner cost, … | Thesis 22. Blue levers. Zero ≠ missing. |
 
 ## Research already on the shelf (keep)
 
@@ -100,8 +100,9 @@ matters. Do not invent a margin until a vendor quote exists.
   what the model uses. Today that is **1% / 75 bps**.
 - Quote WhatsApp / slide numbers only as **asks, ranges, or a scenario**.
 - Never say “broker fee” for Tamarindo’s own origination take.
-- Never invent a delinquent schedule, prepay-penalty dollar, late-fee split,
-  subservicer invoice, or MSR value.
+- The complete fee book is on the model (thesis 22). Quote live keys.
+  Do not invent a dollar where the lever is still $0.
+- Never invent an MSR value.
 - Recurring take shape (05): spread 20% × client rate + **live servicing** +
   rental/PM 40–60 bps. At 11.84% and **75 bps**: ≈ 237 + 75 + 40–60 ≈
   **3.5–3.7% of funded AUM**, plus one-time activation 2% + live origination.

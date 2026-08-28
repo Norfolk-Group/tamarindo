@@ -33,8 +33,9 @@ Terms stay off this shelf.
 The left rail is **Assumptions** (inputs) and **Statements** (the book).
 Assumption groups are collapsible. Statement sections fold the same way.
 
-Key blue levers (meetings + thesis) — the member kit is ~14 keys, deliberately
-small so a what-if session is a comfortable range, not the full book:
+Key blue levers (meetings + thesis) plus the **complete Credit LLC fee
+book** (thesis 22). Core commercial levers stay; every industry-standard
+fee Credit is paid or pays is also blue, usually at **$0** until scheduled:
 
 - Client down / LTV (`downPaymentPct`, seed 40% → 60% LTV)
 - Purchase-option floor (`minResidualOfAssetPct`, seed 20% of asset)

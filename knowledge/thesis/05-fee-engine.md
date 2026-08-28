@@ -16,6 +16,11 @@ the raise math are OPINION/ASSUMPTION for the financial model to confirm
 | 5 | Property mgmt charge-through | Ashoka | recurring | market rate + markup |
 | 6 | Rental revenue share | Tamarindo US / Ashoka | recurring | ~20% of net rental (sourced) |
 
+The **complete** Credit LLC schedule — late, NSF, application, unused
+line, FX hedge, referring-partner cost, and the rest — is thesis **22**.
+Those lines are blue variables at **$0** until Credit sets them. They
+are not a second secret book.
+
 ## Take rate: what $1 of AUM produces annually (OPINION)
 
 On funded AUM at a ~11.84% blended client rate:

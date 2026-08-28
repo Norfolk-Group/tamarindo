@@ -30,6 +30,8 @@ should be pasted into an investor deck without its validation step.
 | [18-kyc-aml.md](18-kyc-aml.md) | US CIP/OFAC/8300/CTA vs Colombian notary SIPLAFT and sucursal SAGRILAFT — do not invent licenses |
 | [19-platform-economics.md](19-platform-economics.md) | WhatsApp/slide seeds vs research 1% / 75 bps; dollars are calculated; not a broker fee |
 | [20-aug-26-decisions.md](20-aug-26-decisions.md) | Live Intervest-pilot box: both classes at once, 780+, 12–84 / 2–15, aviation out, week of 8 Sep |
+| [21-opco-headcount-pl.md](21-opco-headcount-pl.md) | $2.5M OpCo raise: US/Colombia titled seats, lean extra headcount, two offices, year-1 P&L |
+| [22-fee-schedule.md](22-fee-schedule.md) | Complete Credit LLC fee book — paid and payable — zeros are levers, not omissions |
 | [../qa/README.md](../qa/README.md) | Simulated conversational Q&As (work + life), including Spanish investor register |
 
 ## The thesis in one paragraph

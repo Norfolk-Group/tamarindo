@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { blueVariableDefs } from "@/lib/model/blue-variables";
+import { FEE_BLUE_KEYS } from "@/lib/model/variables-fees";
 
 /**
- * The member what-if kit is a product decision (Aug 26 oracle): a small
- * comfortable range, not the full book. Changing this list is fine — but it
- * must be a deliberate diff here, not a side effect of a visibility edit.
+ * Member what-if kit (Aug 26) plus the complete Credit LLC fee book
+ * (Aug 27). Changing this list is fine — but it must be a deliberate
+ * diff here, not a side effect of a visibility edit.
  */
 const MEMBER_KIT = [
   "lineTranche1Usd",
@@ -18,13 +19,18 @@ const MEMBER_KIT = [
   "spreadSharePct",
   "rentalMonthlyPctOfValue",
   "rentalTamarindoSharePct",
+  "coClosingFeeUsd",
+  "coInspectionFeeUsd",
+  "coAdminPerLeaseUsd",
   "postPilotAnnualGrowthPct",
   "autoStartMonth",
   "aircraftStartMonth",
+  "insuranceCommissionPct",
+  ...FEE_BLUE_KEYS,
 ];
 
 describe("member blue-variable kit", () => {
-  it("is exactly the 14 approved levers", () => {
+  it("is the approved levers plus the complete fee book", () => {
     expect(blueVariableDefs().map((def) => def.key)).toEqual(MEMBER_KIT);
   });
 });

@@ -195,7 +195,7 @@ export const OPS_VARIABLE_DEFS: VariableDef[] = [
   usd("aircraftTicketUsd", "Legacy aircraft ticket (unused — Admin → ICPs)", "Aircraft", "admin", 1_200_000, "Superseded by AIR-1 / AIR-2", "ASSUMPTION", 8_000_000),
   integer("aircraftTermMonths", "Legacy aircraft term (unused)", "Aircraft", "admin", 84, "Superseded by AIR-1 / AIR-2"),
   pct("aircraftClientRate", "Legacy aircraft rate (unused)", "Aircraft", "admin", 0.095, "Superseded by AIR-1 / AIR-2"),
-  pct("insuranceCommissionPct", "Insurance / intermediation commission on new funded", "Fees", "admin", 0.004, "Broker cut on forced-place and GAP"),
+  pct("insuranceCommissionPct", "Insurance / intermediation commission on new funded", "Fees Credit is paid", "user", 0.004, "40 bps seed — Credit’s take on placed cover, not a referring-partner cost"),
   pct("rentalPoolOptInPct", "Share of homes in the Ashoka rental pool", "Ashoka", "admin", 0.55, "Aug 19 pool decision"),
   pct("ashokaMgmtFeePct", "Ashoka STR management fee of gross rent", "Ashoka", "admin", 0.2, "20% base — 09 §7", "ASSUMPTION"),
   usd("ashokaGrossRentUsd", "Gross STR rent / pooled home / month", "Ashoka", "admin", 1_800, "Before Ashoka fee and Tamarindo share"),

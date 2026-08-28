@@ -62,10 +62,10 @@ fund; notes say ~$25B). Tamarindo Credit is the servicer/originator.
 Intervest is named in contract fine print, not in retail marketing, and
 does not deal with end clients.
 
-The **US lease is executed here**. The client's 40% deposit wires **here**,
-not to Tamarindo Credit. It (through its Colombian sucursal) buys the
-asset, holds title, receives the net lease stream, and takes default /
-recovery risk — cushioned by the 40% down and 60% max LTV.
+The **US lease is with Tamarindo-Intervest LLC**. The client's 40% and
+ongoing payments **wire to that US company** (Ricardo, 27 Aug). Its
+Colombian sucursal buys the asset and holds title. Default / recovery
+risk sits on that title — cushioned by the 40% down and 60% max LTV.
 
 Pilot: $20M ($10M Medellín + $10M Cartagena). No exclusivity; Intervest
 holds ROFR. Partner #2 would be another US LLC on the same template.

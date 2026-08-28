@@ -1,6 +1,7 @@
 import { ICP_CATALOG, icpVariableMaxUsd } from "@/lib/model/icp-catalog";
 import type { VariableDef, VariableValue } from "@/lib/model/types";
 import { EQUITY_VARIABLE_DEFS } from "@/lib/model/variables-equity";
+import { FEE_VARIABLE_DEFS } from "@/lib/model/variables-fees";
 import { OPS_VARIABLE_DEFS } from "@/lib/model/variables-ops";
 
 export type { VariableValue };
@@ -364,7 +365,7 @@ export const VARIABLE_DEFS: VariableDef[] = [
     label: "Colombia closing fee (client)",
     group: "Colombia",
     type: "usd",
-    visibility: "admin",
+    visibility: "user",
     defaultValue: 2_200,
     min: 0,
     max: 15_000,
@@ -379,7 +380,7 @@ export const VARIABLE_DEFS: VariableDef[] = [
     label: "Colombia diligence fee (client)",
     group: "Colombia",
     type: "usd",
-    visibility: "admin",
+    visibility: "user",
     defaultValue: 400,
     min: 0,
     max: 5_000,
@@ -394,7 +395,7 @@ export const VARIABLE_DEFS: VariableDef[] = [
     label: "Colombia admin per active lease / month",
     group: "Colombia",
     type: "usd",
-    visibility: "admin",
+    visibility: "user",
     defaultValue: 120,
     min: 0,
     max: 2_000,
@@ -777,7 +778,7 @@ for (const [name, count] of RAMP_2027) {
   });
 }
 
-VARIABLE_DEFS.push(...OPS_VARIABLE_DEFS, ...EQUITY_VARIABLE_DEFS);
+VARIABLE_DEFS.push(...OPS_VARIABLE_DEFS, ...FEE_VARIABLE_DEFS, ...EQUITY_VARIABLE_DEFS);
 
 export const VARIABLE_KEYS = new Set(VARIABLE_DEFS.map((row) => row.key));
 
