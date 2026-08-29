@@ -240,10 +240,14 @@ function toPassage(
   };
 }
 
+/** Hyphens and accents fold so "Natalia" hits natalia-competitor and "Volve" hits Volvé. */
 function tokenize(text: string): string[] {
   return text
     .toLowerCase()
-    .replace(/[^a-z0-9áéíóúñü\s-]/g, " ")
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[^a-z0-9\s-]/g, " ")
+    .replace(/-/g, " ")
     .split(/\s+/)
     .filter((t) => t.length > 2 && !STOPWORDS.has(t));
 }

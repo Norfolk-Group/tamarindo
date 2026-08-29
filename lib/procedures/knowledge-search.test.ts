@@ -174,15 +174,12 @@ describe("knowledge.search", () => {
       doc.path.endsWith("natalia-competitor-benchmark-extracted.txt"),
     );
     expect(nataliaDoc).toBeTruthy();
-    setCorpusForTests([
-      {
-        path: "knowledge/thesis/01-thesis.md",
-        title: "Thesis",
-        text: "People say a lot about competitors without naming the four categories.\n\nMore thesis text so the block is long enough to score as a passage.",
-        visibility: "public",
-      },
-      nataliaDoc!,
-    ]);
+    const source = nataliaDoc!.text.toLowerCase();
+    expect(source).toMatch(/bancolombia|direct banks/);
+    expect(source).toMatch(/traditional bank brokers/);
+    expect(source).toMatch(/direct dollar-based/);
+    expect(source).toMatch(/alternative-structure originator/);
+
     const result = (await knowledgeSearch.handler(
       { query: "what did Natalia say Volvé is", limit: 5 },
       {
@@ -200,12 +197,8 @@ describe("knowledge.search", () => {
     );
     expect(natalia.length).toBeGreaterThan(0);
     const hay = natalia.map((p) => p.excerpt).join("\n").toLowerCase();
-    const source = nataliaDoc!.text.toLowerCase();
     expect(hay).toMatch(/volv[eé]/);
+    expect(hay).toMatch(/closest conceptual competitor/);
     expect(hay).toMatch(/comodato|lease/);
-    expect(source).toMatch(/bancolombia|direct banks/);
-    expect(source).toMatch(/traditional bank brokers/);
-    expect(source).toMatch(/direct dollar-based/);
-    expect(source).toMatch(/alternative-structure originator/);
   });
 });
