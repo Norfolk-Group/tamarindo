@@ -65,47 +65,49 @@ No US office. Stipend is thesis 09 §3: **$200/person/month**.
 | Client success (US hours) | **0** | — | Rosario HITL; Colombia CS covers WhatsApp |
 | Extra IT / marketing / legal / books FTE | **0** | — | Tom + Natalia $0 + counsel/CPA retainers |
 
-**US payroll (thesis 09 §3) = $87,555/mo → $1,050,658/year.**
-That loaded number is **not salary alone.** It already has employer
-FICA/Medicare and **single medical** ($7,885/seat/year). Benefits are
-on every US cash seat. Jesi and Natalia are $0 — no Tamarindo benefits.
+**US cash + FICA (thesis 09 §3, before medical) ≈ $1,019k/year.**
+Cash **$960k** + employer FICA/Medicare **~$59k**. Thesis 09’s $1.051M
+loaded still assumes **single** medical. This OpCo book **does not**.
 
-| Seat | Cash / mo | In loaded already | Extra benefits / mo |
-|------|-----------|-------------------|---------------------|
-| Dov | $25,000 | FICA + medical | 401k 3% + dental/vision |
-| Rosario | $15,000 | FICA + medical | 401k 3% + dental/vision |
-| Ricardo | $25,000 | FICA + medical | 401k 3% + dental/vision |
-| Tom | $15,000 | FICA + medical | 401k 3% + dental/vision |
+**US benefits — every cash seat, 100% family, household of 3**
+(employee + two). Credit pays the **entire** premium. Employee
+contribution is $0. Jesi and Natalia stay $0.
 
-Memo inside the $1.051M: cash **$960k** + FICA/Medicare **~$59k** +
-single medical **$31,540**.
+KFF 2025 family premium **$26,993/year** is the published family rate.
+A household of three sits on that band (not employee-only, not EE+1).
+09’s “employer share $20,143” is a typical split. We pay the whole
+**$26,993**.
 
-**On top of 09 loaded (was missing):**
+| Seat | Cash / mo | Medical (100% family) | 401k 3% | Dental/vision family |
+|------|-----------|------------------------|---------|----------------------|
+| Dov | $25,000 | $26,993/yr | on cash | $350/mo |
+| Rosario | $15,000 | $26,993/yr | on cash | $350/mo |
+| Ricardo | $25,000 | $26,993/yr | on cash | $350/mo |
+| Tom | $15,000 | $26,993/yr | on cash | $350/mo |
 
-| Extra US benefit | Year | Notes |
-|------------------|------|-------|
-| 401k match 3% of cash | $28,800 | $80k/mo × 3% × 12 |
-| Dental / vision | $7,200 | $150 × 4 × 12 |
-| **Extra US benefits** | **$36,000** | |
+| US benefits | Year |
+|-------------|------|
+| Medical 100% family × 4 | $107,972 |
+| 401k match 3% of cash | $28,800 |
+| Dental / vision 100% family × 4 | $16,800 |
+| **US benefits** | **$153,572** |
 
-Family medical instead of single is a sensitivity: **+$1,022/seat/month**
-(thesis 09 §3) — not in this base.
+**Payroll + benefits ≈ $1.17M/year** ($1,019k cash+FICA + $154k benefits).
 
 **US workplace:** 4 × $200 × 12 = **$9,600** equipment stipend. Zero flex
 desks.
 
-**Remote business expenses** (Ricardo: **$2,000/month** — read as two
-thousand, not $2,000k). Same band for Dov and Rosario. Not travel.
-Not the $200 stipend. Meals, local transport, coworking days, phone,
-client, home-office ops.
+**Remote business expenses — Dov, Rosario, Ricardo only.**
+**$2,000/person/month.** Not Tom. Not travel. Not the $200 stipend.
+Meals, local transport, coworking days, phone, client, home-office ops.
 
 | Who | / month | Year |
 |-----|---------|------|
 | Dov | $2,000 | $24,000 |
 | Rosario | $2,000 | $24,000 |
 | Ricardo | $2,000 | $24,000 |
-| Tom | $500 | $6,000 |
-| **Business expenses** | **$6,500** | **$78,000** |
+| Tom | **$0** | — |
+| **Business expenses** | **$6,000** | **$72,000** |
 
 **IT:** Tom’s loaded pay is the people budget (**$201,660/year**). Stack he
 already runs (auth, hosting, comms, model) **$1,500/mo → $18k**. Do not
@@ -147,9 +149,9 @@ The rest stays thin — Colombia is still the job, just not a second home:
 | Filings / supplies / misc | $10,000 |
 | **Other G&A (ex-travel, ex-IT stack)** | **$238,000** |
 
-**US OpCo opex ≈ $1.56M/year**
-($1.051M payroll incl. FICA+medical + $36k extra benefits + $10k WFH
-+ $78k business expenses + $18k IT stack + $130k travel + $238k other).
+**US OpCo opex ≈ $1.64M/year**
+($1.02M cash+FICA + $154k benefits + $10k WFH + $72k business expenses
++ $18k IT stack + $130k travel + $238k other).
 
 ### Credit Colombia — 8 cash seats + 2 at $0
 
@@ -209,18 +211,18 @@ carry the book.
 
 | | US | Colombia | Total |
 |--|----|----------|-------|
-| Named payroll (loaded: cash + statutory benefits) | $1.05M | $0.48M | $1.53M |
-| Extra benefits (US 401k + dental; CO already in loaded) | $0.04M | — | $0.04M |
-| Remote business expenses (Dov / Rosario / Ricardo $2k; Tom $0.5k) | $0.08M | — | $0.08M |
+| Named payroll (US cash+FICA / CO loaded) | $1.02M | $0.48M | $1.50M |
+| US benefits (100% family of 3 + 401k + dental) | $0.15M | — | $0.15M |
+| Remote business expenses (Dov / Rosario / Ricardo $2k only) | $0.07M | — | $0.07M |
 | Counsel / CPA / contractors | $0.08M | $0.06M | $0.14M |
 | WFH stipend / offices | $0.01M | $0.04M | $0.05M |
 | IT stack (Tom; no extra FTE) | $0.02M | — | $0.02M |
 | Travel | $0.13M | $0.01M | $0.14M |
 | Insurance / payroll residual / entity / ads / misc | $0.16M | — | $0.16M |
-| **Opex** | **$1.56M** | **$0.59M** | **$2.15M** |
-| Contingency 10% | | | $0.21M |
-| **Uses of $2.5M (year 1)** | | | **$2.36M** |
-| **Cash left after year 1** | | | **~$0.14M** |
+| **Opex** | **$1.64M** | **$0.59M** | **$2.23M** |
+| Contingency 10% | | | $0.22M |
+| **Uses of $2.5M (year 1)** | | | **$2.45M** |
+| **Cash left after year 1** | | | **~$0.05M** |
 
 That is a **one-year** raise if warehouse fees are slow. If Intervest
 draws $10M in year 1, 2% activation is **$200k** to Credit — helpful,
@@ -238,5 +240,6 @@ note** for the $2.5M story and the model for what-ifs.
 
 Not signed payroll. Not Colombian labor advice. Recalculate COP each
 year (thesis 09 §4). Jesi and Natalia stay **$0** on this budget.
-Remote business expenses are **$2,000/month** per Dov, Rosario, and
-Ricardo — not $2,000,000.
+Remote business expenses are **$2,000/month** for Dov, Rosario, and
+Ricardo only — not Tom, not $2,000,000. US medical is **100% family**
+for a household of three.

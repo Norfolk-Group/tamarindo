@@ -40,7 +40,7 @@ what we tell Mike**; older files stay as history or what-if.
 | Hedge | Currency-hedging cost belongs in the model | FACT (must add) |
 | Mike meeting | Week of 8 Sep, in person | FACT |
 | OpCo raise (working) | **$2.5M** | ASSUMPTION — Ricardo 27 Aug. Until Colombia cost pack lands. |
-| US OpCo payroll | Dov, Rosario, Ricardo, Tom | FACT — Ricardo 27 Aug. Paid from Tamarindo Credit US. **No extra US analyst or CS FTE.** Rosario owns HITL. Tom **is** the IT budget. All four **WFH**. Benefits on every cash seat (US medical+FICA in 09 loaded; plus 401k 3% and dental). Remote opex: Dov / Rosario / Ricardo **$2,000/mo** each. Thesis 21. |
+| US OpCo payroll | Dov, Rosario, Ricardo, Tom | FACT — Ricardo 27 Aug. Paid from Tamarindo Credit US. **No extra US analyst or CS FTE.** Rosario owns HITL. Tom **is** the IT budget. All four **WFH**. Benefits: **100% family medical** (household of 3) + 401k 3% + family dental/vision. Remote opex: Dov / Rosario / Ricardo **$2,000/mo** each — not Tom. Thesis 21. |
 | Title — Dov | Founder / Managing Director (Dov Tuzman) | FACT — Ricardo 27 Aug. |
 | Title — Rosario | Finance Director (Rosario Davi) | FACT — Ricardo 27 Aug. |
 | Title — Ricardo | Director of Planning and Corporate Development | FACT — Ricardo 27 Aug. |

@@ -69,13 +69,16 @@ stated otherwise. Research current through 2026-08-23.*
   average employer shares were **$7,885 single** and **$20,143 family**
   ([KFF 2025 survey](https://www.kff.org/health-costs/2025-employer-health-benefits-survey/),
   accessed 2026-08-23).
-- **ASSUMPTION — use single coverage in the base case:** MD at $25,000/month
+- **ASSUMPTION — FICA + single medical (formula only):** MD at $25,000/month
   costs **$26,973/month loaded**; Finance at $15,000 costs **$16,805**; Corp Ops
   at $25,000 costs **$26,973**; CTO at $15,000 costs **$16,805**. Total:
   **$87,555/month** or **$1,050,658/year**. These figures include salary,
-  employer FICA/Medicare, and $7,885 annual health only.
-- **ASSUMPTION — family-health sensitivity:** add **$1,022/month per covered
-  role**, taking all four roles to about **$91,641/month**.
+  employer FICA/Medicare, and $7,885 annual **single** health only.
+- **ASSUMPTION — $2.5M OpCo book (thesis 21) uses 100% family medical:**
+  household of **3** (employee + two). Credit pays the **full** KFF family
+  premium **$26,993/seat/year**, not the typical employer share ($20,143)
+  and not single. True-up vs the single line above is **+$19,108/seat/year**.
+  Four US cash seats → **$107,972/year** medical. Employee contribution $0.
 - **ASSUMPTION:** add 3–5% of payroll for state unemployment, workers'
   compensation, payroll administration, and jurisdiction variance after the
   employing state is known. Do not count PTO as extra cash unless backfill is
@@ -90,12 +93,11 @@ stated otherwise. Research current through 2026-08-23.*
   The **$2.5M OpCo book** (thesis 21) puts all four US named seats at 100%
   WFH — no US flex desk. Colombia keeps two small offices.
 - **ASSUMPTION — remote business expenses:** Dov, Rosario, and Ricardo at
-  **$2,000/person/month** (Ricardo's stated run-rate; not $2,000k). Tom at
-  **$500/month**. Separate from the $200 WFH stipend and from Colombia travel.
-- **ASSUMPTION — US benefits on top of §3 loaded:** 401k match **3% of cash
-  salary** and dental/vision **$150/person/month**. Medical and FICA stay
-  inside the loaded figures. Every US cash seat gets benefits. Family
-  medical remains the +$1,022/month sensitivity, not the base.
+  **$2,000/person/month** only. Tom is **$0**. Separate from the $200 WFH
+  stipend and from Colombia travel.
+- **ASSUMPTION — other US benefits (thesis 21):** 401k match **3% of cash
+  salary** and dental/vision **$350/family/month** (100% employer-paid,
+  household of 3). Every US cash seat. Natalia and Jesi stay $0.
 
 ## 4. Colombia GM
 
