@@ -220,6 +220,9 @@ function overviewPassages(
 function pathBias(path: string, aboutNico: boolean): number {
   if (path.startsWith("knowledge/thesis")) return aboutNico ? 0 : 1.25;
   if (path.startsWith("knowledge/qa")) return aboutNico ? 0 : 1.1;
+  // R2 extracts live here. Without this, unique terms (Volvé, Natalia)
+  // lose to thesis/Q&A blocks that only match filler words like "say".
+  if (path.startsWith("knowledge/documents")) return aboutNico ? 0 : 1.1;
   if (path.startsWith("docs/nico")) return aboutNico ? 1.25 : 0;
   return 0;
 }
