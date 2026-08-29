@@ -41,8 +41,18 @@ const member = {
   traceId: "icp-member",
 };
 
+const admin = {
+  actor: {
+    kind: "user" as const,
+    id: "dev-local",
+    displayName: "Ricardo (dev)",
+    role: "admin" as const,
+  },
+  traceId: "icp-admin",
+};
+
 describe("ICP catalog and vintages", () => {
-  it("maps computeContracts into the six-row catalog", () => {
+  it("maps computeContracts into the six property rows", () => {
     const contracts = computeContracts(defaultValues());
     const catalog = contracts.map(toIcpCatalog);
     expect(catalog).toHaveLength(6);
@@ -92,9 +102,11 @@ describe("ICP procedures", () => {
   it("lists and gets ICPs through the registry", async () => {
     const { registry } = await import("@/lib/procedures");
     const listed = (await registry.invoke("icp.list", {}, investor)) as {
-      icps: { id: string }[];
+      icps: { id: string; explanation?: string }[];
     };
-    expect(listed.icps).toHaveLength(6);
+    expect(listed.icps).toHaveLength(10);
+    expect(listed.icps.map((row) => row.id)).toContain("auto1");
+    expect(listed.icps.map((row) => row.id)).toContain("air2");
     const one = (await registry.invoke("icp.get", { id: "icp1" }, investor)) as {
       icp: { id: string; code: string };
       years: { fy: number; icpId: string }[];
@@ -118,15 +130,26 @@ describe("ICP procedures", () => {
     );
   });
 
-  it("lets a member set a user-visible ICP key and recalculates", async () => {
+  it("lets an admin set an ICP key and recalculates", async () => {
     const { registry } = await import("@/lib/procedures");
     const out = (await registry.invoke(
       "icp.set",
       { id: "icp1", values: { purchasePriceUsd: 450_000 } },
-      member,
+      admin,
     )) as { icp: { purchasePriceUsd: number }; applied: string[] };
     expect(out.applied).toEqual(["icp.icp1.purchasePriceUsd"]);
     expect(out.icp.purchasePriceUsd).toBe(450_000);
+  });
+
+  it("forbids a member from icp.set", async () => {
+    const { registry } = await import("@/lib/procedures");
+    await expect(
+      registry.invoke(
+        "icp.set",
+        { id: "icp1", values: { purchasePriceUsd: 450_000 } },
+        member,
+      ),
+    ).rejects.toMatchObject({ code: "forbidden" });
   });
 
   it("forbids an investor from icp.set", async () => {

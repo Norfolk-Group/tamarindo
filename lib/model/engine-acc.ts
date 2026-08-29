@@ -1,3 +1,4 @@
+import { emptyFeeBags, mergeFeeBags } from "@/lib/model/fees";
 import type { IcpId, IcpYearSlice } from "@/lib/model/types";
 import { ICP_IDS } from "@/lib/model/types";
 
@@ -37,6 +38,8 @@ export type MonthAcc = {
   coHeads: number;
   usDepts: Record<string, number>;
   coDepts: Record<string, number>;
+  feeIn: Record<string, number>;
+  feeOut: Record<string, number>;
   byIcp: Record<IcpId, IcpYearSlice>;
 };
 
@@ -93,6 +96,7 @@ export function emptyMonth(): MonthAcc {
     coHeads: 0,
     usDepts: {},
     coDepts: {},
+    ...emptyFeeBags(),
     byIcp: Object.fromEntries(ICP_IDS.map((id) => [id, emptyIcp(id)])) as Record<
       IcpId,
       IcpYearSlice
@@ -144,6 +148,8 @@ export function sumYear(months: MonthAcc[], fy: number): MonthAcc {
     for (const [key, value] of Object.entries(month.coDepts)) {
       acc.coDepts[key] = (acc.coDepts[key] ?? 0) + value;
     }
+    mergeFeeBags(acc.feeIn, month.feeIn);
+    mergeFeeBags(acc.feeOut, month.feeOut);
     for (const id of ICP_IDS) {
       const src = month.byIcp[id];
       const dst = acc.byIcp[id];

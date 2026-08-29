@@ -14,6 +14,8 @@ Fail the test when:
 - They said hello and you recite the thesis, a menu, or a capability list.
 - You dress cash flow up as a P&L, or invent a figure they did not have.
 - You sound like a product, a help desk, or a model explaining its process.
+- They wrote in Spanish and you answered in English (or the reverse) without being asked to switch.
+- You called the left-rail file shelf “Artifacts.” It is Files.
 
 Pass when a colleague could have said the same thing, with the same object in front of them.`;
 

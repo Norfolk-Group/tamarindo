@@ -20,8 +20,11 @@ main { max-width: 1200px; margin: 0 auto; padding: 32px 20px 72px; }
 .kicker { font-family: "Geist Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: 0.16em; color: var(--teal); }
 h1 { font-family: "Space Grotesk", sans-serif; font-size: 28px; margin: 8px 0 6px; }
 .meta { color: var(--ink-dim); font-size: 12px; margin-bottom: 16px; }
-.depth { display: flex; gap: 8px; margin: 0 0 24px; }
-.depth button {
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 0 0 24px; }
+.depth { display: flex; gap: 8px; }
+.export { display: flex; gap: 8px; }
+.depth button,
+.export a {
   font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -31,6 +34,7 @@ h1 { font-family: "Space Grotesk", sans-serif; font-size: 28px; margin: 8px 0 6p
   border: 1px solid var(--line);
   padding: 6px 12px;
   cursor: pointer;
+  text-decoration: none;
 }
 body[data-depth="summary"] .depth [data-depth="summary"],
 body[data-depth="extended"] .depth [data-depth="extended"] {
@@ -74,7 +78,7 @@ table.xl tr.total td { border-bottom-width: 2px; }
   table.xl tfoot { display: table-footer-group; }
   table.xl thead th { position: static; }
   table.xl tr { break-inside: avoid; page-break-inside: avoid; }
-  .depth { display: none; }
+  .toolbar { display: none; }
 }
 `;
 
@@ -134,11 +138,23 @@ function sheetHtml(sheet: ReportSheet): string {
 const DEPTH_SCRIPT = `
 <script>
 (function () {
+  function exportHref(format, depth) {
+    var kind = document.body.getAttribute("data-kind") || "statements";
+    return "/api/nico/model/export?format=" + encodeURIComponent(format)
+      + "&kind=" + encodeURIComponent(kind)
+      + "&depth=" + encodeURIComponent(depth);
+  }
+  function syncExports(depth) {
+    document.querySelectorAll(".export a[data-format]").forEach(function (link) {
+      link.setAttribute("href", exportHref(link.getAttribute("data-format") || "pdf", depth));
+    });
+  }
   function setDepth(depth) {
     document.body.setAttribute("data-depth", depth);
     var url = new URL(window.location.href);
     url.searchParams.set("depth", depth);
     window.history.replaceState({}, "", url);
+    syncExports(depth);
   }
   document.querySelectorAll(".depth button").forEach(function (btn) {
     btn.addEventListener("click", function () {
@@ -152,6 +168,7 @@ const DEPTH_SCRIPT = `
       body.setAttribute("data-open", body.getAttribute("data-open") === "0" ? "1" : "0");
     });
   });
+  syncExports(document.body.getAttribute("data-depth") || "summary");
 })();
 </script>
 `;
@@ -176,12 +193,18 @@ export function renderReportHtml(
 </head>
 <body data-kind="${escapeHtml(workbook.kind)}" data-depth="${escapeHtml(depth)}" data-hide-lines="${hideLines}">
   <main>
-    <p class="kicker">TAMARINDO · LIVE MODEL · ${escapeHtml(workbook.theme)} · 16:9</p>
+    <p class="kicker">TAMARINDO · LIVE MODEL</p>
     <h1>${escapeHtml(workbook.title)}</h1>
-    <p class="meta">Theme ${escapeHtml(workbook.theme)} · generated ${escapeHtml(workbook.generatedAt)} · hover a cell for its formula · blue = input · print repeats year headers · Summary is totals; Extended is every line</p>
-    <div class="depth" role="tablist" aria-label="Report depth">
-      <button type="button" data-depth="summary">Summary</button>
-      <button type="button" data-depth="extended">Extended</button>
+    <p class="meta">Generated ${escapeHtml(workbook.generatedAt)} · hover a cell for its formula · blue = input · Summary is totals; Extended is every line</p>
+    <div class="toolbar">
+      <div class="depth" role="tablist" aria-label="Report depth">
+        <button type="button" data-depth="summary">Summary</button>
+        <button type="button" data-depth="extended">Extended</button>
+      </div>
+      <div class="export" aria-label="Export">
+        <a data-format="pdf" href="/api/nico/model/export?format=pdf&amp;kind=${escapeHtml(workbook.kind)}&amp;depth=${escapeHtml(depth)}">PDF</a>
+        <a data-format="csv" href="/api/nico/model/export?format=csv&amp;kind=${escapeHtml(workbook.kind)}&amp;depth=${escapeHtml(depth)}">CSV</a>
+      </div>
     </div>
     ${workbook.sheets.map(sheetHtml).join("")}
   </main>

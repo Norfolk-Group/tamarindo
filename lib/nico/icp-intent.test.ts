@@ -5,6 +5,8 @@ describe("icp intent", () => {
   it("maps an identity question to icp.get", () => {
     expect(parseIcpAsk("what is ICP-1")).toEqual({ kind: "get", id: "icp1" });
     expect(parseIcpAsk("tell me about ICP 3")).toEqual({ kind: "get", id: "icp3" });
+    expect(parseIcpAsk("what is AUTO-1")).toEqual({ kind: "get", id: "auto1" });
+    expect(parseIcpAsk("explain the Phenom")).toEqual({ kind: "get", id: "air2" });
   });
 
   it("maps a catalog ask to icp.list", () => {

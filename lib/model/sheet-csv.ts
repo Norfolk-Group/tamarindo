@@ -8,7 +8,6 @@ function csvEscape(value: string): string {
 export function renderReportCsv(workbook: ReportWorkbook): string {
   const banner = [
     `# ${workbook.title}`,
-    `# theme ${workbook.theme}`,
     `# generated ${workbook.generatedAt}`,
     "",
   ].join("\n");

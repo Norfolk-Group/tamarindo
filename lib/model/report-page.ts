@@ -10,6 +10,11 @@ export function reportPageCssSize(): string {
   return `${REPORT_PAGE.widthIn}in ${REPORT_PAGE.heightIn}in`;
 }
 
+/** PDF page is landscape when width is greater than height. */
+export function reportPageIsLandscape(): boolean {
+  return REPORT_PAGE.widthIn > REPORT_PAGE.heightIn;
+}
+
 export function reportPdfBox() {
   return {
     width: `${REPORT_PAGE.widthIn}in`,

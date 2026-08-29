@@ -29,11 +29,15 @@ CF_AIG_GATEWAY_ID=
 # ANTHROPIC_API_KEY=
 # GEMINI_API_KEY=
 # AI_GATEWAY_URL=
-# Strong/analytical tier. Default claude-sonnet-4-5
+# Strong/analytical tier. Default claude-opus-4-6 (financing, reports, ticket math)
 # NICO_MODEL=
 # Fast tier for conversational turns. Default claude-haiku-4-5
 # NICO_FAST_MODEL=
-# Abort if the gateway sends no first token in this many ms (default 6000)
+# Abort if the gateway sends no first token in this many ms
+# (default 6000 conversational / 25000 strong — thinking counts)
 # NICO_FIRST_TOKEN_TIMEOUT_MS=
-# Abort a stream that runs past this many ms in total (default 90000)
+# Abort a stream that runs past this many ms in total
+# (default 90000 conversational / 180000 strong)
 # NICO_STREAM_TIMEOUT_MS=
+# Extended thinking budget on the strong tier (default 8192)
+# NICO_THINKING_BUDGET_TOKENS=

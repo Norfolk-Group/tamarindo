@@ -41,6 +41,7 @@
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-switch": "^1.1.0",
     "@radix-ui/react-tabs": "^1.1.0",
+    "@radix-ui/react-tooltip": "^1.2.16",
     "@workos-inc/authkit-nextjs": "^4.3.1",
     "@workos-inc/node": "^10.10.0",
     "agents": "^0.21.0",

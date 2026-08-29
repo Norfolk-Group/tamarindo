@@ -1,15 +1,18 @@
 import { z } from "zod";
 import { computeContracts } from "@/lib/model/contracts";
+import { CATALOG_BY_ID, isPropertyIcpId } from "@/lib/model/icp-catalog";
 import { runCashflowModel } from "@/lib/model/engine";
+import { productQuotes } from "@/lib/model/products";
 import { loadValuesForActor, saveModelValues } from "@/lib/model/store";
-import type { IcpComputed, IcpId, Vintage } from "@/lib/model/types";
-import { ICP_IDS } from "@/lib/model/types";
-import { VARIABLE_DEFS, VARIABLE_KEYS } from "@/lib/model/variables";
+import type { CatalogIcpId, IcpComputed, IcpId, Vintage } from "@/lib/model/types";
+import { CATALOG_ICP_IDS, ICP_IDS } from "@/lib/model/types";
+import { num, VARIABLE_DEFS, VARIABLE_KEYS } from "@/lib/model/variables";
 import { buildPlannedVintages } from "@/lib/model/vintages";
 import { profileIdFor } from "@/lib/procedures/profile";
 import { defineProcedure } from "@/lib/procedures/registry";
 
-export const IcpIdSchema = z.enum(ICP_IDS);
+export const IcpIdSchema = z.enum(CATALOG_ICP_IDS);
+export const PropertyIcpIdSchema = z.enum(ICP_IDS);
 
 const CitationSchema = z.object({
   label: z.enum(["FACT", "OPINION", "ASSUMPTION"]),
@@ -19,10 +22,16 @@ const CitationSchema = z.object({
 
 export const IcpCatalogSchema = z.object({
   id: IcpIdSchema,
+  assetClass: z.enum(["property", "auto", "aircraft"]),
   code: z.string(),
   name: z.string(),
   city: z.string(),
   neighborhood: z.string(),
+  asset: z.string(),
+  persona: z.string(),
+  explanation: z.string(),
+  researchNote: z.string(),
+  sources: z.array(z.object({ label: z.string(), url: z.string() })),
   purchasePriceUsd: z.number(),
   fundedUsd: z.number(),
   downPaymentUsd: z.number(),
@@ -60,10 +69,16 @@ const IcpFieldValuesSchema = z.object({
 export function toIcpCatalog(icp: IcpComputed): IcpCatalog {
   return {
     id: icp.id,
+    assetClass: "property",
     code: icp.code,
     name: icp.name,
     city: icp.city,
     neighborhood: icp.neighborhood,
+    asset: icp.property,
+    persona: icp.persona,
+    explanation: icp.explanation,
+    researchNote: icp.researchNote,
+    sources: icp.sources,
     purchasePriceUsd: icp.purchasePriceUsd,
     fundedUsd: icp.fundedUsd,
     downPaymentUsd: icp.downPaymentUsd,
@@ -77,7 +92,68 @@ export function toIcpCatalog(icp: IcpComputed): IcpCatalog {
   };
 }
 
-export function icpVariableKey(id: IcpId, field: IcpFieldKey): string {
+function toProductCatalog(
+  id: CatalogIcpId,
+  quote: {
+    ticketUsd: number;
+    fundedUsd: number;
+    residualUsd: number;
+    monthlyLeaseUsd: number;
+    termMonths: number;
+    clientRate: number;
+    mixWeight: number;
+  },
+  values: Parameters<typeof computeContracts>[0],
+): IcpCatalog {
+  const profile = CATALOG_BY_ID[id];
+  return {
+    id,
+    assetClass: profile.assetClass,
+    code: profile.code,
+    name: profile.name,
+    city: profile.city,
+    neighborhood: profile.neighborhood,
+    asset: profile.asset,
+    persona: profile.persona,
+    explanation: profile.explanation,
+    researchNote: profile.researchNote,
+    sources: profile.sources,
+    purchasePriceUsd: quote.ticketUsd,
+    fundedUsd: quote.fundedUsd,
+    downPaymentUsd: quote.ticketUsd - quote.fundedUsd,
+    residualUsd: quote.residualUsd,
+    clientRate: quote.clientRate,
+    baseClientRate: num(values, `icp.${id}.clientRate`),
+    termMonths: quote.termMonths,
+    monthlyLeaseUsd: quote.monthlyLeaseUsd,
+    mixWeight: quote.mixWeight,
+    citation: profile.citation,
+  };
+}
+
+export function computeCatalog(
+  values: Parameters<typeof computeContracts>[0],
+): IcpCatalog[] {
+  const homes = computeContracts(values).map(toIcpCatalog);
+  const autos = productQuotes("auto", values).map((quote) =>
+    toProductCatalog(quote.id, quote, values),
+  );
+  const aircraft = productQuotes("aircraft", values).map((quote) =>
+    toProductCatalog(quote.id, quote, values),
+  );
+  return [...homes, ...autos, ...aircraft];
+}
+
+export function catalogById(
+  values: Parameters<typeof computeContracts>[0],
+  id: CatalogIcpId,
+): IcpCatalog {
+  const found = computeCatalog(values).find((row) => row.id === id);
+  if (!found) throw new Error(`Unknown ICP ${id}`);
+  return found;
+}
+
+export function icpVariableKey(id: CatalogIcpId, field: IcpFieldKey): string {
   return `icp.${id}.${field}`;
 }
 
@@ -134,21 +210,21 @@ export function filterPlannedVintages(
     total: rows.length,
     vintages: rows.slice(0, capped),
     byMonth: [...byMonthMap.values()],
-    byIcp: ICP_IDS.map((id) => ({ icpId: id, count: byIcpMap.get(id) ?? 0 })),
+    byIcp: ICP_IDS.map((id) => ({ icpId: id as IcpId, count: byIcpMap.get(id) ?? 0 })),
   };
 }
 
 export const icpList = defineProcedure({
   name: "icp.list",
   description:
-    "List the six computed ICP contracts — prices, rates, lease, residual, mix — from the live cash-flow engine.",
+    "List the ten Ideal Contract Profiles — six property, two auto, two aircraft — with explanations and live lease math.",
   input: z.object({}),
   output: z.object({ icps: z.array(IcpCatalogSchema) }),
   minRole: "investor",
   requiresApproval: false,
   handler: async (_input, ctx) => {
     const values = await loadValuesForActor(ctx.actor);
-    return { icps: computeContracts(values).map(toIcpCatalog) };
+    return { icps: computeCatalog(values) };
   },
 });
 
@@ -166,12 +242,13 @@ export const icpGet = defineProcedure({
   handler: async (input, ctx) => {
     const values = await loadValuesForActor(ctx.actor);
     const model = runCashflowModel(values);
-    const found = model.contracts.find((row) => row.id === input.id);
-    if (!found) throw new Error(`Unknown ICP ${input.id}`);
+    const icp = catalogById(values, input.id);
     return {
-      icp: toIcpCatalog(found),
+      icp,
       years: model.consolidated.years.map((year) => {
-        const slice = year.byIcp.find((row) => row.icpId === input.id);
+        const slice = isPropertyIcpId(input.id)
+          ? year.byIcp.find((row) => row.icpId === input.id)
+          : undefined;
         return {
           fy: year.fy,
           label: year.label,
@@ -195,7 +272,7 @@ export const icpGet = defineProcedure({
 export const icpSet = defineProcedure({
   name: "icp.set",
   description:
-    "Set per-ICP contract variables (price, term, rate, rented time, rent factor, mix). Members may set the published key set; admin may set every icp.* key. Recalculates on the server.",
+    "Set per-ICP contract variables (price, term, rate, rented time, rent factor, mix). Admin only. Recalculates on the server.",
   input: z.object({
     id: IcpIdSchema,
     values: IcpFieldValuesSchema,
@@ -205,7 +282,7 @@ export const icpSet = defineProcedure({
     applied: z.array(z.string()),
     model: z.unknown(),
   }),
-  minRole: "member",
+  minRole: "admin",
   requiresApproval: false,
   handler: async (input, ctx) => {
     const current = await loadValuesForActor(ctx.actor);
@@ -222,9 +299,7 @@ export const icpSet = defineProcedure({
     const createdById = await profileIdFor(ctx.actor.id);
     const saved = await saveModelValues(current, createdById);
     const model = runCashflowModel(saved);
-    const found = model.contracts.find((row) => row.id === input.id);
-    if (!found) throw new Error(`Unknown ICP ${input.id}`);
-    return { icp: toIcpCatalog(found), applied, model };
+    return { icp: catalogById(saved, input.id), applied, model };
   },
 });
 
@@ -244,7 +319,7 @@ export const icpVintages = defineProcedure({
         monthIndex: z.number(),
         year: z.number(),
         month: z.number(),
-        icpId: IcpIdSchema,
+        icpId: PropertyIcpIdSchema,
       }),
     ),
     byMonth: z.array(
@@ -254,7 +329,7 @@ export const icpVintages = defineProcedure({
         count: z.number(),
       }),
     ),
-    byIcp: z.array(z.object({ icpId: IcpIdSchema, count: z.number() })),
+    byIcp: z.array(z.object({ icpId: PropertyIcpIdSchema, count: z.number() })),
   }),
   minRole: "investor",
   requiresApproval: false,

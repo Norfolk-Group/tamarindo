@@ -5,7 +5,7 @@ const createAnthropic = vi.hoisted(() =>
   vi.fn(() => (id: string) => ({ id })),
 );
 
-vi.mock("ai", () => ({ streamText }));
+vi.mock("ai", () => ({ streamText, stepCountIs: () => () => false }));
 vi.mock("@ai-sdk/anthropic", () => ({ createAnthropic }));
 
 import { composeAnswer, selectModel } from "@/lib/nico/composer";
@@ -160,6 +160,53 @@ describe("composeAnswer", () => {
     expect(call.messages[0].content).toContain("Kaleil Dov Isaza Tuzman");
     expect(call.messages[0].content).toContain("Tamarindo fact");
   });
+
+  it("asks the model to compose from a live snapshot and refresh with tools", async function () {
+    process.env.ANTHROPIC_API_KEY = "sk-test";
+    streamText.mockReturnValue({
+      fullStream: (async function* () {
+        yield { type: "text-delta", text: "Twelve homes." };
+      })(),
+    });
+    await collect(
+      composeAnswer("how does Tamarindo work", [], {
+        artifactNote: "LIVE SNAPSHOT — Live book: 12 homes",
+        tools: { model_get: {} } as unknown as import("ai").ToolSet,
+      }),
+    );
+    const call = streamText.mock.calls[0][0] as {
+      messages: { content: string }[];
+      system: string;
+    };
+    expect(call.messages[0].content).toContain("Live snapshot for this turn");
+    expect(call.messages[0].content).toContain("Do not paste this note");
+    expect(call.messages[0].content).toContain("Live tools are on");
+    expect(call.messages[0].content).not.toContain("Artifact just queued");
+    expect(call.messages[0].content).toContain("Files in the left rail");
+    expect(call.system).toMatch(/Compose the spoken answer this turn/);
+  });
+
+  it("asks the model to reply in Spanish with the consultant register", async function () {
+    process.env.ANTHROPIC_API_KEY = "sk-test";
+    streamText.mockReturnValue({
+      fullStream: (async function* () {
+        yield { type: "text-delta", text: "Arrendamiento con opción de compra." };
+      })(),
+    });
+    await collect(
+      composeAnswer("cómo funciona Tamarindo", [], {
+        language: "es",
+        artifactNote: "LIVE SNAPSHOT — Live book: 12 homes",
+      }),
+    );
+    const call = streamText.mock.calls[0][0] as {
+      messages: { content: string }[];
+      system: string;
+    };
+    expect(call.messages[0].content).toContain("Reply in Spanish this turn");
+    expect(call.system).toContain("arrendamiento con opción de compra");
+    expect(call.system).toContain("Files");
+  });
 });
 
 describe("selectModel", () => {
@@ -170,9 +217,9 @@ describe("selectModel", () => {
   });
 
   it("uses the strong model unless the caller marks the turn conversational", () => {
-    expect(selectModel([], {})).toBe("claude-sonnet-4-5");
+    expect(selectModel([], {})).toBe("claude-opus-4-6");
     expect(selectModel([passage], { conversational: true })).toBe(
-      "claude-sonnet-4-5",
+      "claude-opus-4-6",
     );
     expect(selectModel([], { conversational: true })).toBe("claude-haiku-4-5");
   });
@@ -194,6 +241,12 @@ describe("selectModel", () => {
     expect(thoughts.join("")).toContain("balloon");
     expect(text).toBe("Twenty percent of the asset.");
     expect(text).not.toContain("They want");
+    const call = streamText.mock.calls[0][0] as {
+      model: { id: string };
+      providerOptions?: { anthropic?: { thinking?: { budgetTokens?: number } } };
+    };
+    expect(call.model.id).toBe("claude-opus-4-6");
+    expect(call.providerOptions?.anthropic?.thinking?.budgetTokens).toBe(8_192);
   });
 
   it("honors env overrides so the two tiers can collapse", () => {

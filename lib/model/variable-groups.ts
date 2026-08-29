@@ -13,15 +13,17 @@ export const VARIABLE_SECTIONS: VariableSection[] = [
   { id: "Capital partners", title: "Later vehicles", blurb: "Partners after Intervest exclusivity.", order: 20 },
   { id: "Year-10 goals", title: "Year-10 book", blurb: "Where funded AUM and lines should land.", order: 30 },
   { id: "Lease", title: "Lease terms", blurb: "Down payment, balloon floor, and the lease math.", order: 40 },
-  { id: "Fees", title: "Tamarindo fees", blurb: "Activation, origination, servicing, insurance.", order: 50 },
+  { id: "Fees", title: "Tamarindo fees", blurb: "Activation, origination, servicing.", order: 50 },
+  { id: "Fees Credit is paid", title: "Fees Credit is paid", blurb: "Industry-standard income. Zero until Credit turns a lever on.", order: 52 },
+  { id: "Fees Credit pays", title: "Fees Credit pays", blurb: "Warehouse, hedge, referring-partner, bureau. Zero until scheduled.", order: 54 },
   { id: "Rental pricing", title: "Rental share", blurb: "How OpCo takes a slice of furnished rent.", order: 60 },
   { id: "Ashoka", title: "Ashoka pool", blurb: "STR management, opt-in, and related-party repairs.", order: 70 },
-  { id: "ICP contracts", title: "Buyer profiles", blurb: "The six ICPs — price, term, rate, mix.", order: 80 },
+  { id: "ICP contracts", title: "Ideal Contract Profiles", blurb: "Admin-only — edit under Admin → ICPs.", order: 80 },
   { id: "Credit pricing", title: "Credit and FICO", blurb: "Spreads and credit tiers on the lease rate.", order: 90 },
   { id: "Origination", title: "Volume and mix", blurb: "How many homes, and which ICP, each year.", order: 100 },
   { id: "2027 ramp", title: "2027 ramp", blurb: "The pilot-year climb off the January cohort.", order: 110 },
-  { id: "Autos", title: "Auto leases", blurb: "When cars start, ticket, and pace versus homes.", order: 120 },
-  { id: "Aircraft", title: "Aircraft leases", blurb: "Late-horizon aviation book.", order: 130 },
+  { id: "Autos", title: "Auto leases", blurb: "When cars start and how many versus homes. Tickets live under Admin → ICPs.", order: 120 },
+  { id: "Aircraft", title: "Aircraft leases", blurb: "When aviation starts and yearly count. Hulls live under Admin → ICPs.", order: 130 },
   { id: "OpCo", title: "US operating cost", blurb: "Lump opex when the department roster is off.", order: 140 },
   { id: "Colombia", title: "Colombia operating cost", blurb: "Sucursal fees, lumps, and local cost.", order: 150 },
   { id: "People US", title: "US team", blurb: "Named pay and department seats.", order: 160 },
@@ -30,6 +32,17 @@ export const VARIABLE_SECTIONS: VariableSection[] = [
   { id: "Equity", title: "Ownership and pay", blurb: "Partners, rounds, and founder pay windows.", order: 190 },
   { id: "Horizon", title: "Plan horizon", blurb: "Fiscal years and the start month.", order: 200 },
 ];
+
+export const ASSUMPTION_HIDDEN_GROUPS = new Set(["ICP contracts"]);
+
+export const ASSUMPTION_HIDDEN_KEYS = new Set([
+  "autoTicketUsd",
+  "autoTermMonths",
+  "autoClientRate",
+  "aircraftTicketUsd",
+  "aircraftTermMonths",
+  "aircraftClientRate",
+]);
 
 const BY_ID = new Map(VARIABLE_SECTIONS.map((section) => [section.id, section]));
 

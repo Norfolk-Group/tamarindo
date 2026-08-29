@@ -1,11 +1,15 @@
 import { blendedFicoSpread } from "@/lib/model/contracts";
+import { catalogByClass } from "@/lib/model/icp-catalog";
 import { cents, d, monthlyRate, pmt } from "@/lib/model/money";
+import type { CatalogIcpId } from "@/lib/model/types";
 import { num, type VariableValue } from "@/lib/model/variables";
 
 export type ProductKind = "auto" | "aircraft";
 
 export type ProductQuote = {
   kind: ProductKind;
+  id: CatalogIcpId;
+  mixWeight: number;
   ticketUsd: number;
   fundedUsd: number;
   residualUsd: number;
@@ -14,18 +18,14 @@ export type ProductQuote = {
   clientRate: number;
 };
 
-/** Auto LTV 80% / aircraft 70%. Residual is of ticket, not funded. */
-export function productQuote(
+function quoteFromProfile(
   kind: ProductKind,
+  id: CatalogIcpId,
   values: Record<string, VariableValue>,
 ): ProductQuote {
-  const ticket = kind === "auto" ? num(values, "autoTicketUsd") : num(values, "aircraftTicketUsd");
-  const term =
-    kind === "auto"
-      ? Math.max(12, Math.round(num(values, "autoTermMonths")))
-      : Math.max(12, Math.round(num(values, "aircraftTermMonths")));
-  const baseRate = kind === "auto" ? num(values, "autoClientRate") : num(values, "aircraftClientRate");
-  const rate = d(baseRate).plus(blendedFicoSpread(values));
+  const ticket = num(values, `icp.${id}.purchasePriceUsd`);
+  const term = Math.max(12, Math.round(num(values, `icp.${id}.termMonths`)));
+  const rate = d(num(values, `icp.${id}.clientRate`)).plus(blendedFicoSpread(values));
   const ltv = kind === "auto" ? 0.8 : 0.7;
   const residualPct = kind === "auto" ? 0.2 : 0.25;
   const funded = cents(d(ticket).times(ltv));
@@ -33,6 +33,8 @@ export function productQuote(
   const payment = cents(pmt(monthlyRate(rate), term, d(funded), d(residual)));
   return {
     kind,
+    id,
+    mixWeight: num(values, `icp.${id}.mixWeight`),
     ticketUsd: ticket,
     fundedUsd: funded,
     residualUsd: residual,
@@ -40,6 +42,83 @@ export function productQuote(
     termMonths: term,
     clientRate: rate.toNumber(),
   };
+}
+
+export function productQuotes(
+  kind: ProductKind,
+  values: Record<string, VariableValue>,
+): ProductQuote[] {
+  return catalogByClass(kind).map((row) => quoteFromProfile(kind, row.id, values));
+}
+
+/** Mix-weighted ticket for AUM headroom and tests. */
+export function productQuote(
+  kind: ProductKind,
+  values: Record<string, VariableValue>,
+): ProductQuote {
+  const quotes = productQuotes(kind, values);
+  const weights = quotes.map((row) => Math.max(0, row.mixWeight));
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  if (quotes.length === 0) {
+    throw new Error(`No ${kind} ICP`);
+  }
+  if (total <= 0) return quotes[0]!;
+  const ticket = quotes.reduce(
+    (sum, row, i) => sum + row.ticketUsd * (weights[i]! / total),
+    0,
+  );
+  const term = Math.round(
+    quotes.reduce((sum, row, i) => sum + row.termMonths * (weights[i]! / total), 0),
+  );
+  const rate = quotes.reduce(
+    (sum, row, i) => sum + row.clientRate * (weights[i]! / total),
+    0,
+  );
+  const ltv = kind === "auto" ? 0.8 : 0.7;
+  const residualPct = kind === "auto" ? 0.2 : 0.25;
+  const funded = cents(d(ticket).times(ltv));
+  const residual = cents(d(ticket).times(residualPct));
+  const payment = cents(pmt(monthlyRate(d(rate)), term, d(funded), d(residual)));
+  return {
+    kind,
+    id: quotes[0]!.id,
+    mixWeight: 1,
+    ticketUsd: cents(d(ticket)),
+    fundedUsd: funded,
+    residualUsd: residual,
+    monthlyLeaseUsd: payment,
+    termMonths: term,
+    clientRate: rate,
+  };
+}
+
+function mixCounts(weights: number[], n: number): number[] {
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  const quotas = weights.map((weight) => (weight / total) * n);
+  const floors = quotas.map((quota) => Math.floor(quota));
+  let remain = n - floors.reduce((sum, count) => sum + count, 0);
+  const order = quotas
+    .map((quota, i) => ({ i, frac: quota - floors[i]! }))
+    .sort((a, b) => b.frac - a.frac || a.i - b.i);
+  const counts = [...floors];
+  for (let k = 0; k < remain; k += 1) {
+    const seat = order[k];
+    if (!seat) break;
+    counts[seat.i] = (counts[seat.i] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/** Largest-remainder mix so a 20% ICP still originates in a short book. */
+export function pickProductQuote(quotes: ProductQuote[], originatedIndex: number): ProductQuote {
+  if (quotes.length === 0) throw new Error("No product ICP");
+  const weights = quotes.map((row) => Math.max(0, row.mixWeight));
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  if (total <= 0) return quotes[originatedIndex % quotes.length]!;
+  const before = mixCounts(weights, originatedIndex);
+  const after = mixCounts(weights, originatedIndex + 1);
+  const i = after.findIndex((count, j) => count > (before[j] ?? 0));
+  return quotes[i] ?? quotes[quotes.length - 1]!;
 }
 
 export function autoOriginationsThisMonth(

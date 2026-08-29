@@ -1,17 +1,17 @@
-import type { IcpId } from "@/lib/model/types";
+import type { CatalogIcpId } from "@/lib/model/types";
 import type { IcpFieldKey } from "@/lib/procedures/icp";
 
 export type IcpAsk =
   | { kind: "list" }
-  | { kind: "get"; id: IcpId }
-  | { kind: "set"; id: IcpId; values: Partial<Record<IcpFieldKey, number>> }
+  | { kind: "get"; id: CatalogIcpId }
+  | { kind: "set"; id: CatalogIcpId; values: Partial<Record<IcpFieldKey, number>> }
   | { kind: "vintages"; year?: number; month?: number };
 
 const LIST_RE =
-  /\b(list|show|what are|which are|catalog|all)\b[\s\S]{0,40}\b(icps?|ideal customer profiles?)\b/i;
+  /\b(list|show|what are|which are|catalog|all)\b[\s\S]{0,40}\b(icps?|ideal (customer|contract) profiles?)\b/i;
 
 const GET_RE =
-  /\b(what is|what's|whats|tell me about|show|describe|explain)\b[\s\S]{0,40}\b(icp[-\s]?\d)\b/i;
+  /\b(what is|what's|whats|tell me about|show|describe|explain)\b[\s\S]{0,40}\b(icp[-\s]?\d|auto[-\s]?\d|air(?:craft)?[-\s]?\d)\b/i;
 
 const SET_RE = /\b(set|change|dial|update|move)\b[\s\S]{0,80}\b(to|at|=)\b/i;
 
@@ -35,19 +35,27 @@ const MONTHS: Array<{ re: RegExp; month: number }> = [
   { re: /\b(dec(?:ember)?)\b/i, month: 12 },
 ];
 
-const ICP_ALIASES: Array<{ re: RegExp; id: IcpId }> = [
+const ICP_ALIASES: Array<{ re: RegExp; id: CatalogIcpId }> = [
   { re: /\bicp[-\s]?1\b/i, id: "icp1" },
   { re: /\bicp[-\s]?2\b/i, id: "icp2" },
   { re: /\bicp[-\s]?3\b/i, id: "icp3" },
   { re: /\bicp[-\s]?4\b/i, id: "icp4" },
   { re: /\bicp[-\s]?5\b/i, id: "icp5" },
   { re: /\bicp[-\s]?6\b/i, id: "icp6" },
+  { re: /\bauto[-\s]?1\b/i, id: "auto1" },
+  { re: /\bauto[-\s]?2\b/i, id: "auto2" },
+  { re: /\bair(?:craft)?[-\s]?1\b/i, id: "air1" },
+  { re: /\bair(?:craft)?[-\s]?2\b/i, id: "air2" },
   { re: /\b(poblado executive|el poblado)\b/i, id: "icp1" },
   { re: /\bcartagena heritage\b/i, id: "icp2" },
   { re: /\bllanogrande\b/i, id: "icp3" },
   { re: /\bbocagrande tower\b/i, id: "icp4" },
   { re: /\benvigado family\b/i, id: "icp5" },
   { re: /\bcastillo grande\b/i, id: "icp6" },
+  { re: /\b(andes family prado|prado)\b/i, id: "auto1" },
+  { re: /\b(city hybrid|cx-?30)\b/i, id: "auto2" },
+  { re: /\b(andes caravan|caravan)\b/i, id: "air1" },
+  { re: /\b(caribbean light jet|phenom)\b/i, id: "air2" },
 ];
 
 const FIELD_ALIASES: Array<{
@@ -63,7 +71,7 @@ const FIELD_ALIASES: Array<{
   { re: /\b(mix( weight)?|weight)\b/i, key: "mixWeight", scale: 0.01 },
 ];
 
-function icpIdIn(message: string): IcpId | null {
+function icpIdIn(message: string): CatalogIcpId | null {
   const alias = ICP_ALIASES.find((row) => row.re.test(message));
   return alias?.id ?? null;
 }
@@ -122,15 +130,24 @@ export function parseIcpAsk(message: string): IcpAsk | null {
     return { kind: "list" };
   }
 
-  if (id && (GET_RE.test(text) || /^(what is|what's|whats|tell me about|show)\b/i.test(text))) {
+  if (
+    id &&
+    (GET_RE.test(text) ||
+      /^(what is|what's|whats|tell me about|show|describe|explain)\b/i.test(text))
+  ) {
     return { kind: "get", id };
   }
 
-  if (id && text.length < 40 && /\bicp[-\s]?\d\b/i.test(text) && !/\b(balloon|residual|workbook|excel|cash ?flow|p&l)\b/i.test(text)) {
+  if (
+    id &&
+    text.length < 40 &&
+    /\b(icp[-\s]?\d|auto[-\s]?\d|air(?:craft)?[-\s]?\d)\b/i.test(text) &&
+    !/\b(balloon|residual|workbook|excel|cash ?flow|p&l)\b/i.test(text)
+  ) {
     return { kind: "get", id };
   }
 
-  if (/\b(icps?|ideal customer profiles?)\b/i.test(text) && LIST_RE.test(text)) {
+  if (/\b(icps?|ideal (customer|contract) profiles?)\b/i.test(text) && LIST_RE.test(text)) {
     return { kind: "list" };
   }
 

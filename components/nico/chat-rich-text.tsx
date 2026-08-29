@@ -22,7 +22,13 @@ export function ChatRichText({
 }) {
   const segments = parseChat(text);
   return (
-    <div className="flex flex-col gap-3 text-sm leading-relaxed">
+    <div
+      className={
+        streaming
+          ? "nico-stream-ink flex flex-col gap-3 text-sm leading-relaxed"
+          : "flex flex-col gap-3 text-sm leading-relaxed"
+      }
+    >
       {segments.map((segment, i) => {
         const last = i === segments.length - 1;
         if (segment.kind === "chart") {

@@ -28,8 +28,10 @@ stated otherwise. Research current through 2026-08-23.*
   charge those fees on top of the stated yield.
 - **ASSUMPTION — model Tamarindo US:** collect 2% once when capital is drawn;
   collect 20% of the interest component billed to the customer; collect a
-  separate **75 bps annual servicing fee on outstanding principal** only until
-  a contract supplies the actual rate.
+  separate **75 bps annual servicing fee on outstanding principal** (research
+  seed; market check below is 75–200 bps). WhatsApp / slide 40 bps is a
+  complementary ask, not the live default
+  ([19-platform-economics.md](19-platform-economics.md)).
 - **FACT — market check:** 2025–26 equipment-finance benchmarks put starter
   warehouses at SOFR +225–450 bps, scaling lines at SOFR +150–350 bps, and
   forward-flow servicing at 75–200 bps. Forward-flow asset yields commonly
@@ -67,13 +69,16 @@ stated otherwise. Research current through 2026-08-23.*
   average employer shares were **$7,885 single** and **$20,143 family**
   ([KFF 2025 survey](https://www.kff.org/health-costs/2025-employer-health-benefits-survey/),
   accessed 2026-08-23).
-- **ASSUMPTION — use single coverage in the base case:** MD at $25,000/month
+- **ASSUMPTION — FICA + single medical (formula only):** MD at $25,000/month
   costs **$26,973/month loaded**; Finance at $15,000 costs **$16,805**; Corp Ops
   at $25,000 costs **$26,973**; CTO at $15,000 costs **$16,805**. Total:
   **$87,555/month** or **$1,050,658/year**. These figures include salary,
-  employer FICA/Medicare, and $7,885 annual health only.
-- **ASSUMPTION — family-health sensitivity:** add **$1,022/month per covered
-  role**, taking all four roles to about **$91,641/month**.
+  employer FICA/Medicare, and $7,885 annual **single** health only.
+- **ASSUMPTION — $2.5M OpCo book (thesis 21) uses 100% family medical:**
+  household of **3** (employee + two). Credit pays the **full** KFF family
+  premium **$26,993/seat/year**, not the typical employer share ($20,143)
+  and not single. True-up vs the single line above is **+$19,108/seat/year**.
+  Four US cash seats → **$107,972/year** medical. Employee contribution $0.
 - **ASSUMPTION:** add 3–5% of payroll for state unemployment, workers'
   compensation, payroll administration, and jurisdiction variance after the
   employing state is known. Do not count PTO as extra cash unless backfill is
@@ -85,6 +90,14 @@ stated otherwise. Research current through 2026-08-23.*
 - **ASSUMPTION:** budget WFH at **$200/person/month** for stipend, equipment
   amortization, and periodic meetings; budget flex office at
   **$350/person/month** including the desk and shared meeting-room overage.
+  The **$2.5M OpCo book** (thesis 21) puts all four US named seats at 100%
+  WFH — no US flex desk. Colombia keeps two small offices.
+- **ASSUMPTION — remote business expenses:** Dov, Rosario, and Ricardo at
+  **$2,000/person/month** only. Tom is **$0**. Separate from the $200 WFH
+  stipend and from Colombia travel.
+- **ASSUMPTION — other US benefits (thesis 21):** 401k match **3% of cash
+  salary** and dental/vision **$350/family/month** (100% employer-paid,
+  household of 3). Every US cash seat. Natalia and Jesi stay $0.
 
 ## 4. Colombia GM
 

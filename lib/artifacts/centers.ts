@@ -75,7 +75,7 @@ export const PNL_CENTERS: readonly PnlCenter[] = [
     kind: "revenue",
     name: "Servicing & spread",
     functions: ["servicing", "billing", "interest-spread share"],
-    citation: thesis("05-fee-engine.md", "Lines 3–4: servicing ~75 bps; spread ~20% of interest", "ASSUMPTION"),
+    citation: thesis("19-platform-economics.md", "Servicing 75 bps seed; spread ~20% of interest", "ASSUMPTION"),
   },
   {
     id: "tus.rental_share",

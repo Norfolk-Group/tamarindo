@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { CaseSource } from "@/lib/model/types";
 import { renderWorkbookXlsx } from "@/lib/artifacts/excel";
+import { reportWorkbookToSpec } from "@/lib/model/report-xlsx";
 import {
   AUTO_BASE_SCENARIO_NAME,
   diffScenarios,
@@ -201,6 +202,7 @@ export const modelExport = defineProcedure({
           : kind === "income"
             ? "tamarindo-income"
             : "tamarindo-cashflow";
+    const depthTag = `-${depth}`;
     if (format === "html") {
       return {
         filename: `${stem}.html`,
@@ -210,7 +212,7 @@ export const modelExport = defineProcedure({
     }
     if (format === "csv") {
       return {
-        filename: `${stem}.csv`,
+        filename: `${stem}${depthTag}.csv`,
         contentType: "text/csv; charset=utf-8",
         base64: Buffer.from(renderReportCsv(workbookForDepth(workbook, depth)), "utf8").toString(
           "base64",
@@ -218,14 +220,19 @@ export const modelExport = defineProcedure({
       };
     }
     if (format === "xlsx") {
-      const bytes = renderWorkbookXlsx(
-        cashflowWorkbookSpec(model, {
-          admin: ctx.actor.role === "admin",
-          values,
-        }),
-      );
+      const spec =
+        kind === "statements"
+          ? cashflowWorkbookSpec(model, {
+              admin: ctx.actor.role === "admin",
+              values,
+            })
+          : reportWorkbookToSpec(workbookForDepth(workbook, depth));
+      const bytes = renderWorkbookXlsx(spec);
       return {
-        filename: "tamarindo-cashflow.xlsx",
+        filename:
+          kind === "statements"
+            ? "tamarindo-cashflow.xlsx"
+            : `${stem}${depthTag}.xlsx`,
         contentType:
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         base64: bytes.toString("base64"),
@@ -234,7 +241,7 @@ export const modelExport = defineProcedure({
     const html = renderReportHtml(workbook, { depth });
     const pdf = await renderCashflowPdf(html);
     return {
-      filename: `${stem}.pdf`,
+      filename: `${stem}${depthTag}.pdf`,
       contentType: "application/pdf",
       base64: pdf.toString("base64"),
     };

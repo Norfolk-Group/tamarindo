@@ -36,9 +36,10 @@ const LLM_ENV_KEYS = [
   "NICO_FAST_MODEL",
   "NICO_FIRST_TOKEN_TIMEOUT_MS",
   "NICO_STREAM_TIMEOUT_MS",
+  "NICO_THINKING_BUDGET_TOKENS",
 ] as const;
 
-/** Copy AI Gateway keys onto process.env so composeAnswer can reach Sonnet. */
+/** Copy AI Gateway keys onto process.env so composeAnswer can reach Opus. */
 export function bindLlmEnv(env: SiblingEnv): void {
   for (const key of LLM_ENV_KEYS) {
     const value = env[key];

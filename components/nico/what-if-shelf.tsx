@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { InfoTip } from "@/components/nico/info-tip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,7 +94,7 @@ export function WhatIfShelf({
     }
     setError(null);
     setSaveAsName("");
-    setShelfNote(`Saved as ${name}. Live case unchanged — not a sensitivity grid.`);
+    setShelfNote(`Saved as ${name}. Live model unchanged — not a sensitivity grid.`);
     await loadScenarios();
   }
 
@@ -121,7 +122,7 @@ export function WhatIfShelf({
     }
     setError(null);
     setShelfNote(
-      "Loaded onto your personal case. Reset returns to the company case, not the previous one.",
+      "Loaded onto your live model. Reset returns to the company model, not the previous what-if.",
     );
     await onApplied(json.data ?? {});
   }
@@ -162,17 +163,21 @@ export function WhatIfShelf({
 
   return (
     <div className="mt-6 space-y-4 border-t border-border/60 pt-5">
-      <p className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground">
+      <p className="flex items-center gap-1 text-[11px] font-medium tracking-[0.18em] text-muted-foreground">
         Named what-ifs
+        <InfoTip topic="whatif.shelf" />
       </p>
       <p className="text-sm text-muted-foreground">
-        Snapshots of the saved live case. Unsaved edits and sensitivity grids stay off
-        the shelf. Load replaces the live case — Reset goes back to the company case,
-        not the previous one.
+        Snapshots of the live model. Unsaved edits and sensitivity grids stay off
+        the shelf. Load replaces the live model — Reset goes back to the company model,
+        not the previous what-if.
       </p>
       <div className="flex flex-wrap items-end gap-2">
         <div className="space-y-1.5">
-          <Label htmlFor="save-as-name">Save as</Label>
+          <Label htmlFor="save-as-name" className="inline-flex items-center gap-1">
+            Save as
+            <InfoTip topic="whatif.saveas" />
+          </Label>
           <Input
             id="save-as-name"
             value={saveAsName}
@@ -193,7 +198,10 @@ export function WhatIfShelf({
       </div>
       <div className="flex flex-wrap items-end gap-2">
         <div className="space-y-1.5">
-          <Label>Load</Label>
+          <Label className="inline-flex items-center gap-1">
+            Load
+            <InfoTip topic="whatif.load" />
+          </Label>
           <Select
             value={loadId}
             onValueChange={setLoadId}
@@ -222,7 +230,10 @@ export function WhatIfShelf({
       </div>
       <div className="flex flex-wrap items-end gap-2">
         <div className="space-y-1.5">
-          <Label>Compare</Label>
+          <Label className="inline-flex items-center gap-1">
+            Compare
+            <InfoTip topic="whatif.compare" />
+          </Label>
           <Select
             value={compareA}
             onValueChange={setCompareA}

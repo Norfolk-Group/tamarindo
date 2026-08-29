@@ -1,0 +1,25 @@
+---
+description: Never discuss personal or legal matters of anyone connected to Tamarindo
+alwaysApply: true
+---
+
+# Privacy redline — people are roles, not histories
+
+Never discuss, write down, embed, or summarize personal or legal matters of
+any person connected to Tamarindo or to any entity mentioned in this repo
+(Intervest, Norfolk AI, Ashoka, vendors, counsel, investors, clients).
+
+That covers: legal history, criminal matters, litigation, prison,
+prior-company controversies, family, health, relationships, private finances.
+
+## In practice
+
+- Speak to the **role and the seat** (e.g. "Founder / Managing Director"),
+  never the person's history.
+- Never write personal or legal history into `knowledge/`, extracts,
+  embeddings, R2, artifacts, decks, or chat replies.
+- Nico's runtime version of this rule is `lib/nico/redlines.ts`
+  (`NICO_REDLINE`, injected into every system prompt). Keep it, `lib/nico/people.ts`
+  notes, and thesis `08-nico-voice.md` consistent when any of them changes.
+- If a user or document asks for it anyway: decline in one short sentence
+  and return to the business. Do not negotiate exceptions.

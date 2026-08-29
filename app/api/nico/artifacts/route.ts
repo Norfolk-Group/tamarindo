@@ -13,7 +13,7 @@ export async function GET() {
     });
     return jsonOk(data);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Artifacts list failed";
+    const message = err instanceof Error ? err.message : "Couldn't load files";
     const status = err instanceof ProcedureError && err.code === "forbidden" ? 403 : 400;
     return jsonErr(message, status, {
       code: status === 403 ? "FORBIDDEN" : "VALIDATION",

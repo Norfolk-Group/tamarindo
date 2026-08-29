@@ -18,7 +18,12 @@ vi.mock("@/lib/nico/memory", () => ({ recallLearned, learnFromTurn }));
 vi.mock("@/lib/nico/who", () => ({ loadWho }));
 
 import { UnpublishedTermsError } from "@/lib/artifacts/deck";
+import { parseChat } from "@/lib/nico/chat-rich-parse";
 import { runTurn } from "@/lib/nico/orchestrator";
+import { runCashflowModel } from "@/lib/model/engine";
+import { computeInvestorReturns } from "@/lib/model/returns";
+import { returnsWorkbook } from "@/lib/model/report-workbook";
+import { defaultValues } from "@/lib/model/variables";
 
 const actor = {
   kind: "user" as const,
@@ -30,6 +35,7 @@ const actor = {
 describe("runTurn", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    agentToolSet.mockResolvedValue({ model_get: {} });
     recallLearned.mockResolvedValue("");
     learnFromTurn.mockResolvedValue(undefined);
     loadWho.mockResolvedValue({
@@ -597,6 +603,296 @@ describe("runTurn", () => {
     );
   });
 
+  it("opens the help catalog when asked how the app works", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "help.list") {
+        return {
+          topics: [{ title: "Help", tip: "Hover any (i).", body: "Same catalog." }],
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    for await (const event of runTurn("help", actor, {
+      conversationId: "conv_help",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "help.list",
+      { query: undefined },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "help",
+      expect.anything(),
+      expect.objectContaining({
+        artifactNote: expect.stringContaining("(i) buttons"),
+      }),
+    );
+  });
+
+  it("briefs the live business without dumping the thesis", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "model.get") {
+        return {
+          model: {
+            summary: {
+              homesOriginated: 12,
+              autosOriginated: 30,
+              aircraftOriginated: 4,
+              fy1ClosingCashUsd: 1_000_000,
+              fy10ClosingCashUsd: 8_000_000,
+            },
+          },
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string; onThinking?: (s: string) => void },
+    ) {
+      context?.onThinking?.("Reading the live book against InterVest.");
+      yield "";
+      yield "US-law lease-to-own. InterVest is the warehouse.";
+    });
+
+    const events = [];
+    for await (const event of runTurn("how does Tamarindo work", actor, {
+      conversationId: "conv_biz",
+    })) {
+      events.push(event);
+    }
+    const thinkIdx = events.findIndex(
+      (event) =>
+        event.type === "activity" && event.label === "Nico is thinking…",
+    );
+    const snippetIdx = events.findIndex(
+      (event) =>
+        event.type === "activity" &&
+        event.state === "thinking" &&
+        typeof event.label === "string" &&
+        event.label.includes("live book"),
+    );
+    const speakIdx = events.findIndex(
+      (event) => event.type === "activity" && event.state === "speaking",
+    );
+    expect(thinkIdx).toBeGreaterThan(-1);
+    expect(snippetIdx).toBeGreaterThan(thinkIdx);
+    expect(speakIdx).toBeGreaterThan(snippetIdx);
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.get",
+      {},
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "knowledge.search",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "how does Tamarindo work",
+      expect.anything(),
+      expect.objectContaining({
+        artifactNote: expect.stringMatching(/Live book: 12 homes/),
+        tools: expect.anything(),
+      }),
+    );
+    expect(agentToolSet).toHaveBeenCalledWith(
+      { ...actor, kind: "agent" },
+      expect.any(String),
+      expect.objectContaining({ allow: expect.any(Set) }),
+    );
+  });
+
+  it("calculates a $500k ticket from live fee seeds", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "model.get") {
+        return {
+          variables: [
+            { key: "originationFeePct", value: 0.01 },
+            { key: "servicingBps", value: 0.0075 },
+            { key: "activationFeePct", value: 0.02 },
+            { key: "spreadSharePct", value: 0.2 },
+            { key: "icp.icp1.clientRate", value: 0.115 },
+          ],
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    const events = [];
+    for await (const event of runTurn(
+      "what do we make on a $500k lease",
+      actor,
+      { conversationId: "conv_ticket" },
+    )) {
+      events.push(event);
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.get",
+      {},
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(invokeAgentTool).not.toHaveBeenCalledWith(
+      "knowledge.search",
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+    );
+    const spoken = events
+      .filter((event) => event.type === "token")
+      .map((event) => (event.type === "token" ? event.text : ""))
+      .join("");
+    expect(spoken).toContain("$5,000");
+    expect(parseChat(spoken).some((segment) => segment.kind === "table")).toBe(
+      true,
+    );
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "what do we make on a $500k lease",
+      expect.anything(),
+      expect.objectContaining({
+        artifactNote: expect.stringMatching(/Ticket math from live variables/),
+      }),
+    );
+  });
+
+  it("streams investor returns with new tab, PDF, CSV, and Excel", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    const values = defaultValues();
+    const model = runCashflowModel(values);
+    const workbook = returnsWorkbook(computeInvestorReturns(values, model));
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "model.report") {
+        return {
+          kind: "returns",
+          fromFy: 1,
+          toFy: 10,
+          workbook,
+          consolidated: { years: [] },
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* () {
+      yield "";
+    });
+
+    const events = [];
+    for await (const event of runTurn("what's the IRR", actor, {
+      conversationId: "conv_irr",
+    })) {
+      events.push(event);
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.report",
+      { kind: "returns", fromFy: undefined, toFy: undefined },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    const spoken = events
+      .filter((event) => event.type === "token")
+      .map((event) => (event.type === "token" ? event.text : ""))
+      .join("");
+    const report = parseChat(spoken).find((segment) => segment.kind === "report");
+    expect(report?.kind).toBe("report");
+    if (report?.kind === "report") {
+      expect(report.spec.previewPath).toContain("format=html&kind=returns");
+      expect(report.spec.pdfPath).toContain("format=pdf&kind=returns");
+      expect(report.spec.csvPath).toContain("format=csv&kind=returns");
+      expect(report.spec.xlsxPath).toContain("format=xlsx&kind=returns");
+    }
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "what's the IRR",
+      expect.anything(),
+      expect.objectContaining({
+        artifactNote: expect.stringMatching(/Excel export from that glance/),
+      }),
+    );
+  });
+
+  it("opens the 10-year cash flow as a live statements glance", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "model.report") {
+        return {
+          kind: "statements",
+          fromFy: 1,
+          toFy: 10,
+          consolidated: {
+            years: [
+              { fy: 1, label: "FY1", closingCashUsd: 1, byIcp: [] },
+              { fy: 10, label: "FY10", closingCashUsd: 2, byIcp: [] },
+            ],
+          },
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    for await (const event of runTurn("show the 10-year cash flow", actor, {
+      conversationId: "conv_10y",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.report",
+      { kind: "statements", fromFy: 1, toFy: 10 },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+  });
+
   it("queues a structure deck when asked for the entity map", async () => {
     profileIdFor.mockResolvedValue("prof_1");
     ensureConversation.mockResolvedValue(undefined);
@@ -1060,6 +1356,7 @@ describe("runTurn", () => {
       void event;
     }
 
+    expect(agentToolSet).not.toHaveBeenCalled();
     expect(invokeAgentTool).toHaveBeenCalledWith(
       "model.setVariables",
       { values: { downPaymentPct: expect.closeTo(0.35) } },

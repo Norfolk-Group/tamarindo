@@ -75,7 +75,7 @@ export const FEE_LINES: readonly FeeLine[] = [
     rate: 0.01,
     rateUnit: "pct_of_funded",
     pnlCenterId: "tus.origination",
-    citation: thesis("05-fee-engine.md", "Line 1: TBD; assume ~1% of funded", "ASSUMPTION"),
+    citation: thesis("19-platform-economics.md", "Research seed 1% of funded; WhatsApp ask 1.50%", "ASSUMPTION"),
   },
   {
     id: "chg.activation",
@@ -99,7 +99,7 @@ export const FEE_LINES: readonly FeeLine[] = [
     rate: 75,
     rateUnit: "bps_outstanding",
     pnlCenterId: "tus.servicing",
-    citation: thesis("05-fee-engine.md", "Line 3: assume 75 bps of outstanding", "ASSUMPTION"),
+    citation: thesis("19-platform-economics.md", "Research seed 75 bps; WhatsApp ask 40 bps", "ASSUMPTION"),
   },
   {
     id: "chg.interest_spread",

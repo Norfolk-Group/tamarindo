@@ -8,6 +8,13 @@ describe("needsKnowledgeSearch", () => {
     expect(needsKnowledgeSearch("thanks")).toBe(false);
   });
 
+  it("skips ticket math so Nico calculates instead of dumping 19", () => {
+    expect(needsKnowledgeSearch("what do we make on a $500k lease")).toBe(
+      false,
+    );
+    expect(needsKnowledgeSearch("what's our origination fee")).toBe(false);
+  });
+
   it("skips a workbook ask (that path queues the file instead)", () => {
     expect(
       needsKnowledgeSearch(

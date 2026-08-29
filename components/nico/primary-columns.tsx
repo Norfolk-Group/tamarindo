@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HelpWorkspace } from "@/components/nico/help-workspace";
 import { ModelWorkspace } from "@/components/nico/model-workspace";
-import { SecondLevelRail } from "@/components/nico/second-level-rail";
 import { VariablesWorkspace } from "@/components/nico/variables-workspace";
 import {
   ArtifactsPanel,
@@ -10,36 +10,19 @@ import {
 } from "@/components/nico/workspace-panels";
 import type { PrimaryColumnId } from "@/lib/nico/rail-columns";
 
-const COLUMN_META: Record<PrimaryColumnId, { title: string; label: string }> = {
-  model: { title: "STATEMENTS", label: "Statements" },
-  variables: { title: "ASSUMPTIONS", label: "Assumptions" },
-  artifacts: { title: "ARTIFACTS", label: "Artifacts" },
-  dataroom: { title: "DATA ROOM", label: "Data Room" },
-};
-
-export function PrimaryColumn({
-  id,
-  onHome,
-}: {
-  id: PrimaryColumnId;
-  onHome: () => void;
-}) {
-  const meta = COLUMN_META[id];
+export function PrimaryWorkspace({ id }: { id: PrimaryColumnId }) {
   return (
-    <SecondLevelRail
-      title={meta.title}
-      label={meta.label}
-      onHome={onHome}
-    >
+    <div className="min-h-0 flex-1 overflow-auto">
       {id === "model" && <ModelWorkspace />}
       {id === "variables" && <VariablesWorkspace scope="user" />}
-      {id === "artifacts" && <ArtifactsColumn />}
-      {id === "dataroom" && <DataRoomColumn />}
-    </SecondLevelRail>
+      {id === "artifacts" && <ArtifactsWorkspace />}
+      {id === "dataroom" && <DataRoomWorkspace />}
+      {id === "help" && <HelpWorkspace />}
+    </div>
   );
 }
 
-function ArtifactsColumn() {
+function ArtifactsWorkspace() {
   const [rows, setRows] = useState<
     { id: string; kind: string; title: string; createdAt: string }[]
   >([]);
@@ -53,7 +36,7 @@ function ArtifactsColumn() {
       error?: { message: string };
     };
     if (!json.ok) {
-      setError(json.error?.message ?? "Could not load artifacts");
+      setError(json.error?.message ?? "Could not load files");
       return;
     }
     setError(null);
@@ -69,7 +52,7 @@ function ArtifactsColumn() {
   return <ArtifactsPanel rows={rows} error={error} onRefresh={() => void load()} />;
 }
 
-function DataRoomColumn() {
+function DataRoomWorkspace() {
   const [rows, setRows] = useState<
     {
       id: string;

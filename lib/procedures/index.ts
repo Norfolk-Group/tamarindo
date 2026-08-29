@@ -36,6 +36,7 @@ import {
   modelSetVariables,
 } from "@/lib/procedures/model";
 import { modelReport } from "@/lib/procedures/reports";
+import { helpGet, helpList } from "@/lib/procedures/help";
 import { icpGet, icpList, icpSet, icpVintages } from "@/lib/procedures/icp";
 import { tickerList } from "@/lib/procedures/ticker";
 import { weatherGet } from "@/lib/procedures/weather";
@@ -90,6 +91,8 @@ export const registry = new ProcedureRegistry()
   .register(icpGet)
   .register(icpSet)
   .register(icpVintages)
+  .register(helpList)
+  .register(helpGet)
   .register(modelSaveScenario)
   .register(modelListScenarios)
   .register(modelApplyScenario)

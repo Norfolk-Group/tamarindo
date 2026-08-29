@@ -1,3 +1,5 @@
+import { parseBusinessExplainAsk } from "@/lib/nico/business-intent";
+import { parseUnitCalcAsk } from "@/lib/nico/unit-intent";
 import { isWorkbookRequest } from "@/lib/nico/workbook-intent";
 import { isLifeTalk } from "@/lib/nico/world-intent";
 import { parseMediaAsk } from "@/lib/nico/media-intent";
@@ -17,6 +19,8 @@ export function needsKnowledgeSearch(message: string): boolean {
   const text = message.trim();
   if (text.length < 2) return false;
   if (isWorkbookRequest(text)) return false;
+  if (parseBusinessExplainAsk(text)) return false;
+  if (parseUnitCalcAsk(text)) return false;
   if (isLifeTalk(text)) return false;
   if (parseMediaAsk(text) && !KNOWLEDGE_RE.test(text)) return false;
   if (SMALLTALK_RE.test(text) && text.length < 80) return false;

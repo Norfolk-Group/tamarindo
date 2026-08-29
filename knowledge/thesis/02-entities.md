@@ -1,81 +1,98 @@
 # 02 — Entity Architecture: The Tamarindo Family
 
 *Roles, ownership of risk, and money flows across the sister entities.
-Structure per the Aug 19 call and Aug 18 debrief, extended with Ashoka
-(user input, Aug 21) and OPINION on how the pieces should divide labor.*
+Live structure is FACT from Dov on the Aug 20 Granola call
+(`69c16e2e-bb63-43de-8c4c-eacffefbe284`) and restated Aug 26. Ashoka
+(user input, Aug 21) and OPINION on labor split sit below that.*
+
+**Hard line:** Tamarindo Credit does **not** own Tamarindo Intervest.
+Intervest owns the vehicle. Tamarindo Credit **manages** it and earns
+2 + 20. Both companies are US LLCs; each has its own Colombian sucursal.
 
 ## The map
 
 ```mermaid
 flowchart TB
-    subgraph US["United States"]
-        TUS["Tamarindo US (OpCo)\nplatform · origination · underwriting\nservicing · billing · US infra"]
-        TIV["Tamarindo-Intervest LLC\nfunding vehicle #1\ncapital: InterVest ($10M + $10M)"]
-        TXN["Tamarindo-[Partner] LLC\nfuture funding vehicles #2..N\n(same template, new capital)"]
+    IV["Intervest / Global\n~owns 100% of the vehicle"]
+    subgraph US["United States — two Delaware LLCs"]
+        TUS["Tamarindo Credit, LLC\nOpCo: originator · servicer · biller\nrisk mitigator · manages the vehicle"]
+        TIV["Tamarindo Intervest, LLC\nthe bank / funding vehicle\nlease contract lives HERE"]
+        TXN["Tamarindo-[Partner] LLC\nfuture vehicles #2..N\nsame template, new owner"]
     end
-    subgraph CO["Colombia"]
-        SUC["Sucursal(es)\nColombian branch of each vehicle\nholds property title"]
-        TCO["Tamarindo Colombia\nacquisition · title/notary · comodato\ninspections · local compliance"]
-        ASH["Ashoka (sister co.)\nmaintenance · property management\nrental operations"]
-        CLIENT["Client\nuse rights + purchase option\npays US-law lease"]
+    subgraph CO["Colombia — a sucursal of each US LLC"]
+        SUC_IV["Tamarindo Intervest, Sucursal Colombia\nbuys and holds title to the asset"]
+        SUC_CR["Tamarindo Credit, Sucursal Colombia\nlocal ops: bills, repairs, PM liaison"]
+        ASH["Ashoka (sister co.)\noutsourced PM / rental ops"]
+        CLIENT["Client\ncomodato use rights + purchase option"]
     end
-    TIV -->|owns| SUC
-    TXN -.->|owns| SUC
-    SUC -->|comodato + option| CLIENT
-    CLIENT -->|lease payments| TUS
-    TUS -->|net of fees| TIV
-    TUS -->|mandates| TCO
-    TCO -->|contracts| ASH
-    ASH -->|manages & rents| SUC
+    IV -->|owns 100%| TIV
+    TUS -->|manages, does not own| TIV
+    TIV -->|owns| SUC_IV
+    TUS -->|owns| SUC_CR
+    TXN -.->|owns| SUC_IV
+    SUC_IV -->|comodato + option| CLIENT
+    CLIENT -->|40% deposit + lease| TIV
+    TUS -->|2+20 and servicing| TIV
+    SUC_CR -->|local execution| SUC_IV
+    ASH -->|PM / rentals| SUC_IV
 ```
 
 ## The entities
 
-### Tamarindo US — the operating company (where the value accrues)
+### Tamarindo Credit, LLC — the operating company (where the value accrues)
 
-The platform business and the entity investors buy into. It owns the
-brand, the underwriting policy, the servicing/billing system, the contract
-templates, and the capital-partner relationships. It employs the lean core
-team (target: ~3 US + 2 Colombia, per Aug 19) and carries the tech budget.
+Delaware OpCo. Rosario is incorporating it (possibly repurposing an
+existing KIT entity). This is what the OpCo fundraise is against. It owns
+the brand, the app, underwriting policy, servicing/billing, title-study
+process, Formulario 4 capital-intake admin, insurance coordination, and
+the capital-partner **relationship**. Lean core (~3 US + 2 Colombia).
+US-side OpCo pay (founder seats) routes through this P&L, not Colombian
+payroll (FACT — Dov, 27 Aug).
 
-**Earns:** origination fees, 2% activation fee on capital drawdown,
-servicing fees, ~20% of interest billings (the spread share), and its
-share of rental economics. **Owns no properties, ever.**
+**Earns:** origination, 2% activation on each Intervest drawdown,
+servicing, ~20% of client billings, PM charge-through / markup, rental
+share. **Owns no properties, ever.**
 
-### Tamarindo-Intervest LLC — funding vehicle #1
+**Manages Tamarindo Intervest. Does not own it.**
 
-The InterVest-backed vehicle: $10M committed with $10M more on success
-(Aug 20), deployed roughly half Medellín / half Cartagena. It (through its
-sucursal) owns the properties, receives the net lease stream, and earns
-the base yield (capital priced at ~9–12%). Risk of client default and
-asset recovery sits here — priced into the capital, cushioned by the ~40%
-client down payment and 60% max LTV.
+### Tamarindo Intervest, LLC — funding vehicle #1 (Intervest-owned)
 
-**OPINION — the template point:** this vehicle's docs, waterfall, and
-reporting pack should be built as a *reusable template*. No exclusivity
-was granted, so partner #2 gets "Tamarindo-[Partner] LLC" on identical
-rails with only the economics page changing. The faster a new vehicle can
-be stood up (target: weeks, not months), the more real the marketplace
-thesis becomes.
+A **US (Delaware) company**. **100% owned by Intervest** (the Global
+fund; notes say ~$25B). Tamarindo Credit is the servicer/originator.
+Intervest is named in contract fine print, not in retail marketing, and
+does not deal with end clients.
 
-### Tamarindo Colombia — the local execution arm
+The **US lease is with Tamarindo-Intervest LLC**. The client's 40% and
+ongoing payments **wire to that US company** (Ricardo, 27 Aug). Its
+Colombian sucursal buys the asset and holds title. Default / recovery
+risk sits on that title — cushioned by the 40% down and 60% max LTV.
 
-Handles everything that requires Colombian presence: property sourcing
-and diligence support, notary/title closing for the sucursal, comodato
-administration, inspections, tax/compliance filings, and recovery
-execution if a deal goes bad. Small team (~2 people initially), scales
-with unit count, paid by Tamarindo US via service agreement.
+Pilot: $20M ($10M Medellín + $10M Cartagena). No exclusivity; Intervest
+holds ROFR. Partner #2 would be another US LLC on the same template.
 
-**OPINION (thesis, Aug 19):** keep it an execution arm, not a profit
-center — its job is speed and legal cleanliness of closings. Local
-margin lives in Ashoka.
+### The two sucursales (not a third OpCo)
+
+There is no separate "Tamarindo Colombia Inc." in the live structure.
+Each US LLC has its **own** Colombian branch:
+
+- **Tamarindo Intervest, Sucursal Colombia** — the entity that **buys
+  and holds title**. Formulario 4 / supplementary investment from the
+  US parent funds it. This is the recovery advantage: title already sits
+  here.
+- **Tamarindo Credit, Sucursal Colombia** — local execution: property
+  management liaison, repairs, local bills, comodato admin, notary
+  support. If this branch is profitable it faces Colombian CIT (CONTEXT:
+  35% cited Aug 20; was 19% pre-Petro). The US lessee has no Colombian
+  tax event on the lease.
+
+**OPINION (thesis, Aug 19):** keep the Credit sucursal an execution arm,
+not a profit center — speed and clean closings. Local margin lives in
+Ashoka.
 
 **MODEL OVERRIDE (Ricardo, 2026-08-23):** the shipped cash-flow book
-treats Tamarindo Colombia as a **for-profit sucursal**. It bills clients
-for closing, diligence, and monthly administration, plus a US mandate. It
-is allowed to run cash-flow negative while the book is thin. Do not force
-a wash to zero. This overrides the execution-arm OPINION above until the
-thesis is rewritten to match.
+still treats a for-profit Colombian book that bills clients for closing,
+diligence, and monthly admin, plus a US mandate. It may run cash-flow
+negative while thin. That is a model choice, not a third legal entity.
 
 ### Ashoka — the service layer (sister company)
 
@@ -102,14 +119,15 @@ a diligence red flag.
 $750k Cartagena apartment; client puts ~$300k down (40%); vehicle funds
 ~$450k through its sucursal.
 
-1. **Closing:** client pays down payment; Tamarindo-Intervest draws $450k
-   → Tamarindo US earns 2% activation (~$9k) + origination fee (level
-   TBD — undecided in sources).
-2. **Monthly:** client pays the US-law lease (≈$5.8k/mo at **11.84%
-   effective** over 10y with a **20%-of-asset residual**, $150k on this
-   $750k shape — see 04). Tamarindo US services and
-   bills, retains its servicing fee + ~20% of the interest component,
-   remits the rest to the vehicle.
+1. **Closing:** client wires the 40% deposit to **Tamarindo Intervest,
+   LLC**; that vehicle (via its sucursal) buys the asset. Tamarindo
+   Credit earns 2% activation on the Intervest draw (~$9k) + origination
+   (who pays it — vehicle, client, or mix — still open).
+2. **Monthly:** client pays the US-law lease **on the Intervest vehicle**
+   (≈$5.8k/mo at **11.84% effective** over 10y with a **20%-of-asset
+   residual**, $150k on this $750k shape — see 04). Tamarindo Credit
+   services and bills, retains servicing + ~20% of billings, remits the
+   rest to the vehicle.
 3. **When rented** (default **30% of the time** — clients want to use their
    homes; see 04): Ashoka rents the unit; gross rent splits into Ashoka's
    management fee (20%), operating costs (25%), ~20% Tamarindo share of the
@@ -130,6 +148,7 @@ $750k Cartagena apartment; client puts ~$300k down (40%); vehicle funds
   lease vs. disguised financing) — Colombian and US opinions pending.
 - Tax treatment of sucursal ownership and cross-border payment flows.
 - Origination fee level and who pays it (client vs. vehicle).
-- Whether Tamarindo Colombia and Ashoka are truly separate entities or
-  divisions — OPINION: keep separate; Ashoka may serve non-Tamarindo
-  properties one day, and separation keeps vehicle diligence clean.
+- Whether Ashoka stays a sister company or a vendor — OPINION: keep
+  separate; it may serve non-Tamarindo properties, and separation keeps
+  vehicle diligence clean. There is no third "Tamarindo Colombia"
+  company in the live legal map.

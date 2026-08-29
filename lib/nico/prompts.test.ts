@@ -14,5 +14,10 @@ describe("nicoSystemPrompt", () => {
     expect(chat).toContain("would a human answer this way?");
     expect(voice).toContain("would a human answer this way?");
     expect(voice).toContain("eleven point eight four percent");
+    expect(chat).toContain("Files");
+    expect(chat).not.toContain("point at Artifacts");
+    expect(chat).toContain("Answer in the language they just used");
+    expect(nicoSystemPrompt("chat", "es")).toContain("arrendamiento con opción de compra");
+    expect(nicoSystemPrompt("chat", "es")).toMatch(/usted/i);
   });
 });

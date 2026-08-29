@@ -1,3 +1,4 @@
+import { FEE_LINES, feeLabel, sumFeeBag } from "@/lib/model/fee-catalog";
 import { cents, d } from "@/lib/model/money";
 import type { MonthAcc } from "@/lib/model/engine-acc";
 import { sumYear } from "@/lib/model/engine-acc";
@@ -109,7 +110,9 @@ export function buildUs(
         acc.servicing +
         acc.spread +
         acc.rental +
-        acc.insurance -
+        acc.insurance +
+        sumFeeBag(acc.feeIn) -
+        sumFeeBag(acc.feeOut) -
         acc.usOpex -
         acc.intercompany,
       cfi: 0,
@@ -129,6 +132,22 @@ export function buildUs(
       line("spread", "Interest spread share", "operatingIn", yearly.map((y) => y.spread)),
       line("rental", "Rental revenue share", "operatingIn", yearly.map((y) => y.rental)),
       line("insurance", "Insurance / intermediation commission", "operatingIn", yearly.map((y) => y.insurance)),
+      ...FEE_LINES.filter((row) => row.side === "in").map((row) =>
+        line(
+          `feeIn.${row.id}`,
+          feeLabel(row.id),
+          "operatingIn",
+          yearly.map((y) => y.feeIn[row.id] ?? 0),
+        ),
+      ),
+      ...FEE_LINES.filter((row) => row.side === "out").map((row) =>
+        line(
+          `feeOut.${row.id}`,
+          feeLabel(row.id),
+          "operatingOut",
+          yearly.map((y) => y.feeOut[row.id] ?? 0),
+        ),
+      ),
       ...deptLines("us", US_DEPT_LABELS, yearly, "usDepts"),
       line(
         "toSucursal",
@@ -213,7 +232,9 @@ export function buildConsolidated(
         acc.insurance +
         acc.coClosing +
         acc.coInspection +
-        acc.coAdmin -
+        acc.coAdmin +
+        sumFeeBag(acc.feeIn) -
+        sumFeeBag(acc.feeOut) -
         acc.usOpex -
         acc.sucursalOpex,
       cfi: 0,
@@ -236,6 +257,22 @@ export function buildConsolidated(
       line("coClosing", "Colombia closing fees", "operatingIn", yearly.map((y) => y.coClosing)),
       line("coInspection", "Colombia diligence fees", "operatingIn", yearly.map((y) => y.coInspection)),
       line("coAdmin", "Colombia administration", "operatingIn", yearly.map((y) => y.coAdmin)),
+      ...FEE_LINES.filter((row) => row.side === "in").map((row) =>
+        line(
+          `feeIn.${row.id}`,
+          feeLabel(row.id),
+          "operatingIn",
+          yearly.map((y) => y.feeIn[row.id] ?? 0),
+        ),
+      ),
+      ...FEE_LINES.filter((row) => row.side === "out").map((row) =>
+        line(
+          `feeOut.${row.id}`,
+          feeLabel(row.id),
+          "operatingOut",
+          yearly.map((y) => y.feeOut[row.id] ?? 0),
+        ),
+      ),
       ...deptLines("us", US_DEPT_LABELS, yearly, "usDepts"),
       ...deptLines("co", CO_DEPT_LABELS, yearly, "coDepts"),
       line("capex", "Platform / capex", "investing", yearly.map(() => 0)),

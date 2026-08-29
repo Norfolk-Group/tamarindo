@@ -25,6 +25,7 @@ describe("report glance", () => {
     );
     expect(glance?.previewPath).toContain("format=html");
     expect(glance?.pdfPath).toContain("format=pdf");
+    expect(glance?.xlsxPath).toContain("format=xlsx");
     expect(glance?.chart).toBeUndefined();
     expect(glance?.title).toMatch(/cash flows/i);
     expect(glance?.rows.some((row) => /cash from operations/i.test(row.cells[0] ?? ""))).toBe(

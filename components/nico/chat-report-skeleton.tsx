@@ -6,7 +6,9 @@ export function isReportBuild(presence: AppliedTurn): boolean {
   if (presence.avatarState !== "drafting" && presence.avatarState !== "generating") {
     return false;
   }
-  return /build|laying out the sheet/i.test(presence.activityLabel);
+  return /build|laying out the sheet|cash-flow engine|worksheet/i.test(
+    presence.activityLabel,
+  );
 }
 
 export function ChatReportSkeleton({ presence }: { presence: AppliedTurn }) {

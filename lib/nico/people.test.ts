@@ -15,12 +15,12 @@ describe("Tamarindo people", () => {
   });
 
   it("knows Natalia as marketing director", () => {
-    expect(peopleNoteFor("who is Natalia?") ?? "").toMatch(/Marketing Director/i);
+    expect(peopleNoteFor("who is Natalia?") ?? "").toMatch(/Director of Marketing/i);
   });
 
   it("knows Juan Pablo and Jesse from the Launch Team thread", () => {
     expect(peopleNoteFor("who is Juan Pablo?") ?? "").toMatch(/Hoyos/i);
-    expect(peopleNoteFor("who is Jesse?") ?? "").toMatch(/aviation/i);
+    expect(peopleNoteFor("who is Jesse?") ?? "").toMatch(/Business Development/i);
   });
 
   it("does not treat a greeting as a person lookup", () => {

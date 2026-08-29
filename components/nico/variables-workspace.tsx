@@ -10,29 +10,35 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InfoTip, WithTip } from "@/components/nico/info-tip";
 import { WhatIfShelf } from "@/components/nico/what-if-shelf";
 import { fromDraftValue, toDraftValue } from "@/lib/model/variable-display";
-import { DEFAULT_OPEN_SECTIONS, sectionForGroup } from "@/lib/model/variable-groups";
+import {
+  ASSUMPTION_HIDDEN_GROUPS,
+  ASSUMPTION_HIDDEN_KEYS,
+  DEFAULT_OPEN_SECTIONS,
+  sectionForGroup,
+} from "@/lib/model/variable-groups";
 import type { CaseSource, CashflowModel, ModelVariableView, VariableValue } from "@/lib/model/types";
 
 function caseCopy(source: CaseSource | null, scope: "user" | "admin"): { kicker: string; title: string; body: string } {
   if (scope === "admin") {
     return {
-      kicker: "Your case · every input",
+      kicker: "Live model · every input",
       title: "Assumptions",
       body:
         source === "personal"
-          ? "This is your saved case. Reports and Nico use these numbers. Reset drops you back to the shared company case."
-          : "You are on the shared company case. Save once and you get your own copy — nobody else's reports move.",
+          ? "These are your saved numbers. Reports and Nico use them. Reset returns you to the company model."
+          : "You are on the company model. Save once and you get your own copy — nobody else's reports move.",
     };
   }
   return {
-    kicker: "Your case · published inputs",
-    title: "Assumptions",
-    body:
-      source === "personal"
-        ? "This is your saved case. Statements, income, and returns run from these numbers."
-        : "Seed and company numbers until you save. Save starts your own case.",
+      kicker: "Live model · published inputs",
+      title: "Assumptions",
+      body:
+        source === "personal"
+          ? "These are your saved numbers. Statements, income, and returns run from them."
+          : "Company numbers until you save. Save starts your own live model.",
   };
 }
 
@@ -66,10 +72,11 @@ export function VariablesWorkspace({
       return;
     }
     setError(null);
-    const visible =
-      scope === "admin"
-        ? json.data.variables
-        : json.data.variables.filter((row) => row.visibility === "user");
+    const visible = json.data.variables.filter((row) => {
+      if (ASSUMPTION_HIDDEN_GROUPS.has(row.group)) return false;
+      if (ASSUMPTION_HIDDEN_KEYS.has(row.key)) return false;
+      return scope === "admin" ? true : row.visibility === "user";
+    });
     setRows(visible);
     setDraft(
       Object.fromEntries(visible.map((row) => [row.key, toDraftValue(row.type, row.value)])),
@@ -175,7 +182,10 @@ export function VariablesWorkspace({
       <p className="text-[11px] font-medium tracking-[0.18em] text-muted-foreground">
         {copy.kicker}
       </p>
-      <h2 className="mt-1 text-lg font-semibold">{copy.title}</h2>
+      <h2 className="mt-1 flex items-center gap-2 text-lg font-semibold">
+        {copy.title}
+        <InfoTip topic="assumptions.blue" />
+      </h2>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{copy.body}</p>
       {summary && (
         <p className="mt-3 font-mono text-xs text-muted-foreground">
@@ -206,7 +216,10 @@ export function VariablesWorkspace({
               <div className="grid gap-4 sm:grid-cols-2">
                 {items.map((row) => (
                   <div key={row.key} className="space-y-1.5">
-                    <Label htmlFor={row.key}>{row.label}</Label>
+                    <Label htmlFor={row.key} className="inline-flex items-center gap-1">
+                      {row.label}
+                      <InfoTip text={row.citation.note} />
+                    </Label>
                     <Input
                       id={row.key}
                       type={row.type === "text" ? "text" : "number"}
@@ -237,32 +250,38 @@ export function VariablesWorkspace({
       </Accordion>
       {canEdit ? (
         <div className="mt-6 flex flex-wrap gap-2">
-          <Button type="button" onClick={() => void save()} disabled={saving}>
-            Save
-          </Button>
-          {caseSource === "personal" ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void resetToShared()}
-              disabled={saving}
-            >
-              Reset
+          <WithTip topic="assumptions.save">
+            <Button type="button" onClick={() => void save()} disabled={saving}>
+              Save
             </Button>
+          </WithTip>
+          {caseSource === "personal" ? (
+            <WithTip topic="assumptions.reset">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void resetToShared()}
+                disabled={saving}
+              >
+                Reset
+              </Button>
+            </WithTip>
           ) : null}
           {scope === "admin" ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void publish()}
-              disabled={saving}
-            >
-              Publish
-            </Button>
+            <WithTip topic="assumptions.publish">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void publish()}
+                disabled={saving}
+              >
+                Publish
+              </Button>
+            </WithTip>
           ) : null}
         </div>
       ) : (
-        <p className="mt-6 text-sm text-muted-foreground">View only — members can save a case.</p>
+        <p className="mt-6 text-sm text-muted-foreground">View only — members can save their own numbers.</p>
       )}
       {canEdit ? (
         <WhatIfShelf

@@ -141,4 +141,13 @@ describe("agentToolSet", () => {
       "Search the knowledge base.",
     );
   });
+
+  it("can restrict the model to live-read procedures", async () => {
+    arrange();
+    const tools = await agentToolSet(human, "t7", {
+      allow: new Set(["knowledge.search"]),
+    });
+    expect(Object.keys(tools)).toEqual(["knowledge_search"]);
+    expect(tools.communications_send).toBeUndefined();
+  });
 });

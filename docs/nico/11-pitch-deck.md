@@ -35,7 +35,7 @@ on-demand after Nico recalculates.
 2. **Problem** — credit does not travel.
 3. **Why now / why Tamarindo** — diaspora, Intervest vehicle, OpCo still needs equity.
 4. **Product** — US lease + Colombian comodato. Tamarindo originates and services.
-5. **Who we serve** — six ICPs from the live catalog.
+5. **Who we serve** — ten Ideal Contract Profiles from the live catalog (six property, two auto, two aircraft).
 6. **P&L** — Excel-like table. Numbers from `runCashflowModel` at request time.
 7. **Use of funds** — Excel-like table. OpCo spend from the same run. Not vehicle warehouse cash.
 8. **Team** — current roster (`lib/nico/people.ts`). Chat may omit a name.

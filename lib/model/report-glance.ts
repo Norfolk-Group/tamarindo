@@ -44,6 +44,7 @@ export type ReportGlance = {
   previewPath: string;
   pdfPath: string;
   csvPath: string;
+  xlsxPath?: string;
 };
 
 type ConsolidatedYear = {
@@ -57,11 +58,13 @@ export function exportPaths(kind: ReportKind): {
   previewPath: string;
   pdfPath: string;
   csvPath: string;
+  xlsxPath: string;
 } {
   return {
     previewPath: `/api/nico/model/export?format=html&kind=${kind}`,
     pdfPath: `/api/nico/model/export?format=pdf&kind=${kind}&depth=extended`,
     csvPath: `/api/nico/model/export?format=csv&kind=${kind}&depth=extended`,
+    xlsxPath: `/api/nico/model/export?format=xlsx&kind=${kind}&depth=extended`,
   };
 }
 

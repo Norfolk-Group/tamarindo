@@ -11,6 +11,11 @@ from `VARIABLE_DEFS` (`visibility: "user"`). Members may change every blue
 key; admins may change every key, including grey operating detail. The
 engine recalculates on the server.
 
+**Ideal Contract Profiles** (six property, two auto, two aircraft) are
+admin-only. They live under Admin → ICPs, not as blue member inputs.
+Seeds and explanations are in `lib/model/icp-catalog.ts`. The gate is
+[CONTRACT-admin-catalog.md](../contracts/CONTRACT-admin-catalog.md).
+
 This is the Excel convention: blue = typed by the analyst; black = formula.
 
 Seeds live in code. The **shared company case** is the legacy
@@ -28,15 +33,21 @@ Terms stay off this shelf.
 The left rail is **Assumptions** (inputs) and **Statements** (the book).
 Assumption groups are collapsible. Statement sections fold the same way.
 
-Key blue levers (meetings + thesis):
+Key blue levers (meetings + thesis) plus the **complete Credit LLC fee
+book** (thesis 22). Core commercial levers stay; every industry-standard
+fee Credit is paid or pays is also blue, usually at **$0** until scheduled:
 
 - Client down / LTV (`downPaymentPct`, seed 40% → 60% LTV)
 - Purchase-option floor (`minResidualOfAssetPct`, seed 20% of asset)
-- Activation and origination fees
-- ICP prices, terms, mix
-- Published opex lumps
+- Activation, origination, servicing, and US share of interest — the same
+  four levers sensitivity shocks
+- Warehouse tranches and second-tranche month
+- Rental pricing share, post-pilot growth, auto / aircraft start months
 
-Ask and pre-money are **not** blue. They come from published Deal Terms.
+Everything else — payroll and department seats, equity rounds and pre-money,
+year-10 targets, FICO internals, opex lumps, Ashoka detail, ramp, horizon —
+is grey (admin-only). Ask and pre-money are **not** blue. They come from
+published Deal Terms.
 
 ## Reports Nico builds on demand
 

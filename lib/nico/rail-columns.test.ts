@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   activePrimary,
+  canShowPanel,
   goHome,
   isAdminOpen,
   railLevel,
@@ -9,6 +10,23 @@ import {
   toggleAdmin,
 } from "@/lib/nico/rail-columns";
 
+describe("canShowPanel", () => {
+  it("hides confidential panels before the NDA", () => {
+    const viewer = { isAdmin: false, ndaExecuted: false };
+    expect(canShowPanel("conversation", viewer)).toBe(true);
+    expect(canShowPanel("dataroom", viewer)).toBe(true);
+    expect(canShowPanel("help", viewer)).toBe(true);
+    expect(canShowPanel("model", viewer)).toBe(false);
+    expect(canShowPanel("variables", viewer)).toBe(false);
+    expect(canShowPanel("artifacts", viewer)).toBe(false);
+  });
+
+  it("shows everything once the NDA is executed or for admins", () => {
+    expect(canShowPanel("model", { isAdmin: false, ndaExecuted: true })).toBe(true);
+    expect(canShowPanel("variables", { isAdmin: true, ndaExecuted: false })).toBe(true);
+  });
+});
+
 describe("selectPrimary", () => {
   it("opens one workspace column and replaces any other flyout", () => {
     expect(selectPrimary("model")).toEqual({ type: "primary", id: "model" });
@@ -16,6 +34,7 @@ describe("selectPrimary", () => {
       type: "primary",
       id: "artifacts",
     });
+    expect(selectPrimary("help")).toEqual({ type: "primary", id: "help" });
   });
 
   it("closes the flyout when conversation is selected", () => {
@@ -43,6 +62,10 @@ describe("selectAdminSection", () => {
       type: "admin",
       section: "variables",
     });
+    expect(selectAdminSection("icps")).toEqual({
+      type: "admin",
+      section: "icps",
+    });
   });
 });
 
@@ -61,9 +84,9 @@ describe("railLevel", () => {
     expect(railLevel({ type: "none" })).toBe("first");
   });
 
-  it("replaces the first-level rail when Admin or a workspace is open", () => {
+  it("replaces the first-level rail only for Admin, not for workspaces", () => {
     expect(railLevel({ type: "admin", section: "approvals" })).toBe("second");
-    expect(railLevel({ type: "primary", id: "model" })).toBe("second");
+    expect(railLevel({ type: "primary", id: "model" })).toBe("first");
   });
 });
 

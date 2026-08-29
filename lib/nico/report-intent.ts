@@ -1,5 +1,6 @@
 import type { ReportDepth } from "@/lib/model/report-depth";
 import type { ReportKind } from "@/lib/model/report-workbook";
+import { detectReplyLanguage } from "@/lib/nico/reply-language";
 
 export type ReportAsk = {
   kind: ReportKind;
@@ -12,25 +13,25 @@ export type ReportAsk = {
 };
 
 const RETURNS_RE =
-  /\b(investor returns?|returns? report|vehicle irr|unit irr|moic|cash[- ]on[- ]cash)\b/i;
+  /\b(investor returns?|returns? report|vehicle irr|unit irr|irr|tir|moic|cash[- ]on[- ]cash|what (are|is) (the )?(investor )?returns|retornos?( del inversionista)?|cu[aá]l es (la )?(tir|irr))\b/i;
 
 const SENS_RE =
-  /\b(sensitivity|tornado|what[- ]if grid|shock (the )?(residual|balloon|down|ltv))\b/i;
+  /\b(sensitivity( analysis)?|tornado|stress tests?|what[- ]if grid|shock (the )?(model|residual|balloon|down|ltv)|sensibilidad|prueba de estr[eé]s|estresar (el )?(modelo|globo|cuota))\b/i;
 
 const INCOME_RE =
-  /\b(income statement|p&l|p and l|profit and loss|operating p&l)\b/i;
+  /\b(income statement|p&l|p and l|profit and loss|operating p&l|estado de resultados|p&g|p y g)\b/i;
 
 const STATEMENTS_RE =
-  /\b(financial statements?|statement of cash|scf|ias 7|period report|cash ?flow)\b/i;
+  /\b(financial statements?|statement of cash|scf|ias 7|period report|cash ?flow|show (me )?(the )?(live )?books?|estados? financieros?|flujo de caja|mu[eé]strame (los )?libros|los libros)\b/i;
 
 const FY_RANGE_RE =
-  /\b(?:fy|fiscal years?|years?)\s*(\d{1,2})\s*(?:to|-|–|—|through|thru)\s*(?:fy|fiscal year|year)?\s*(\d{1,2})\b/i;
+  /\b(?:fy|fiscal years?|years?|a[nñ]os?)\s*(\d{1,2})\s*(?:to|-|–|—|through|thru|a)\s*(?:fy|fiscal year|year|a[nñ]o)?\s*(\d{1,2})\b/i;
 
 const FY_SINGLE_RE = /\b(?:fy|fiscal year)\s*(\d{1,2})\b/i;
 
-const YEAR_SINGLE_RE = /\byear\s+(\d{1,2})\b/i;
+const YEAR_SINGLE_RE = /\b(?:year|a[nñ]o)\s+(\d{1,2})\b/i;
 
-const TEN_YEAR_RE = /\b(10-year|ten-year|10 year)\b/i;
+const TEN_YEAR_RE = /\b(10-year|ten-year|10 year|10 a[nñ]os|diez a[nñ]os)\b/i;
 
 function clampFy(n: number): number {
   return Math.min(10, Math.max(1, Math.round(n)));
@@ -52,8 +53,10 @@ function fyFrom(text: string): { fromFy: number; toFy: number } | null {
   return null;
 }
 
-const EXTENDED_RE = /\b(extended|detailed|every line|line items|full detail)\b/i;
-const SUMMARY_RE = /\b(summar(?:y|ised|ized)|high[- ]level|totals only)\b/i;
+const EXTENDED_RE =
+  /\b(extended|detailed|every line|line items|full detail|detallado|extendido)\b/i;
+const SUMMARY_RE =
+  /\b(summar(?:y|ised|ized)|high[- ]level|totals only|resumen|resumido)\b/i;
 
 function depthFrom(text: string): ReportDepth | undefined {
   if (EXTENDED_RE.test(text)) return "extended";
@@ -87,7 +90,9 @@ export function parseReportAsk(message: string): ReportAsk | null {
     return withFy("income", text, {
       liveBuild: true,
       waitLine:
-        "Give me a moment — I don't have that income statement on the shelf. Building it now from the live model.",
+        detectReplyLanguage(text) === "es"
+          ? "Un momento — ese estado de resultados no está en el estante. Lo estoy armando ahora con el modelo en vivo."
+          : "Give me a moment — I don't have that income statement on the shelf. Building it now from the live model.",
     });
   }
 
@@ -99,7 +104,7 @@ export function parseReportAsk(message: string): ReportAsk | null {
   if (fy && (STATEMENTS_RE.test(text) || FY_RANGE_RE.test(text) || FY_SINGLE_RE.test(text))) {
     return withFy("statements", text);
   }
-  if (STATEMENTS_RE.test(text) && !TEN_YEAR_RE.test(text)) {
+  if (STATEMENTS_RE.test(text)) {
     return withFy("statements", text, fy ?? { fromFy: 1, toFy: 10 });
   }
   return null;
