@@ -893,7 +893,84 @@ describe("runTurn", () => {
     );
   });
 
-  it("queues a structure deck when asked for the entity map", async () => {
+  it("opens the corporate-structure report when asked for the entity map", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      if (name === "knowledge.search") return { passages: [] };
+      if (name === "model.report") {
+        return {
+          kind: "structure",
+          fromFy: 1,
+          toFy: 10,
+          previewPath: "/api/nico/model/export?format=html&kind=structure",
+          workbook: {
+            kind: "structure",
+            title: "Tamarindo · corporate structure",
+            generatedAt: "2026-09-01T00:00:00.000Z",
+            theme: "tamarindo-sheet",
+            sheets: [
+              {
+                id: "entities",
+                title: "The Tamarindo family",
+                rows: [
+                  {
+                    kind: "header",
+                    cells: [
+                      { text: "Entity", format: "text" },
+                      { text: "Jurisdiction", format: "text" },
+                      { text: "Role", format: "text" },
+                    ],
+                  },
+                  {
+                    kind: "line",
+                    cells: [
+                      { text: "Tamarindo Credit, LLC", format: "text" },
+                      { text: "Delaware OpCo", format: "text" },
+                      { text: "Manages the vehicle", format: "text" },
+                    ],
+                  },
+                ],
+              },
+            ],
+            cells: [],
+          },
+          consolidated: { years: [] },
+        };
+      }
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    for await (const event of runTurn("show me the entity map", actor, {
+      conversationId: "conv_structure",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).toHaveBeenCalledWith(
+      "model.report",
+      { kind: "structure", fromFy: undefined, toFy: undefined },
+      { ...actor, kind: "agent" },
+      expect.any(String),
+    );
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "show me the entity map",
+      expect.anything(),
+      expect.objectContaining({
+        artifactNote: expect.stringMatching(/does not own/i),
+      }),
+    );
+  });
+
+  it("queues a structure deck when asked for slides", async () => {
     profileIdFor.mockResolvedValue("prof_1");
     ensureConversation.mockResolvedValue(undefined);
     appendMessage.mockResolvedValue(undefined);
@@ -910,7 +987,7 @@ describe("runTurn", () => {
       yield context?.artifactNote ?? "";
     });
 
-    for await (const event of runTurn("show me the entity map", actor, {
+    for await (const event of runTurn("structure deck", actor, {
       conversationId: "conv_deck",
     })) {
       void event;
@@ -927,7 +1004,7 @@ describe("runTurn", () => {
       expect.any(String),
     );
     expect(composeAnswer).toHaveBeenCalledWith(
-      "show me the entity map",
+      "structure deck",
       expect.anything(),
       expect.objectContaining({
         artifactNote: expect.stringContaining("art_structure"),

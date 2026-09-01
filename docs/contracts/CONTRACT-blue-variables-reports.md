@@ -83,7 +83,7 @@ row off. History stays.
 | `model.listScenarios` | This profile’s named what-ifs. Hides auto-saved `"Base case (auto)"`. Members see blue keys only. |
 | `model.applyScenario` | Copy one owned snapshot onto this profile’s personal case. Never publishes. Members persist only published keys. |
 | `model.diffScenarios` | Compare two owned snapshots. Glance of input deltas plus FY1/FY10 closing cash — not a second report book. |
-| `model.report` | Build workbook for `statements` \| `income` \| `returns` \| `sensitivity`; persist cells; return preview path |
+| `model.report` | Build workbook for `statements` \| `income` \| `returns` \| `sensitivity` \| `structure`; persist cells; return preview path |
 | `model.export` | `html` \| `pdf` \| `csv` \| `xlsx` of that kind; optional `depth=summary\|extended` |
 
 ## Report kinds
@@ -94,6 +94,7 @@ row off. History stays.
 | `income` | Cash-basis operating P&L built on demand from the same engine |
 | `returns` | Unit / book investor returns the product can compute without inventing an exit |
 | `sensitivity` | Shock published blue levers; show the same output columns each time |
+| `structure` | Corporate / entity map as an HTML diagram plus the same family table for CSV / Excel |
 
 ## Presentation
 
@@ -107,7 +108,8 @@ headers; CSV is the same tables. PDF/CSV default to extended.
 ## Agent-native chat
 
 Honor: “financial statements”, a fiscal-year slice, “investor returns”,
-“sensitivity on {lever}”, “set {blue variable} to {n}”, “show my
+“sensitivity on {lever}”, “corporate structure” / “entity map” (HTML
+diagram; “structure deck” still queues slides), “set {blue variable} to {n}”, “show my
 assumptions” (meeting-lever glance, not the 181-row book), “save this as
 {name}” (`model.saveScenario`, not Publish), “load {name}” / “apply {name}”
 (`model.applyScenario` after a name match), “compare {A} and {B}”

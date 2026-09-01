@@ -22,6 +22,8 @@ describe("business explain intent", () => {
   it("does not steal reports, ICPs, or worksheets", () => {
     expect(parseBusinessExplainAsk("what is ICP-1")).toBe(false);
     expect(parseBusinessExplainAsk("show investor returns")).toBe(false);
+    expect(parseBusinessExplainAsk("show the corporate structure")).toBe(false);
+    expect(parseReportAsk("show the corporate structure")?.kind).toBe("structure");
     expect(parseBusinessExplainAsk("Help me build a worksheet")).toBe(false);
     expect(parseBusinessExplainAsk("what do we make on a $500k lease")).toBe(
       false,

@@ -58,6 +58,13 @@ describe("report intent", () => {
       kind: "statements",
       depth: "extended",
     });
+    expect(parseReportAsk("show the corporate structure")).toEqual({
+      kind: "structure",
+    });
+    expect(parseReportAsk("entity map please")).toEqual({ kind: "structure" });
+    expect(parseReportAsk("org chart")).toEqual({ kind: "structure" });
+    expect(parseReportAsk("estructura corporativa")).toEqual({ kind: "structure" });
+    expect(parseReportAsk("structure deck")).toBeNull();
   });
 
   it("maps a 10-year cash-flow ask to the live statements book", () => {

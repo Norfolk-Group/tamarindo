@@ -15,7 +15,7 @@ const SET_VARIABLE_RE =
 const SENSITIVITY_RE =
   /\b(sensitivity|tornado|what[- ]if grid|shock (the )?(residual|balloon|down|ltv))\b/i;
 const LOAD_STEAL_RE =
-  /\b(financial statements?|statement of cash|cash ?flow|income statement|p&l|investor returns?|sensitivity|icps?|assumptions?|workbook|worksheet|entity map|deck|raise)\b/i;
+  /\b(financial statements?|statement of cash|cash ?flow|income statement|p&l|investor returns?|sensitivity|corporate structure|icps?|assumptions?|workbook|worksheet|entity map|deck|raise)\b/i;
 
 const GLANCE_ROW_CAP = 12;
 

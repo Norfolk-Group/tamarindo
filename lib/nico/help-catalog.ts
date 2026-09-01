@@ -31,14 +31,14 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: "Conversation",
     family: "nav",
     tip: "Chat with Nico. He uses the same procedures as the rest of the app — he is not a second product.",
-    body: "Conversation is the default. Ask for statements, returns, ICPs, or a what-if. Nico does not invent a raise or an exit IRR. A new conversation only clears the window; he keeps what he learned.",
+    body: "Conversation is the default. Ask for statements, returns, the corporate structure, ICPs, or a what-if. Nico does not invent a raise or an exit IRR. A new conversation only clears the window; he keeps what he learned.",
   },
   {
     id: "nav.statements",
     title: "Statements",
     family: "nav",
     tip: "The live cash-flow book — US, Colombia sucursal, consolidated, and the Intervest vehicle.",
-    body: "Opens in the main pane. Numbers are recalculated on the server from your live model. Click a cell to trace its formula. Export Income, Statements, Returns, or Sensitivity to a new tab; from there, PDF (landscape) or CSV.",
+    body: "Opens in the main pane. Numbers are recalculated on the server from your live model. Click a cell to trace its formula. Export Income, Statements, Returns, Sensitivity, or Structure to a new tab; from there, PDF (landscape) or CSV.",
   },
   {
     id: "nav.assumptions",
@@ -137,6 +137,13 @@ export const HELP_TOPICS: HelpTopic[] = [
     family: "statements",
     tip: "Shocks published levers in memory. Does not save unless you name a what-if.",
     body: "Sensitivity reruns the engine. It is not a second live model. “Save this as {name}” in chat or Assumptions snapshots the live case, not the shock grid.",
+  },
+  {
+    id: "statements.structure",
+    title: "Structure report",
+    family: "statements",
+    tip: "HTML diagram of the Tamarindo family — two US LLCs, each with a Colombian sucursal.",
+    body: "Credit manages Intervest; it does not own it. Ashoka is a sister operator. This is the entity map, not the cash-flow book. Chat: “show the corporate structure” or “entity map.” A structure deck still queues from “structure deck.”",
   },
   {
     id: "statements.csv",

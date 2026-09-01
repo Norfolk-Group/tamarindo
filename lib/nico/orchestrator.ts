@@ -266,7 +266,9 @@ export async function* runTurn(
             ? "Calculating investor returns…"
             : reportAsk.kind === "sensitivity"
               ? "Running sensitivity…"
-              : `Slicing FY${reportAsk.fromFy ?? 1}–FY${reportAsk.toFy ?? 10}…`,
+              : reportAsk.kind === "structure"
+                ? "Drawing the corporate map…"
+                : `Slicing FY${reportAsk.fromFy ?? 1}–FY${reportAsk.toFy ?? 10}…`,
       };
     }
     try {
@@ -316,13 +318,17 @@ export async function* runTurn(
         yield { type: "token", text: reportPreface };
       }
       const preview =
-        " Glance is already on screen — Summary first, Extended is every line. Same numbers. Do not reprint the fence. Full book opens in a new tab; PDF, CSV, and Excel export from that glance.";
+        data.kind === "structure"
+          ? " Glance is the entity table. The diagram opens in a new tab; PDF, CSV, and Excel export from that glance. Do not reprint the fence."
+          : " Glance is already on screen — Summary first, Extended is every line. Same numbers. Do not reprint the fence. Full book opens in a new tab; PDF, CSV, and Excel export from that glance.";
       if (data.kind === "income") {
         artifactNote = `I built a cash-basis OpCo income statement from the live model — receipts, payments, cash from operations. It is not an accrual accountant's P&L.${preview}`;
       } else if (data.kind === "returns") {
         artifactNote = `Investor returns, live from the blue-variable set. Unit vehicle IRR is the Intervest-style lease return. OpCo has cash-on-cash, not a fake exit IRR.${preview}`;
       } else if (data.kind === "sensitivity") {
         artifactNote = `Sensitivity grid: down payment, balloon floor, spread, and activation — each shocked, engine rerun. Shocks are not saved.${preview}`;
+      } else if (data.kind === "structure") {
+        artifactNote = `The Tamarindo family map — two Delaware LLCs, each with its own Colombian sucursal. Credit manages Intervest; it does not own it. Ashoka is a sister operator, not OpCo.${preview}`;
       } else {
         const years = data.consolidated.years;
         const first = years[0];

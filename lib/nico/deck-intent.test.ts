@@ -37,11 +37,11 @@ describe("parseDeckAsk", () => {
   });
 
   it("maps structure phrasing to a structure deck or memo", () => {
-    expect(parseDeckAsk("show the corporate structure")).toEqual({
+    expect(parseDeckAsk("structure deck")).toEqual({
       kind: "deck",
       variant: "structure",
     });
-    expect(parseDeckAsk("entity map please")).toEqual({
+    expect(parseDeckAsk("queue a structure pptx")).toEqual({
       kind: "deck",
       variant: "structure",
     });
@@ -53,6 +53,8 @@ describe("parseDeckAsk", () => {
       kind: "memo",
       variant: "structure",
     });
+    expect(parseDeckAsk("show the corporate structure")).toBeNull();
+    expect(parseDeckAsk("entity map please")).toBeNull();
   });
 
   it("does not treat cash-flow or Excel workbook asks as a deck", () => {

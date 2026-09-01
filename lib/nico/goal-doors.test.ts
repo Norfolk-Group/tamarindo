@@ -16,7 +16,7 @@ import { parseReportAsk } from "@/lib/nico/report-intent";
 import { parseUnitCalcAsk } from "@/lib/nico/unit-intent";
 import { buildReportWorkbook } from "@/lib/procedures/reports";
 
-const KINDS: ReportKind[] = ["statements", "income", "returns", "sensitivity"];
+const KINDS: ReportKind[] = ["statements", "income", "returns", "sensitivity", "structure"];
 
 describe("Nico goal doors", () => {
   it("routes explain, books, returns, sensitivity, and ticket math", () => {
@@ -28,6 +28,8 @@ describe("Nico goal doors", () => {
     expect(parseReportAsk("show me the income statement")?.kind).toBe("income");
     expect(parseReportAsk("what's the IRR")?.kind).toBe("returns");
     expect(parseReportAsk("run a stress test")?.kind).toBe("sensitivity");
+    expect(parseReportAsk("show the corporate structure")?.kind).toBe("structure");
+    expect(parseReportAsk("entity map")?.kind).toBe("structure");
     expect(parseUnitCalcAsk("what do we make on a $500k lease")).toEqual({
       kind: "ticket",
       fundedUsd: 500_000,

@@ -39,6 +39,8 @@ describe("unit calc intent", () => {
     expect(parseVariableSet("set origination to 1.5%")).toBeTruthy();
     expect(parseUnitCalcAsk("show investor returns")).toBeNull();
     expect(parseReportAsk("show investor returns")?.kind).toBe("returns");
+    expect(parseUnitCalcAsk("show the corporate structure")).toBeNull();
+    expect(parseReportAsk("show the corporate structure")?.kind).toBe("structure");
     expect(parseUnitCalcAsk("explain the business model")).toBeNull();
     expect(parseHelpAsk("what do we make on a $500k lease")).toBeNull();
   });

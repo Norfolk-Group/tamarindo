@@ -14,7 +14,7 @@ const RAISE_RE =
   /\b(?:investor\s+deck|raise\s+\.?pptx|pitch\s+deck|raise\s+deck)\b/i;
 
 const STRUCTURE_RE =
-  /\b(?:corporate\s+structure|entity\s+map|ashoka\s+memo|structure\s+(?:deck|memo|pptx|slides?))\b/i;
+  /\b(?:ashoka\s+memo|structure\s+(?:deck|memo|pptx|slides?))\b/i;
 
 const MEMO_RE = /\bmemo\b/i;
 

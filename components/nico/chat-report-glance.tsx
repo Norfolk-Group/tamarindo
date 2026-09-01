@@ -112,9 +112,9 @@ export function ChatReportGlance({ spec }: { spec: ReportGlance }) {
             variant="outline"
             onClick={() => window.open(spec.previewPath, "_blank", "noopener,noreferrer")}
           >
-            Full book
+            {spec.kind === "structure" ? "Diagram" : "Full book"}
           </Button>
-          <InfoTip topic="statements.book" />
+          <InfoTip topic={spec.kind === "structure" ? "statements.structure" : "statements.book"} />
         </span>
         <span className="inline-flex items-center gap-0.5">
           <Button type="button" size="sm" variant="outline" asChild>

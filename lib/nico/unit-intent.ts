@@ -6,7 +6,7 @@ const SET_RE =
   /\b(set|change|dial|update|move|pon|cambia|ajusta|mueve|actualiza)\b[\s\S]{0,80}\b(to|at|=|a|en|al)\b/i;
 
 const STEAL_RE =
-  /\b(investor returns?|sensitivity|income statement|p&l|financial statements?|worksheet|workbook|excel|help me build|explain (tamarindo|the (business|model))|estados? financieros?|flujo de caja|explica(me)? tamarindo)\b/i;
+  /\b(investor returns?|sensitivity|income statement|p&l|financial statements?|corporate structure|entity map|worksheet|workbook|excel|help me build|explain (tamarindo|the (business|model))|estados? financieros?|flujo de caja|explica(me)? tamarindo)\b/i;
 
 const QUOTE_RE =
   /\b(what(?:'s| is) (?:the |our )?(?:origination|servicing|activation|take rate|fee stack)|quote (?:the )?(?:fees|live (?:fees|seeds|rates))|live (?:fee|origination|servicing) (?:rate|seed)s?|cu[aá]l es (?:nuestra |la )?(?:originaci[oó]n|servicing|activaci[oó]n|comisi[oó]n))\b/i;

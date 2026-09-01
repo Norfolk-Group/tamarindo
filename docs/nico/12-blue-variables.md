@@ -60,6 +60,7 @@ PNG. Chat or Model → he recalculates from the current blue set.
 | `income` | Cash-basis OpCo P&L, built live — not on the shelf |
 | `returns` | Investor returns: unit vehicle IRR, book vehicle IRR, OpCo cash-on-cash |
 | `sensitivity` | Shock blue levers (down, balloon floor, spread, activation); show FY cash and ICP-1 IRR |
+| `structure` | Corporate map — two Delaware LLCs, each with a Colombian sucursal. HTML diagram, not engine math |
 
 ## Where cells live
 
