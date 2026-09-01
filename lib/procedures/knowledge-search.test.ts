@@ -1,5 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/knowledge/vector-search", () => ({
+  vectorPassages: vi.fn(async () => []),
+}));
+
 import { setCurrentNdaForTests } from "@/lib/domain/access";
+import { bundledDocuments } from "@/lib/knowledge/corpus.generated";
 import { setCorpusForTests } from "@/lib/knowledge/corpus";
 import { registry } from "@/lib/procedures";
 import { knowledgeSearch } from "@/lib/procedures/knowledge-search";
@@ -82,7 +88,7 @@ describe("knowledge.search", () => {
 
   it("returns the thesis overview when nothing matches", async () => {
     const result = (await knowledgeSearch.handler(
-      { query: "hello", limit: 3 },
+      { query: "zzzznonexistenttoken123", limit: 3 },
       investorCtx,
     )) as { passages: { path: string }[] };
     expect(result.passages.length).toBeGreaterThan(0);
@@ -161,5 +167,38 @@ describe("knowledge.search", () => {
       },
     )) as { passages: { path: string }[] };
     expect(result.passages.some((p) => p.path.startsWith("docs/nico/"))).toBe(true);
+  });
+
+  it("lets an admin cite Natalia's four competitor categories including Volvé", async () => {
+    const nataliaDoc = bundledDocuments.find((doc) =>
+      doc.path.endsWith("natalia-competitor-benchmark-extracted.txt"),
+    );
+    expect(nataliaDoc).toBeTruthy();
+    const source = nataliaDoc!.text.toLowerCase();
+    expect(source).toMatch(/bancolombia|direct banks/);
+    expect(source).toMatch(/traditional bank brokers/);
+    expect(source).toMatch(/direct dollar-based/);
+    expect(source).toMatch(/alternative-structure originator/);
+
+    const result = (await knowledgeSearch.handler(
+      { query: "what did Natalia say Volvé is", limit: 5 },
+      {
+        actor: {
+          kind: "user",
+          id: "admin-natalia",
+          displayName: "Admin",
+          role: "admin",
+        },
+        traceId: "test-natalia-benchmark",
+      },
+    )) as { passages: { path: string; excerpt: string }[] };
+    const natalia = result.passages.filter((p) =>
+      p.path.endsWith("natalia-competitor-benchmark-extracted.txt"),
+    );
+    expect(natalia.length).toBeGreaterThan(0);
+    const hay = natalia.map((p) => p.excerpt).join("\n").toLowerCase();
+    expect(hay).toMatch(/volv[eé]/);
+    expect(hay).toMatch(/closest conceptual competitor/);
+    expect(hay).toMatch(/comodato|lease/);
   });
 });
