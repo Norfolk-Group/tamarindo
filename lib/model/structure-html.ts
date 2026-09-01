@@ -186,27 +186,24 @@ function structureSvg(): string {
     <line x1="400" y1="378" x2="476" y2="378" stroke="#23a5b4" stroke-width="1.2" marker-end="url(#arrow-teal)"/>
     <text x="438" y="368" text-anchor="middle" class="edge-label" fill="#23a5b4">LOCAL EXECUTION</text>
 
-    <rect x="280" y="468" width="280" height="72" rx="4" fill="#0b1717" stroke="rgba(35,165,180,0.45)" stroke-width="1.2"/>
-    <text x="420" y="498" text-anchor="middle" class="node-title">Ashoka</text>
-    <text x="420" y="518" text-anchor="middle" class="node-sub">sister co. · PM / rentals · related-party</text>
+    <rect x="80" y="468" width="320" height="72" rx="4" fill="#0b1717" stroke="rgba(35,165,180,0.45)" stroke-width="1.2"/>
+    <text x="240" y="498" text-anchor="middle" class="node-title">Ashoka</text>
+    <text x="240" y="518" text-anchor="middle" class="node-sub">sister co. · PM / rentals · related-party</text>
 
-    <line x1="240" y1="418" x2="240" y2="504" stroke="#23a5b4" stroke-width="1.2"/>
-    <line x1="240" y1="504" x2="276" y2="504" stroke="#23a5b4" stroke-width="1.2" marker-end="url(#arrow-teal)"/>
-    <text x="168" y="458" class="edge-label" fill="#23a5b4">CONTRACTS</text>
-    <line x1="640" y1="418" x2="640" y2="504" stroke="#23a5b4" stroke-width="1.2"/>
-    <line x1="640" y1="504" x2="564" y2="504" stroke="#23a5b4" stroke-width="1.2" marker-end="url(#arrow-teal)"/>
-    <text x="648" y="458" class="edge-label" fill="#23a5b4">PM / RENTALS</text>
+    <line x1="240" y1="418" x2="240" y2="464" stroke="#23a5b4" stroke-width="1.2" marker-end="url(#arrow-teal)"/>
+    <text x="148" y="446" class="edge-label" fill="#23a5b4">CONTRACTS</text>
+    <path d="M640 418 V444 H404" fill="none" stroke="#23a5b4" stroke-width="1.2" marker-end="url(#arrow-teal)"/>
+    <text x="500" y="438" class="edge-label" fill="#23a5b4">PM / RENTALS</text>
 
-    <rect x="420" y="596" width="280" height="72" rx="4" fill="#0b1717" stroke="rgba(242,247,246,0.16)" stroke-width="1"/>
-    <text x="560" y="626" text-anchor="middle" class="node-title">Client</text>
-    <text x="560" y="646" text-anchor="middle" class="node-sub">comodato use rights + purchase option</text>
+    <rect x="480" y="596" width="320" height="72" rx="4" fill="#0b1717" stroke="rgba(242,247,246,0.16)" stroke-width="1"/>
+    <text x="640" y="626" text-anchor="middle" class="node-title">Client</text>
+    <text x="640" y="646" text-anchor="middle" class="node-sub">comodato use rights + purchase option</text>
 
-    <line x1="640" y1="418" x2="640" y2="572" stroke="#ffc94d" stroke-width="1.2"/>
-    <line x1="640" y1="572" x2="700" y2="572" stroke="none"/>
-    <path d="M640 418 V572 H560" fill="none" stroke="#ffc94d" stroke-width="1.2" marker-end="url(#arrow-gold)"/>
-    <text x="652" y="556" class="edge-label" fill="#ffc94d">COMODATO + OPTION</text>
-    <path d="M560 596 V572 H420 V504" fill="none" stroke="#23a5b4" stroke-width="1.2"/>
-    <text x="360" y="568" class="edge-label" fill="#23a5b4">40% + LEASE TO VEHICLE</text>
+    <line x1="640" y1="418" x2="640" y2="592" stroke="#ffc94d" stroke-width="1.2" marker-end="url(#arrow-gold)"/>
+    <text x="652" y="520" class="edge-label" fill="#ffc94d">COMODATO + OPTION</text>
+    <path d="M800 632 H828 V222 H804" fill="none" stroke="#23a5b4" stroke-width="1.2" marker-end="url(#arrow-teal)"/>
+    <text x="836" y="430" class="edge-label" fill="#23a5b4">40% + LEASE</text>
+    <text x="836" y="444" class="edge-label" fill="#23a5b4">TO THE VEHICLE</text>
   </svg>`;
 }
 
