@@ -168,8 +168,8 @@ function structureSvg(): string {
     <text x="438" y="212" text-anchor="middle" class="edge-label" fill="#23a5b4">MANAGES</text>
     <text x="438" y="254" text-anchor="middle" class="edge-label" fill="#23a5b4">DOES NOT OWN</text>
 
-    <line x1="240" y1="268" x2="240" y2="330" stroke="rgba(242,247,246,0.28)" stroke-width="1.2" marker-end="url(#arrow-dim)"/>
-    <text x="252" y="306" class="edge-label">OWNS</text>
+    <line x1="240" y1="268" x2="240" y2="330" stroke="#ffc94d" stroke-width="1.4" marker-end="url(#arrow-gold)"/>
+    <text x="252" y="306" class="edge-label" fill="#ffc94d">OWNS</text>
     <line x1="640" y1="268" x2="640" y2="330" stroke="#ffc94d" stroke-width="1.4" marker-end="url(#arrow-gold)"/>
     <text x="652" y="306" class="edge-label" fill="#ffc94d">OWNS</text>
 
