@@ -6,6 +6,7 @@ import {
   returnsWorkbook,
   sensitivityWorkbook,
   statementsWorkbook,
+  structureWorkbook,
   type ReportKind,
   type ReportWorkbook,
 } from "@/lib/model/report-workbook";
@@ -94,6 +95,7 @@ export function buildReportWorkbook(
 ): ReportWorkbook {
   if (kind === "returns") return returnsWorkbook(computeInvestorReturns(values, model));
   if (kind === "sensitivity") return sensitivityWorkbook(runSensitivity(values));
+  if (kind === "structure") return structureWorkbook(model.generatedAt);
   const sliced = sliceCashflowModel(model, fromFy, toFy);
   if (kind === "income") {
     return incomeWorkbook({
@@ -120,14 +122,14 @@ export function buildReportWorkbook(
 export const modelReport = defineProcedure({
   name: "model.report",
   description:
-    "Recalculate from current blue variables and return a live report workbook: statements (FY slice), investor returns, or sensitivity. Cells and formulas are stored in the database.",
+    "Recalculate from current blue variables and return a live report workbook: statements (FY slice), investor returns, sensitivity, or the corporate-structure diagram. Cells and formulas are stored in the database.",
   input: z.object({
-    kind: z.enum(["statements", "returns", "sensitivity", "income"]).optional(),
+    kind: z.enum(["statements", "returns", "sensitivity", "income", "structure"]).optional(),
     fromFy: z.number().optional(),
     toFy: z.number().optional(),
   }),
   output: z.object({
-    kind: z.enum(["statements", "returns", "sensitivity", "income"]),
+    kind: z.enum(["statements", "returns", "sensitivity", "income", "structure"]),
     fromFy: z.number(),
     toFy: z.number(),
     consolidated: z.unknown(),

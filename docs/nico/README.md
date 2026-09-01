@@ -22,7 +22,7 @@ The interactive explainer lives at [`docs/nico.html`](../nico.html).
 | [09-build-plan.md](09-build-plan.md) | Build order and current status |
 | [10-r2-library.md](10-r2-library.md) | File drawers on R2 and how files become something Nico can quote |
 | [11-pitch-deck.md](11-pitch-deck.md) | 10-slide raise + 6 backups; live P&L / Use of Funds; chat limits |
-| [12-blue-variables.md](12-blue-variables.md) | Blue inputs, live statements / returns / sensitivity, cells in DB |
+| [12-blue-variables.md](12-blue-variables.md) | Blue inputs, live statements / returns / sensitivity / structure, cells in DB |
 | [design/pitch-deck.md](design/pitch-deck.md) | Tokens, type, table chrome for HTML / PPTX / PDF |
 | [design/financial-reports.md](design/financial-reports.md) | Excel-like HTML grid for financial reports |
 

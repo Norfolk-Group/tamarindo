@@ -76,4 +76,24 @@ describe("model.report slice", () => {
     expect(out.icps).toHaveLength(6);
     expect((out as { kind?: string }).kind).toBe("statements");
   });
+
+  it("builds the corporate-structure workbook without engine math", async () => {
+    const { registry } = await import("@/lib/procedures");
+    const out = (await registry.invoke(
+      "model.report",
+      { kind: "structure" },
+      {
+        actor: {
+          kind: "agent",
+          id: "dev-local",
+          displayName: "Nico",
+          role: "investor",
+        },
+        traceId: "report-structure",
+      },
+    )) as { kind?: string; workbook?: { title?: string; sheets?: { id: string }[] } };
+    expect(out.kind).toBe("structure");
+    expect(out.workbook?.title).toMatch(/corporate structure/i);
+    expect(out.workbook?.sheets?.map((sheet) => sheet.id)).toEqual(["entities", "flow"]);
+  });
 });

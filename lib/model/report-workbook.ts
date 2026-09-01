@@ -2,8 +2,15 @@ import { formatPct, formatUsd } from "@/lib/model/format";
 import type { CashflowModel, DivisionStatement, StatementLine } from "@/lib/model/types";
 import type { InvestorReturns } from "@/lib/model/returns";
 import type { SensitivityReport } from "@/lib/model/sensitivity";
+import { STRUCTURE_ENTITIES, STRUCTURE_FLOW } from "@/lib/model/structure";
 
-export const REPORT_KINDS = ["statements", "returns", "sensitivity", "income"] as const;
+export const REPORT_KINDS = [
+  "statements",
+  "returns",
+  "sensitivity",
+  "income",
+  "structure",
+] as const;
 export type ReportKind = (typeof REPORT_KINDS)[number];
 
 export function isReportKind(value: string): value is ReportKind {
@@ -374,6 +381,62 @@ export function returnsWorkbook(returns: InvestorReturns): ReportWorkbook {
       { id: "book", title: "Book returns", rows: bookRows },
     ],
     cells,
+  };
+}
+
+/** Entity map from thesis 02. Not live engine math — ownership does not change with blue variables. */
+export function structureWorkbook(generatedAt = new Date().toISOString()): ReportWorkbook {
+  const entityRows: SheetRow[] = [
+    {
+      kind: "header",
+      cells: ["Entity", "Jurisdiction", "Role", "Owns assets", "Relationship"].map(
+        (text, i) => cell(text, { tone: "dim", hideInSummary: i >= 3 }),
+      ),
+    },
+    ...STRUCTURE_ENTITIES.map((entity) => ({
+      kind: "line" as const,
+      cells: [
+        cell(entity.name, { tone: entity.id === "credit" ? "gold" : "plain" }),
+        cell(entity.jurisdiction, { tone: "dim" }),
+        cell(entity.role),
+        { ...cell(entity.ownsAssets), hideInSummary: true },
+        { ...cell(entity.relationship), hideInSummary: true },
+      ],
+    })),
+  ];
+  const flowRows: SheetRow[] = [
+    {
+      kind: "header",
+      cells: ["Step", "Who", "What"].map((text) => cell(text, { tone: "dim" })),
+    },
+    ...STRUCTURE_FLOW.map((row) => ({
+      kind: "line" as const,
+      cells: [cell(row.step, { tone: "gold" }), cell(row.who), cell(row.what)],
+    })),
+  ];
+  return {
+    kind: "structure",
+    title: "Tamarindo · corporate structure",
+    generatedAt,
+    theme: "tamarindo-sheet",
+    sheets: [
+      {
+        id: "entities",
+        title: "The Tamarindo family",
+        caption:
+          "FACT from thesis 02. Two Delaware LLCs, each with its own Colombian sucursal. Credit manages Intervest — it does not own it. Ashoka is a sister operator.",
+        rows: entityRows,
+      },
+      {
+        id: "flow",
+        title: "Money on one deal",
+        caption: "Illustrative path. Fees and rates stay on the live book.",
+        rows: flowRows,
+      },
+    ],
+    cells: STRUCTURE_ENTITIES.map((entity, i) =>
+      record("entities", `structure.${entity.id}`, entity.name, i + 1, null, "text", "plain"),
+    ),
   };
 }
 

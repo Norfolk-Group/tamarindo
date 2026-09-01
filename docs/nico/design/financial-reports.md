@@ -1,6 +1,7 @@
 # Financial report design standard
 
 Excel-like HTML for statements, investor returns, and sensitivity.
+The structure report is the same theme as a diagram, not a grid.
 Tokens match [07-design-system.md](../07-design-system.md).
 
 ## Canvas

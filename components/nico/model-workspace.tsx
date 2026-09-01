@@ -181,6 +181,18 @@ export function ModelWorkspace() {
               Sensitivity
             </Button>
           </ExportTip>
+          <ExportTip topic="statements.structure">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                window.open("/api/nico/model/export?format=html&kind=structure", "_blank", "noopener,noreferrer")
+              }
+            >
+              Structure
+            </Button>
+          </ExportTip>
           <ExportTip topic="statements.csv">
             <Button type="button" variant="outline" size="sm" asChild>
               <a href="/api/nico/model/export?format=csv&kind=statements">CSV</a>

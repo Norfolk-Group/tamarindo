@@ -18,6 +18,7 @@ describe("help catalog", () => {
     expect(helpTopic("nav.artifacts")?.title).toBe("Files");
     expect(helpTopic("artifacts.list")?.title).toBe("Files list");
     expect(helpTopic("glossary.icp")?.title).toBe("Ideal Contract Profile");
+    expect(helpTopic("statements.structure")?.title).toBe("Structure report");
   });
 
   it("searches title, tip, and body", () => {

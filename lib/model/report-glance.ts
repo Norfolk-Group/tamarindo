@@ -109,12 +109,51 @@ export function buildReportGlance(input: {
   if (input.kind === "income") {
     return withDepth(incomeGlance(input.workbook, paths), depth);
   }
+  if (input.kind === "structure") {
+    return withDepth(structureGlance(input.workbook, paths), depth);
+  }
   return withDepth(statementsGlance(input, paths), depth);
 }
 
 function withDepth(glance: ReportGlance | null, depth: ReportDepth): ReportGlance | null {
   if (!glance) return null;
   return { ...glance, defaultDepth: glance.extended ? depth : "summary" };
+}
+
+function structureGlance(
+  workbook: ReportWorkbook | null | undefined,
+  paths: ReturnType<typeof exportPaths>,
+): ReportGlance {
+  const sheet = workbook?.sheets.find((item) => item.id === "entities") ?? workbook?.sheets[0];
+  const lines = (sheet?.rows ?? []).filter((row) => row.kind === "line");
+  const headers = ["Entity", "Role"];
+  const extendedHeaders = ["Entity", "Jurisdiction", "Role", "Owns assets", "Relationship"];
+  const rows: GlanceRow[] = lines.map((row) => ({
+    cells: [row.cells[0]?.text ?? "—", row.cells[2]?.text ?? "—"],
+    tone: /credit, llc/i.test(row.cells[0]?.text ?? "") ? "gold" : "plain",
+  }));
+  const extendedRows: GlanceRow[] = lines.map((row) => ({
+    cells: [
+      row.cells[0]?.text ?? "—",
+      row.cells[1]?.text ?? "—",
+      row.cells[2]?.text ?? "—",
+      row.cells[3]?.text ?? "—",
+      row.cells[4]?.text ?? "—",
+    ],
+    tone: /credit, llc/i.test(row.cells[0]?.text ?? "") ? "gold" : "plain",
+  }));
+  return {
+    kind: "structure",
+    title: "Corporate structure — Tamarindo family",
+    takeaway:
+      "Two Delaware LLCs, each with its own Colombian sucursal. Credit manages Intervest — it does not own it. Ashoka is a sister operator. The diagram opens in a new tab.",
+    headers,
+    rows: rows.length
+      ? rows
+      : [{ cells: ["Tamarindo Credit, LLC", "OpCo — manages, does not own"], tone: "gold" }],
+    extended: extendedRows.length ? { headers: extendedHeaders, rows: extendedRows } : undefined,
+    ...paths,
+  };
 }
 
 function statementsGlance(

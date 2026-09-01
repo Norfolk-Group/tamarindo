@@ -3,6 +3,7 @@ import { escapeHtml } from "@/lib/model/format";
 import type { ReportDepth } from "@/lib/model/report-depth";
 import { sheetHidesLinesInSummary } from "@/lib/model/report-depth";
 import type { ReportSheet, ReportWorkbook, SheetRow } from "@/lib/model/report-workbook";
+import { renderStructureHtml } from "@/lib/model/structure-html";
 
 const SHEET_CSS = `
 :root {
@@ -178,6 +179,7 @@ export function renderReportHtml(
   workbook: ReportWorkbook,
   opts: { depth?: ReportDepth } = {},
 ): string {
+  if (workbook.kind === "structure") return renderStructureHtml(workbook);
   const depth = opts.depth ?? "summary";
   const hideLines = sheetHidesLinesInSummary(workbook.kind) ? "1" : "0";
   return `<!DOCTYPE html>

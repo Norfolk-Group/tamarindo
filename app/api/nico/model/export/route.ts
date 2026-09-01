@@ -19,11 +19,14 @@ export async function GET(request: Request) {
     kind !== "statements" &&
     kind !== "returns" &&
     kind !== "sensitivity" &&
-    kind !== "income"
+    kind !== "income" &&
+    kind !== "structure"
   ) {
-    return jsonErr("kind must be statements, returns, sensitivity, or income", 400, {
-      code: "VALIDATION",
-    });
+    return jsonErr(
+      "kind must be statements, returns, sensitivity, income, or structure",
+      400,
+      { code: "VALIDATION" },
+    );
   }
   try {
     const data = (await registry.invoke(

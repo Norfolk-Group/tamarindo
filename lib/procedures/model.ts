@@ -169,10 +169,10 @@ export const modelPublishShared = defineProcedure({
 export const modelExport = defineProcedure({
   name: "model.export",
   description:
-    "Build HTML, PDF, CSV, or Excel of a live report (statements, investor returns, or sensitivity). Calculation stays on the server.",
+    "Build HTML, PDF, CSV, or Excel of a live report (statements, investor returns, sensitivity, or corporate structure). Calculation stays on the server.",
   input: z.object({
     format: z.enum(["html", "pdf", "xlsx", "csv"]),
-    kind: z.enum(["statements", "returns", "sensitivity", "income"]).optional(),
+    kind: z.enum(["statements", "returns", "sensitivity", "income", "structure"]).optional(),
     depth: z.enum(["summary", "extended"]).optional(),
   }),
   output: z.object({
@@ -201,7 +201,9 @@ export const modelExport = defineProcedure({
           ? "tamarindo-sensitivity"
           : kind === "income"
             ? "tamarindo-income"
-            : "tamarindo-cashflow";
+            : kind === "structure"
+              ? "tamarindo-structure"
+              : "tamarindo-cashflow";
     const depthTag = `-${depth}`;
     if (format === "html") {
       return {

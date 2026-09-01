@@ -7,7 +7,7 @@ const EXPLAIN_RE =
   /\b(how does (tamarindo|the (business|model|deal|structure)|this (business|model|product)) work|explain (tamarindo|the (business|model|deal|structure|thesis|product))|walk me through (tamarindo|the (business|model|deal|structure))|what (is|does) tamarindo( do)?\b|what is the product|business model|c[oó]mo funciona (tamarindo|el (negocio|modelo|producto|deal|estructura))|expl[ií]ca(me)? (tamarindo|el (negocio|modelo|producto|tesis))|qu[eé] (es|hace) tamarindo|cu[aá]l es el producto|modelo de negocio)\b/i;
 
 const STEAL_RE =
-  /\b(icp[-\s]?\d|auto[-\s]?\d|air(?:craft)?[-\s]?\d|investor returns?|sensitivity|income statement|p&l|financial statements?|worksheet|workbook|excel|help me build|unit economics|what (do|would) we (make|earn|take)|estados? financieros?|flujo de caja|cu[aá]nto (ganamos|nos llevamos)|prueba de estr[eé]s)\b/i;
+  /\b(icp[-\s]?\d|auto[-\s]?\d|air(?:craft)?[-\s]?\d|investor returns?|sensitivity|income statement|p&l|financial statements?|corporate structure|entity map|worksheet|workbook|excel|help me build|unit economics|what (do|would) we (make|earn|take)|estados? financieros?|flujo de caja|cu[aá]nto (ganamos|nos llevamos)|prueba de estr[eé]s)\b/i;
 
 export function parseBusinessExplainAsk(message: string): boolean {
   const text = message.trim();
@@ -37,6 +37,6 @@ export function formatBusinessBrief(summary: {
     "Lessee pays Intervest. OpCo originates/services and takes a strip. Colombia sucursal bills. Five equal partners; $6.5M equity, three rounds. Intervest funds the book — not OpCo cash, not the cap table.",
     `Live seeds: origination ${(orig * 100).toFixed(2)}% of funded, servicing ${(serv * 10_000).toFixed(0)} bps of outstanding, activation ${(act * 100).toFixed(0)}% of draw, spread ${(spread * 100).toFixed(0)}% of interest. WhatsApp 1.50%/40 bps is not this book unless these keys say so.`,
     `Live book: ${summary.homesOriginated} homes, ${summary.autosOriginated} autos, ${summary.aircraftOriginated} aircraft. Cash FY1 ${summary.fy1ClosingCashUsd}, FY10 ${summary.fy10ClosingCashUsd}.`,
-    "Speak the user's language this turn (English or Spanish). Doors: statements, returns, sensitivity, ticket math — glance here; full book / PDF / CSV / Excel from that glance. Queued workbooks live in Files in the left rail, not Artifacts. No TAM, no diaspora.",
+    "Speak the user's language this turn (English or Spanish). Doors: statements, returns, sensitivity, corporate structure, ticket math — glance here; full book / PDF / CSV / Excel from that glance. Queued workbooks live in Files in the left rail, not Artifacts. No TAM, no diaspora.",
   ].join(" ");
 }

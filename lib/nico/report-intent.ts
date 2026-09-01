@@ -24,6 +24,11 @@ const INCOME_RE =
 const STATEMENTS_RE =
   /\b(financial statements?|statement of cash|scf|ias 7|period report|cash ?flow|show (me )?(the )?(live )?books?|estados? financieros?|flujo de caja|mu[eé]strame (los )?libros|los libros)\b/i;
 
+const STRUCTURE_RE =
+  /\b(corporate structure|entity map|org(?:anizational)? chart|estructura corporativa|mapa de entidades|organigrama)\b/i;
+
+const STRUCTURE_DECK_RE = /\b(deck|pptx|slides?|memo)\b/i;
+
 const FY_RANGE_RE =
   /\b(?:fy|fiscal years?|years?|a[nñ]os?)\s*(\d{1,2})\s*(?:to|-|–|—|through|thru|a)\s*(?:fy|fiscal year|year|a[nñ]o)?\s*(\d{1,2})\b/i;
 
@@ -79,6 +84,10 @@ function withFy(kind: ReportKind, text: string, extra: Partial<ReportAsk> = {}):
 export function parseReportAsk(message: string): ReportAsk | null {
   const text = message.trim();
   if (!text) return null;
+
+  if (STRUCTURE_RE.test(text) && !STRUCTURE_DECK_RE.test(text)) {
+    return { kind: "structure" };
+  }
 
   if (RETURNS_RE.test(text)) {
     return withFy("returns", text);
