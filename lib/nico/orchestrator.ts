@@ -45,6 +45,10 @@ import {
 } from "@/lib/model/unit-economics";
 import { parseIcpAsk, type IcpAsk } from "@/lib/nico/icp-intent";
 import {
+  excelSpecDownloadNote,
+  parseExcelSpecAsk,
+} from "@/lib/nico/spec-intent";
+import {
   entitiesForWorkbook,
   isWorkbookRequest,
 } from "@/lib/nico/workbook-intent";
@@ -136,6 +140,7 @@ export async function* runTurn(
   const helpAsk = parseHelpAsk(message);
   const businessAsk = parseBusinessExplainAsk(message);
   const unitAsk = parseUnitCalcAsk(message);
+  const specAsk = parseExcelSpecAsk(message);
   const modelAction =
     Boolean(scenarioAsk) ||
     Boolean(variableSet) ||
@@ -144,6 +149,7 @@ export async function* runTurn(
     Boolean(businessAsk) ||
     Boolean(unitAsk) ||
     Boolean(reportAsk) ||
+    specAsk ||
     isCashflowModelRequest(message) ||
     isWorkbookRequest(message) ||
     Boolean(deckAsk) ||
@@ -375,6 +381,13 @@ export async function* runTurn(
         err instanceof Error ? err.message : "unknown error"
       }.`;
     }
+  } else if (specAsk) {
+    yield {
+      type: "activity",
+      state: "drafting",
+      label: "Opening the Excel spec…",
+    };
+    artifactNote = excelSpecDownloadNote(message);
   } else if (isWorkbookRequest(message)) {
     yield {
       type: "activity",

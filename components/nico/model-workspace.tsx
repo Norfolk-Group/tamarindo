@@ -196,6 +196,13 @@ export function ModelWorkspace() {
               <a href="/api/nico/model/export?format=xlsx">Excel</a>
             </Button>
           </ExportTip>
+          <ExportTip topic="statements.excelSpec">
+            <Button type="button" variant="outline" size="sm" asChild>
+              <a href="/api/nico/spec" download="tamarindo-excel-spec.md">
+                Excel spec
+              </a>
+            </Button>
+          </ExportTip>
         </div>
       </div>
 

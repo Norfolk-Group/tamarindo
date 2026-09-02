@@ -1,5 +1,6 @@
 import { ENTITY_LABELS, TAMARINDO_ENTITIES } from "@/lib/artifacts/centers";
 import { isCashflowModelRequest } from "@/lib/nico/model-intent";
+import { parseExcelSpecAsk } from "@/lib/nico/spec-intent";
 
 const WORKBOOK_RE =
   /\b(workbook|worksheet|spreadsheet|\.xlsx|excel|p&l|income statement|financial model|ten-year|10-year)\b/i;
@@ -20,6 +21,7 @@ export const WHOLE_BUSINESS_LABELS = TAMARINDO_ENTITIES.map(
 
 export function isWorkbookRequest(message: string): boolean {
   if (isCashflowModelRequest(message)) return false;
+  if (parseExcelSpecAsk(message)) return false;
   return WORKBOOK_RE.test(message);
 }
 

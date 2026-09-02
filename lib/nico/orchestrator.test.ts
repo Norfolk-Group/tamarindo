@@ -283,6 +283,37 @@ describe("runTurn", () => {
     );
   });
 
+  it("points at the Excel spec download instead of queuing a workbook", async () => {
+    profileIdFor.mockResolvedValue("prof_1");
+    ensureConversation.mockResolvedValue(undefined);
+    appendMessage.mockResolvedValue(undefined);
+    invokeAgentTool.mockImplementation(async (name: string) => {
+      throw new Error(name);
+    });
+    composeAnswer.mockImplementation(async function* (
+      _message: string,
+      _passages: unknown,
+      context?: { artifactNote?: string },
+    ) {
+      yield context?.artifactNote ?? "";
+    });
+
+    for await (const event of runTurn("download the excel spec", actor, {
+      conversationId: "conv_spec",
+    })) {
+      void event;
+    }
+
+    expect(invokeAgentTool).not.toHaveBeenCalled();
+    expect(composeAnswer).toHaveBeenCalledWith(
+      "download the excel spec",
+      expect.anything(),
+      expect.objectContaining({
+        artifactNote: expect.stringContaining("/api/nico/spec"),
+      }),
+    );
+  });
+
   it("queues a family workbook when the user asks for a whole-business worksheet", async () => {
     profileIdFor.mockResolvedValue("prof_1");
     ensureConversation.mockResolvedValue(undefined);
