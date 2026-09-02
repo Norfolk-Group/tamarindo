@@ -23,8 +23,8 @@ describe("tamarindo excel spec", () => {
     expect(TAMARINDO_EXCEL_SPEC_MD).toContain("Ashoka");
     expect(TAMARINDO_EXCEL_SPEC_MD).toContain("Who pays whom");
     expect(TAMARINDO_EXCEL_SPEC_MD).toContain("lineTranche1Usd");
-    expect(TAMARINDO_EXCEL_SPEC_MD).toContain("runCashflowModel");
     expect(TAMARINDO_EXCEL_SPEC_MD).toContain("Dov Tuzman");
-    expect(TAMARINDO_EXCEL_SPEC_MD).toMatch(/=PMT\(/);
+    expect(TAMARINDO_EXCEL_SPEC_MD).toContain("their own");
+    expect(TAMARINDO_EXCEL_SPEC_MD).not.toMatch(/=PMT\(/);
   });
 });

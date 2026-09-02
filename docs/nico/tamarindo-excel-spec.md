@@ -1,80 +1,28 @@
-# Tamarindo — complete business and engine spec for Excel
+# Tamarindo — business brief for a new Excel model
 
-**Download:** Nico → Statements → **Excel spec**, or
-`GET /api/nico/spec` (signed-in). Filename `tamarindo-excel-spec.md`.
-Paste this whole file into Claude for Excel.
+**Download:** Nico → Statements → **Excel spec**, or `GET /api/nico/spec`
+(signed-in). Filename `tamarindo-excel-spec.md`.
 
-**Audience:** Claude for Excel (or any modeler) rebuilding Nico’s live
-workbook. Recreate the **same calculations and the same four statement
-books**. Do not invent a raise, an exit IRR, or a legal conclusion.
+**Job:** Give Claude for Excel (or any modeler) the **facts, companies,
+cash flows, people, and live seeds** to build **their own** 10-year
+model. Do **not** clone Nico’s statement layout or paste engine formulas.
+You own the workbook design. Nico is a reference book, not a template.
 
-**Canonical code:** `lib/model/engine.ts`, `lib/model/contracts.ts`,
-`lib/model/money.ts`, `lib/model/engine-statements.ts`,
-`lib/model/variables.ts` (+ fees / ops / equity), `lib/model/icp-catalog.ts`,
-`lib/model/capital-kpis.ts`, `lib/model/equity.ts`, `lib/model/returns.ts`,
-`lib/model/fee-catalog.ts`. Thesis: `knowledge/thesis/01`–`22`.
+**Do not invent** a raise ask, an exit year, or an exit IRR. Do not
+conclude lease characterization, sucursal tax, or usury. Zeros on the
+fee book are unused levers, not “does not exist.” Never call Credit’s
+origination a broker fee.
 
-**Generated:** 2026-09-02 from the shipped seed defaults. Percents in the
-app are typed as `40` meaning 40%. In this file, percent **seeds** are
-already converted (e.g. `40%` = `0.40` in Excel).
+**Labels:** FACT / CONTEXT / OPINION / ASSUMPTION. Percents here are
+already converted (`40%` = `0.40`). Money is **USD**. Fiscal year is
+**November–October**, not calendar. Plan opens **November 2026** for
+**120 months** (FY1 = Nov 2026–Oct 2027; FY10 = Nov 2035–Oct 2036).
 
-**Labels:** FACT / CONTEXT / OPINION / ASSUMPTION. Zeros on the fee book
-are levers, not omissions.
-
-**Do not discuss** anyone’s personal or legal history. Seats and roles only.
+**Seats only.** Do not discuss anyone’s personal or legal history.
 
 ---
 
-## 1. How to use this file
-
-1. Build **one Inputs sheet** with every key in §11. Blue cells = user
-   (visibility `user`). Grey = admin.
-2. Build **one Contracts sheet**: ten ICPs, computed funded / residual /
-   monthly lease from §6.
-3. Build **120 monthly columns** (or 120 rows) for Nov 2026 → Oct 2036.
-   Originate, service, and roll books as in §7.
-4. Roll months into **10 fiscal years** (Nov–Oct) as in §2.
-5. Produce **four statement books** (§8): Tamarindo US, Tamarindo Colombia
-   (sucursal), Consolidated OpCo, Tamarindo-Intervest vehicle.
-6. Produce **Returns** (unit vehicle IRR + OpCo cash-on-cash) and
-   **Sensitivity** (shock one blue lever, rerun). Do **not** invent an
-   exit year or an exit IRR.
-7. Money is **USD, bank cents** (`ROUND(x, 2)` half-up). Use Excel `PMT`
-   and `IRR` as specified. Use `decimal.js` precision if you leave JS.
-
-Nico’s reports to match:
-
-| Report | What to print |
-|--------|----------------|
-| Statements | Direct-method cash flow, four entities, FY columns |
-| Income | Cash-basis OpCo P&L = US operating receipts − payments (not accrual) |
-| Returns | Per-ICP vehicle IRR; book vehicle IRR; OpCo cash-on-cash |
-| Sensitivity | Shock down / balloon floor / spread / activation; FY1 & FY10 cash |
-| Structure | Entity map — not engine math (thesis 02) |
-
----
-
-## 2. Fiscal period
-
-Not a calendar year.
-
-| Item | Seed |
-|------|------|
-| Plan open | **November 2026** (`planStartYear=2026`, `planStartMonth=11`) |
-| Horizon | **120 months** = 10 fiscal years (`horizonMonths=120`) |
-| FY window | November → October |
-| FY1 | Nov 2026 – Oct 2027 |
-| FY10 | Nov 2035 – Oct 2036 |
-| Month index | `0` = Nov 2026 |
-
-Label: `FY{n} · {Mon} {openYear}–{Mon} {closeYear}`.
-
-Engine steps **monthly**, then sums 12 months into each FY. Opening cash
-of FY1 is 0. Closing cash = opening + CFO + CFI + CFF.
-
----
-
-## 3. What Tamarindo is
+## 1. What Tamarindo is
 
 **A US-law lease-to-own origination and servicing platform.** A prime US
 credit file becomes the right to use a Colombian hard asset (homes first)
@@ -83,375 +31,131 @@ US-law lease, puts ~40% down, occupies under **comodato**, and faces a
 **material balloon**. InterVest is the **first warehouse**, not the
 product.
 
-Not a mortgage. Not Colombian *leasing habitacional*. Not a broker. Never
-call Credit’s origination a “broker fee.” Referring-partner cost is a
-**cost**.
+Not a mortgage. Not Colombian *leasing habitacional*. Not a broker.
 
-**OPINION — three identities, in order:**
+**Three identities (OPINION), in order:**
 
 1. **Fee machine, not a lender.** OpCo never owns the house. Capital
    partners own the asset and earn the base yield. Credit earns layered
-   fees: origination, activation, servicing, interest spread, rental
-   share, later PM via Ashoka.
-2. **Rails company.** Durable asset is the legal + ops machinery
+   fees.
+2. **Rails company.** The durable asset is legal + ops machinery
    (sucursal title, comodato + US lease + option, recovery, underwriting,
    servicing). Vehicle #1 is a template for vehicles #2..N.
 3. **Lifestyle product.** Use US credit to occupy a Colombian home; rent
    it when away. Default rented-time 30%. Tamarindo keeps ~20% of net
    rent.
 
-**10-year arc (thesis 03 / 10):** prove ~45 homes on a $20M Intervest
-pilot (Y1–2); OpCo breakeven near $60M AUM (Y3, OPINION); more vehicles
-after Intervest exclusivity (Y3–5); corridors and aircraft in the last
-three FYs. Year-10 **funded AUM** goal: **$100M property / $30M auto /
-$20M aircraft**. Intervest walks a KPI curve to **$75M (50%)**; three
+**10-year arc:** prove ~45 homes on a $20M Intervest pilot (Y1–2); OpCo
+breakeven near $60M AUM (Y3, OPINION); more vehicles after Intervest
+exclusivity (Y3–5); corridors and aircraft in the last three FYs.
+Year-10 **funded AUM** goal: **$100M property / $30M auto / $20M
+aircraft**. Intervest walks a KPI curve to **$75M (50%)**; three
 simulated partners share the other $75M.
 
 ---
 
-## 4. The four companies (legal map vs model books)
+## 2. The four companies
 
 **Hard line (FACT):** Tamarindo Credit does **not** own Tamarindo
-Intervest. Intervest / Global owns 100% of the vehicle. Credit **manages**
-it. There is **no** “Tamarindo Colombia Inc.” Each US LLC has its **own**
-Colombian sucursal. Ashoka is a **sister**, not OpCo.
+Intervest. Intervest / Global owns 100% of the vehicle. Credit
+**manages** it. There is **no** “Tamarindo Colombia Inc.” Each US LLC
+has its **own** Colombian sucursal. Ashoka is a **sister**, not OpCo.
 
-The Excel family (same as Nico’s four tabs) is:
+| Company | Legal identity | Role | Owns the asset? | On OpCo cap table? |
+|---------|----------------|------|-----------------|--------------------|
+| **Tamarindo Credit, LLC** | Delaware OpCo | Brand, underwriting, servicing, billing, partner relationship. Earns fees. Pays US desks + mandate to Colombia. Financed by equity rounds. | Never | Yes — this is the raise |
+| **Tamarindo Intervest, LLC** + its sucursal | Delaware vehicle, 100% Intervest-owned | US lease lives here. Client wires down + monthly + balloon. Sucursal Colombia **buys and holds title**. Warehouse #1. | Yes | **No** |
+| **Credit Sucursal Colombia** | Branch of Credit (not a third Inc.) | Local ops: closings, bills, repairs, comodato admin. Model treats it as **for-profit** (client fees + US mandate). Intervest’s title sucursal is a different book. | No | No |
+| **Ashoka** | Sister PM / maintenance / rental pool | Related-party: market rates, disclosed, terminable. STR fee ~20% of gross; repair markup ~15%. | No | No — memo only; do not consolidate into OpCo cash |
 
-| Book | Legal identity | Owns assets? | On OpCo cap table? |
-|------|----------------|--------------|--------------------|
-| **Tamarindo US** | Tamarindo Credit, LLC (Delaware OpCo) | Never | Yes — this is the raise |
-| **Tamarindo Colombia (sucursal)** | Credit’s Colombian branch (model: one for-profit sucursal book) | No | No third company |
-| **Consolidated** | US + Colombia, **eliminate** the US→CO mandate | — | OpCo cash |
-| **Tamarindo-Intervest** | Tamarindo Intervest, LLC + its sucursal (title) | Yes | **No** — counterparty |
-
-**Ashoka** is the fourth company in the family. It does **not** get a
-cash-flow tab. Its STR fee and repair markup sit as **memo** on US /
-consolidated. Do not consolidate Ashoka into OpCo cash.
-
-### 4.1 Tamarindo Credit, LLC (OpCo / “US”)
-
-Delaware. Brand, app, underwriting, servicing, billing, partner
-relationship. Lean core. **Earns:** activation 2% of draw (FACT),
-origination 1% of funded (ASSUMPTION), servicing 75 bps of outstanding
-(ASSUMPTION), ~20% of interest (FACT), insurance commission 40 bps of new
-funded (ASSUMPTION), 20% of net rental remainder (OPINION). **Pays:**
-named US payroll, US desks, mandate to Colombia, ancillary costs (most $0
-until scheduled). **Financed by** three priced equity rounds — **not**
-the Intervest warehouse.
-
-### 4.2 Tamarindo Intervest, LLC (vehicle #1)
-
-Delaware. **100% Intervest-owned.** The **US lease lives here**. Client
-wires **down + monthly + balloon** to this company. Its **Sucursal
-Colombia buys and holds title**. Default / recovery sits on that title,
-cushioned by ~40% down / 60% LTV. Pilot: $10M Medellín + $10M Cartagena
-(FACT). Intervest exclusive first **three fiscal years**, then ROFR, not
-exclusivity. Future `Tamarindo-[Partner] LLC` clones this template.
-
-**Vehicle cash is not OpCo payroll and is not on the cap table.**
-
-### 4.3 Tamarindo Credit, Sucursal Colombia
-
-Branch of Credit — local ops: bills, repairs, PM liaison, notary,
-comodato admin. **MODEL OVERRIDE (Ricardo 2026-08-23):** the cash-flow
-book treats a **for-profit** Colombia that bills clients (closing,
-diligence, monthly admin) plus a US mandate. It may run cash-flow
-negative while thin. That is a model choice, **not** a third legal
-entity. Intervest’s sucursal (title) is **not** this P&L.
-
-### 4.4 Ashoka (sister)
-
-Property management, maintenance, rental pool. Related-party: market
-rates, disclosed, terminable. **Earns** ~20% of gross STR (ASSUMPTION)
-and repair markup ~15%. Vehicle LPs will read the contract. Sloppy
-Ashoka is a diligence red flag.
+Pilot warehouse: **$10M Medellín + $10M Cartagena** (FACT). Intervest
+exclusive first **three fiscal years**, then ROFR. Later vehicles clone
+`Tamarindo-[Partner] LLC`. Vehicle cash is **not** OpCo payroll.
 
 ---
 
-## 5. Who pays whom (money on one deal)
+## 3. Who pays whom
 
-Illustrative **ICP-1** (engine, thesis 13): $420k home, 40% down, 120
-months, 11.5% + FICO blend ≈ **11.84%**, balloon **20% of asset = $84k**,
-monthly lease **$3,223**.
+Illustrative **ICP-1**: $420k Poblado home, 40% down, 10-year term,
+~11.5% base + FICO blend (~11.84%), balloon **20% of asset**.
 
-| Step | Payer | Payee | What |
+| When | Payer | Payee | What |
 |------|-------|-------|------|
-| Close | Client | Intervest vehicle (US) | ~40% down ($168k). Vehicle sucursal buys the asset. Seller gets $420k day 0. |
-| Close | Vehicle | Seller | Full ticket. Warehouse draws the funded slice ($252k). |
-| Close | Vehicle / client (model: Credit books the fee) | **Credit US** | Activation **2% of draw** ($5,040). Origination **1% of funded** ($2,520). Insurance **40 bps of funded** ($1,008). |
-| Close | Client | **Credit sucursal** | Closing $2,200 + inspection $400. |
-| Close | Credit US | Credit sucursal | Mandate **$1,000 per home close** + **$20,000/mo** retainer (eliminated in consolidation). |
-| Monthly | Client | Vehicle (Credit bills / services) | US-law lease. Credit keeps servicing + 20% of interest; **remits the rest** to the vehicle. |
-| Monthly | Client | Credit sucursal | $120 admin / home / month. |
-| When rented | Guest | Ashoka waterfall | Default **30% of time**. Gross → Ashoka mgmt 20% → opex 25% → Tamarindo 20% of remainder → client credit. |
-| Exit | Client | Vehicle | Residual balloon. Title leaves the Intervest sucursal (*escritura* / RUNT — thesis 17). |
+| Close | Client | Intervest vehicle (US) | ~40% down. Vehicle sucursal buys the asset. Seller is paid in full. |
+| Close | Vehicle | Seller | Full ticket. Warehouse draws the funded slice (60%). |
+| Close | Vehicle / client (Credit books the fee) | **Credit US** | Activation **2% of draw**. Origination **1% of funded**. Insurance **40 bps of new funded**. |
+| Close | Client | **Credit sucursal** | Closing fee + inspection / diligence. |
+| Close | Credit US | Credit sucursal | Monthly mandate retainer + per-home close mandate (eliminated if you consolidate OpCo). |
+| Monthly | Client | Vehicle (Credit bills / services) | US-law lease. Credit keeps servicing + ~20% of interest and **remits the rest** to the vehicle. |
+| Monthly | Client | Credit sucursal | Local admin per active home. |
+| When rented | Guest | Ashoka waterfall | Default **30% of time**. Gross → Ashoka mgmt → opex → Tamarindo share of remainder → client credit. |
+| Exit | Client | Vehicle | Residual balloon. Title leaves the Intervest sucursal. |
 | Default | — | Intervest sucursal | Comodato ends. Title already here. Down payment is the cushion. |
 
-**Lifetime ICP-1 (engine, thesis 13 — do not invent new IRRs):**
+Thesis 13 lifetime walk on this ticket (do **not** invent a new IRR):
+client pays over the term and can take the home; vehicle funds day-0
+and earns a mid-single-digit-to-~9% style vehicle return; Credit US
+takes the fee stack + strip + rental share; sucursal takes local client
+fees + the mandate.
 
-| Party | Puts in | Takes out |
-|-------|---------|-----------|
-| Client | ~$664k over 10 years | The $420k home if they exercise |
-| Vehicle | $252k day 0 | ~$413k back ≈ **9.08% vehicle IRR** |
-| Credit US | desks | ~$75.3k fees + strip + rental share |
-| Credit sucursal | closings / field | ~$17k client fees + $1k mandate |
-
----
-
-## 6. Lease math (must match Excel PMT)
-
-Use **decimal half-up cents**. Annual rate / 12 = monthly rate.
-
-### Homes (ICP-1…6)
-
-```
-down = ROUND(purchase * downPaymentPct, 2)
-funded = ROUND(purchase - down, 2)          // 60% LTV at 40% down
-residual = MAX(funded * residualOfFundedPct, purchase * minResidualOfAssetPct)
-effectiveRate = baseClientRate + blendedFicoSpread
-monthlyLease = PMT(effectiveRate/12, termMonths, -funded, residual)
-```
-
-Excel: `=PMT(rate, nper, -pv, fv)` — same as `lib/model/money.ts` `pmt`.
-
-**Blended FICO spread (defaults ≈ +34 bps):**
-
-```
-spread = ficoTier1SharePct * ficoTier1SpreadPct
-       + ficoTier2SharePct * ficoTier2SpreadPct
-       + ficoTier3SharePct * ficoTier3SpreadPct
-```
-
-Seeds: 50% at +75 bps (750–779), 35% at 0 (780–809), 15% at −25 bps (810+).
-
-**Gross rent / Tamarindo rental share (homes only):**
-
-```
-grossRent = purchase * rentalMonthlyPctOfValue * rentFactor
-tamarindoSharePerMonth = ROUND(grossRent * (1 - ashokaMgmtFeePct - rentalCostsPct) * rentalTamarindoSharePct, 2)
-rentalThisMonth = ROUND(tamarindoSharePerMonth * icp.rentedTimePct, 2)
-```
-
-### Autos
-
-LTV **80%**. Residual **20% of ticket**. Rate = ICP base + FICO blend.
-`PMT` on funded → residual. Mix AUTO-1 / AUTO-2.
-
-### Aircraft
-
-LTV **70%**. Residual **25% of ticket**. Same PMT. Mix AIR-1 / AIR-2.
-Aviation is **out of this Intervest warehouse** (Aug 26 box) — the model
-still books a late-horizon aircraft book as a planning goal.
+**Autos:** 80% LTV, residual 20% of ticket, higher rate, shorter term.
+**Aircraft:** 70% LTV, residual 25% of ticket. Aviation is **out of this
+Intervest warehouse**; a late-horizon aircraft book is a planning goal
+only.
 
 ---
 
-## 7. Monthly engine (the algorithm)
+## 4. Economics you should model (plain language)
 
-For `m` in `0 … horizonMonths-1`:
+Build whatever sheets you want. These are the **relationships**, not a
+prescribed formula pack.
 
-### 7.1 Capacity
+**Homes.** Client down ~40% (60% LTV). Purchase option / balloon is the
+**greater of** 15% of funded and **20% of asset** (the 20% floor binds).
+Client rate = ICP base + a FICO blend (seeds: 50% at +75 bps, 35% at 0,
+15% at −25 bps ≈ **+34 bps**). Monthly lease is a standard amortizing
+payment from funded down to that balloon.
 
-```
-intervestLine = kpi path (below) or legacy
-partnerLine   = three simulated vehicles after exclusivity
-committed     = intervest + partners
-capacity      = useKpiCapitalCurve ? committed : committed * targetUtilizationPct
-```
+**Volume.** Soft open Nov–Dec 2026 (2+2 homes), one in Jan 2027, then a
+2027 ramp from 2 to 5 per month, then a post-pilot run-rate that can
+grow. First five home vintages are **ICP-1, ICP-5, ICP-2, ICP-4,
+ICP-6**; after that, mix weights. Autos start after month 6 at ~3×
+homes, capped. Aircraft starts in FY8.
 
-**KPI Intervest line (useKpiCapitalCurve=1):**
+**Capital.** KPI Intervest line: $10M only until month 6, then a walk
+toward **$75M** by FY10 (FY-end millions 20, 25, 30, 40, 48, 55, 62, 68,
+72, 75). Three other vehicles after exclusivity share another $75M
+(start months 36 / 60 / 84). Do not originate past committed capacity
+or past the year-10 product AUM ceilings.
 
-- Months `< tranche2MonthIndex` (seed 6): **$10M** (`lineTranche1Usd`) only.
-- Then FY-end millions: `20, 25, 30, 40, 48, 55, 62, 68, 72, 75` scaled so
-  FY10 = `fy10IntervestLineUsd` (seed $75M).
+**OpCo cash in:** activation, origination, servicing, interest strip,
+rental share, insurance, later ancillary fees (most $0). **OpCo cash
+out:** named desks (or lumps), mandate to Colombia, costs Credit pays
+(most $0). **Colombia cash in:** client closing / diligence / admin +
+US mandate. **Vehicle cash:** client down + remittance − activation −
+origination; it **buys** the asset; warehouse **draws** the funded
+slice. Equity rounds fund OpCo, not the warehouse.
 
-**KPI other partners:** `fy10PartnerLineUsd` / 3 each. Start months 36 /
-60 / 84. Ramp 40% → 70% → 100% after 0 / 24 / 48 months on book.
+**Equity (OPINION).** Three priced rounds: $2.0M at $10M pre (month 0),
+$2.25M at $15M pre (month 12), $2.25M at $20M pre (month 24). Five
+**equal** unnamed partners; Intervest is **off** the cap table. Named
+US founder pay is **50% for the first 8 months**.
 
-**Product AUM ceilings** (refuse an origination that would breach):
-
-| Book | FY weights (share of FY10 goal at each FY close) |
-|------|--------------------------------------------------|
-| Home | 0.16, 0.28, 0.38, 0.50, 0.60, 0.70, 0.80, 0.88, 0.95, 1 |
-| Auto | 0.06, 0.16, 0.28, 0.40, 0.53, 0.67, 0.80, 0.90, 0.97, 1 |
-| Aircraft | 0, 0, 0, 0, 0, 0, 0, 0.35, 0.70, 1 |
-
-Also refuse if `currentOutstanding + newFunded > capacity`.
-
-### 7.2 Home originations
-
-Planned count by calendar month:
-
-| When | Count keys |
-|------|------------|
-| Nov 2026 | `stubNovCount` = 2 |
-| Dec 2026 | `stubDecCount` = 2 |
-| Jan `januaryCohortYear` (2027) | `januaryCount` = 1 |
-| Feb–Dec 2027 | `ramp2027.feb` … `ramp2027.dec` (2 → 5) |
-| 2028+ | `min(maxOriginationsPerMonth, ROUND(postPilotMonthlyBase * (1+postPilotAnnualGrowthPct)^yearsAfter2028))` |
-
-**ICP pick:** first five vintages **fixed**: ICP-1, ICP-5, ICP-2, ICP-4,
-ICP-6. After that, weighted mix of the six home ICPs (`originatedIndex %
-100` against cumulative mix × 100).
-
-On each successful home close, book:
-
-```
-activation += funded * activationFeePct
-origination += funded * originationFeePct
-insurance  += funded * insuranceCommissionPct
-vehicle: assetPurchase += ticket; fundedNew += funded; clientDown += ticket - funded
-```
-
-### 7.3 Autos and aircraft
-
-Autos start `autoStartMonth` (6). Wanted = max(homesThisMonth ×
-`autoMultipleX10`/10, floor(auto AUM headroom / blend funded)), cap
-`autoMaxPerMonth`. Alternate AUTO-1 / AUTO-2 by mix.
-
-Aircraft: `aircraftPerYear` after `aircraftStartMonth` (84), pick AIR-1 /
-AIR-2 by mix. Same activation / origination / insurance on **funded**.
-
-### 7.4 Service each live lease
-
-```
-interest  = ROUND(outstanding * monthlyRate, 2)
-last      = (age == termMonths - 1)
-principal = last ? outstanding - residual : MIN(payment - interest, outstanding)
-collected = last ? interest + principal + residual : payment
-usSpread  = ROUND(interest * spreadSharePct, 2)
-usServicing = ROUND(outstanding * servicingBps / 12, 2)
-remit     = MAX(0, collected - usSpread - usServicing)
-outstanding -= principal
-if last: balloon += residual; drop the lease
-```
-
-Homes also add `rentalThisMonth` (above).
-
-**Agency memo (not OpCo CFO):** `leaseCollected`, `remitted`.
-
-### 7.5 Opex
-
-If `useDepartmentOpex=1` (seed): named US + Colombia desks from §11
-People groups, including CS growth (`dept.csHomesPerRep`), sales growth,
-founder half-pay for `founderPayHalfMonths`. Else lumps
-`usMonthlyOpexUsd` / `sucursalMonthlyOpexUsd` + per-lease.
-
-### 7.6 Colombia client fees + mandate
-
-```
-intercompany = (usMandateMonthlyUsd + sucursalClosingFeeUsd * homesClosedThisMonth) * (1 + sucursalCostPlusPct)
-coClosing    = coClosingFeeUsd * homesClosedThisMonth
-coInspection = coInspectionFeeUsd * homesClosedThisMonth
-coAdmin      = coAdminPerLeaseUsd * activeHomes
-```
-
-### 7.7 Ancillary fees (most $0)
-
-See `FEE_LINES` in `lib/model/fee-catalog.ts` and `applyAncillaryFees`.
-A dollar fee **and** its incidence must both be non-zero to book cash.
-Referring-partner cost is **out**, never labeled broker fee.
-
-### 7.8 Ashoka memo (not OpCo cash)
-
-```
-pooled = Σ (rentedTimePct of live homes) * rentalPoolOptInPct
-ashokaFee    = pooled * ashokaGrossRentUsd * ashokaMgmtFeePct
-ashokaRepair = pooled * ashokaRepairUsd * (1 + ashokaRepairMarkupPct)
-```
-
-### 7.9 Equity in month m
-
-`seedEquityUsd` in month 0 (seed **$0** — unused). Plus priced rounds
-when `m == equityRoundNMonth` and amount > 0.
-
-Seeds: R1 $2.0M at $10M pre, month 0; R2 $2.25M at $15M pre, month 12;
-R3 $2.25M at $20M pre, month 24; R4 off. Five equal partners; Intervest
-**not** on the cap table. Each founder starts 20%, diluted by
-`amount / (pre + amount)` each round.
+**Returns (if you want them).** Vehicle IRR on one ticket or on the
+book; OpCo cash-on-cash vs equity in. Leave IRR **blank** if it will
+not solve. No exit sale.
 
 ---
 
-## 8. Statement identities (match Nico)
-
-Direct method. IAS 7 / ASC 230 spirit. **Cash, not accrual.**
-
-### Tamarindo US — CFO
-
-```
-+ activation + origination + servicing + spread + rental + insurance
-+ Σ feeIn − Σ feeOut − usOpex − intercompany (mandate to Colombia)
-CFI = 0
-CFF = equity proceeds
-```
-
-Memo: agency collections / remittance, lines, AUM, originations, Ashoka.
-
-### Tamarindo Colombia — CFO
-
-```
-+ intercompany + coClosing + coInspection + coAdmin − sucursalOpex
-CFI = 0, CFF = 0
-```
-
-### Consolidated OpCo — CFO
-
-```
-US receipts + Colombia client fees + feeIn
-− feeOut − usOpex − sucursalOpex
-```
-
-**Eliminate** the US mandate (`intercompany` is memo only). CFF = equity.
-Vehicle warehouse cash is **not** here.
-
-### Tamarindo-Intervest — not consolidated
-
-```
-CFO = clientDown + remitted − activation − origination
-CFI = −assetPurchase
-CFF = fundedNew   // warehouse draw
-```
-
-Split remittance into ex-balloon vs balloon on the printed book.
-
-**Closing cash** each FY: `opening + CFO + CFI + CFF`.
-
----
-
-## 9. Returns and sensitivity
-
-### Unit vehicle IRR (one ICP)
-
-Month-0 vehicle flow: `−funded − activation − origination`.  
-Months 1..term: remittance as in §7.4 (last month includes balloon).  
-`IRR` of that series, then **effective annual** `(1+monthly)^12 − 1`.  
-If Excel cannot solve, leave **blank** — do not invent.
-
-### Book vehicle IRR
-
-Annual net change in vehicle cash (10 FY points). Same IRR rule.
-
-### OpCo cash-on-cash
-
-`Σ US CFO over 10y / Σ equity in`. **Not** an exit IRR.
-
-### Sensitivity
-
-Rerun the full engine shocking **one** blue lever at a time (down,
-balloon floor, spread, activation). Do **not** save shocks. Show FY1
-cash, FY10 cash, ICP-1 lease, ICP-1 vehicle IRR.
-
----
-
-## 10. Named seats (roles only)
+## 5. Named seats (roles only)
 
 Five **equal partners** at t=0; **names not assigned** to the 20%
-equity seats (thesis 11). Norfolk AI builds Nico; it is **not** Credit
-and **not** a capital partner.
+equity seats. Norfolk AI builds Nico; it is **not** Credit and **not**
+a capital partner.
 
 | Name | Function | On OpCo payroll? |
 |------|----------|------------------|
-| Dov Tuzman | Founder / Managing Director. Capital partners and the Intervest relationship. | Yes — Credit US (`pay.dovLoadedUsd`) |
+| Dov Tuzman | Founder / Managing Director. Capital partners and the Intervest relationship. | Yes (`pay.dovLoadedUsd`) |
 | Rosario Davi | Finance Director. Deck, numbers, HITL on the book. | Yes (`pay.rosarioLoadedUsd`) |
 | Ricardo Cidale | Director of Planning and Corporate Development. Model and Nico. Also MD of Norfolk AI (vendor). | Yes (`pay.ricardoLoadedUsd`) |
 | Tom Herman | Director of Information Systems. Platform / credit-stack (part-time at launch). | Yes (`pay.tomLoadedUsd`) |
@@ -463,14 +167,12 @@ and **not** a capital partner.
 | Michael Gontar | Intervest counterpart. | **No** |
 | Juan Pablo Hoyos | Stakeholder, Colombia channels. | **No** until titled |
 
-Founder US named pay is **50% for the first 8 months**
-(`founderPayHalfMonths`, `founderPayHalfPct`).
-
 ---
 
-## 11. Complete variable catalog (live seeds)
+## 6. Live seed catalog
 
-Percents shown already converted. `user` = blue. `admin` = grey.
+Use these as **inputs** for your model. `user` = published / blue.
+`admin` = operating detail. A $0 fee is a lever left off.
 
 ### Capital
 
@@ -832,142 +534,24 @@ Percents shown already converted. `user` = blue. `admin` = grey.
 | air1 | AIR-1 | Andes Caravan | Rionegro / JMC / domestic utility | 2200000 | 84 | 9.50% | 0.8 | 0 | aircraft |
 | air2 | AIR-2 | Caribbean Light Jet | Miami / Cartagena / US–Colombia corridor | 11500000 | 120 | 9.50% | 0.2 | 0 | aircraft |
 
-
-
 ---
 
-## 12. Reports Claude for Excel must emit
-
-**Sheets (minimum):**
-
-1. `Inputs` — §11, blue/grey
-2. `ICP` — ten tickets + computed funded, residual, payment, effective rate
-3. `Monthly` — 120 months of the engine (or a hidden calc sheet)
-4. `US` `Colombia` `Consolidated` `Vehicle` — FY1–FY10, same lines as
-   `lib/model/engine-statements.ts`
-5. `Returns` — unit IRR + book IRR + OpCo CoC
-6. `Sensitivity` — four levers
-7. `Structure` — entity map (static)
-8. `Fee book` — every Credit-paid and Credit-pays line, including zeros
-
-**Formatting:** navy / teal / gold. Blue = input. Gold = totals / IRR.
-Geist Mono (or Consolas) for numbers.
-
-**Guardrails:**
-
-- Do not treat vehicle warehouse cash as OpCo equity.
-- Do not invent Deal Terms / raise ask.
-- Do not fill unlabeled salary or fee cells with made-up quotes — zeros
-  stay zero until cited.
-- Do not call origination a broker fee.
-- Lease characterization, sucursal tax, and usury opinions are **open**
-  (thesis 16–18). Do not conclude them.
-
----
-
-## 13. Open items (do not close in Excel)
+## 7. Open items (leave open)
 
 - Legal characterization of the lease (US and Colombia).
-- Tax of sucursal ownership and cross-border flows (CIT CONTEXT 35%).
-- Who pays origination (client vs vehicle) — model books it as Credit
-  revenue; vehicle CFO subtracts activation + origination.
+- Tax of sucursal ownership and cross-border flows.
+- Who economically pays origination (client vs vehicle) — Credit books
+  the fee; the vehicle feels activation + origination as a cost.
 - Whether Ashoka stays sister or vendor — OPINION: keep separate.
-- FX hedge: lever exists, seed **0** until a quote (thesis 20).
-- Aviation is out of **this** Intervest warehouse; the FY8–10 aircraft
-  book is a planning goal.
+- FX hedge: lever exists, seed **0** until a quote.
+- Aviation is out of **this** Intervest warehouse.
 
 ---
 
-## 14. Named functions (TypeScript → Excel)
+## 8. Sources (if you want more prose)
 
-Rebuild these. If a name and this prose disagree, **the function wins**.
-
-| Function | File | Excel equivalent / job |
-|----------|------|------------------------|
-| `d`, `cents`, `money` | `lib/model/money.ts` | `ROUND(x, 2)` half-up |
-| `pmt(rate, nper, pv, fv)` | same | `=PMT(rate, nper, -pv, fv)` |
-| `monthlyRate` | same | `annual/12` |
-| `irr(cashflows)` | same | `=IRR(range)` — blank if unsolvable |
-| `annualizeMonthlyIrr` | same | `(1+monthly)^12-1` |
-| `blendedFicoSpread` | `lib/model/contracts.ts` | weighted FICO bps |
-| `computeContracts` | same | funded, residual, payment, effective rate per ICP |
-| `plannedOriginations` | `lib/model/vintages.ts` | homes wanted this month |
-| `pickIcp` | same | first five fixed, then mix |
-| `buildPlannedVintages` | same | vintage list |
-| `kpiIntervestLineUsd` | `lib/model/capital-kpis.ts` | Intervest commitment at month m |
-| `kpiPartnerLineUsd` | same | other vehicles at month m |
-| `productAumTargetUsd` | same | home / auto / aircraft ceiling |
-| `productQuote` / `pickProductQuote` | `lib/model/products.ts` | auto / aircraft ticket |
-| `autoOriginationsThisMonth` | same | auto count |
-| `aircraftOriginationsThisMonth` | same | aircraft count |
-| `applyAncillaryFees` | `lib/model/fees.ts` | fee book in/out |
-| `monthDepartmentCash` | `lib/model/departments.ts` | named-desk opex |
-| `plannedRounds` / `equityProceedsAt` / `buildCapTable` | `lib/model/equity.ts` | CFF equity + dilution |
-| `founderPayFactor` | same | 50% named US pay for 8 months |
-| `runCashflowModel` | `lib/model/engine.ts` | **the 120-month loop** |
-| `assertConsolidatedIdentity` | same | US + CO − mandate = consolidated CFO |
-| `buildUs` / `buildSucursal` / `buildConsolidated` / `buildVehicle` | `lib/model/engine-statements.ts` | four books |
-| `sumYear` | `lib/model/engine-acc.ts` | 12 months → one FY |
-| `computeInvestorReturns` | `lib/model/returns.ts` | unit IRR, book IRR, OpCo CoC |
-| `runSensitivity` | `lib/model/sensitivity.ts` | shock one blue lever |
-| `calcTicketEconomics` | `lib/model/unit-economics.ts` | one-ticket walk |
-| `cashflowWorkbookSpec` | `lib/model/excel-spec.ts` | Nico’s generated .xlsx (outputs, not this spec) |
-| `TAMARINDO_PEOPLE` / `namedPeopleIn` / `peopleNoteFor` | `lib/nico/people.ts` | seats only |
-| `VARIABLE_DEFS` / `defaultValues` / `num` | `lib/model/variables.ts` | Inputs sheet |
-| `ICP_CATALOG` | `lib/model/icp-catalog.ts` | ten tickets |
-| `FEE_LINES` | `lib/model/fee-catalog.ts` | fee book including zeros |
-
-### Statement line ids (print these)
-
-**US / Consolidated operating in:** `activation`, `origination`, `servicing`, `spread`, `rental`, `insurance`, plus `feeIn.{id}`. Consolidated also: `coClosing`, `coInspection`, `coAdmin`.
-
-**US operating out:** `feeOut.{id}`, `us.{dept}`, `toSucursal` (eliminated on consolidated as `elims` memo).
-
-**US / Consolidated financing:** `seed`. Investing: `capex` = 0.
-
-**US memo:** `collections`, `remit`, `line`, `partners`, `vehicles`, `aum`, `homeAum`, `autoAum`, `aircraftAum`, `homes`, `autos`, `aircraft`, `ashokaFee`, `ashokaRepair`.
-
-**Colombia in:** `coClosing`, `coInspection`, `coAdmin`, `fromUs`. Out: `co.{dept}`.
-
-**Vehicle:** `clientDown`, `remitExBalloon`, `balloon`, `activation`, `origination`, `purchases` (negative CFI), `draws` (CFF), memo `line` / `aum` / counts.
-
-**US dept keys:** `leadership`, `credit`, `success`, `service`, `legal`, `it`, `finance`, `accounting`, `sales`, `marketing`, `autoDesk`, `aircraftDesk`, `office`, `wfh`, `lump`.
-
-**Colombia dept keys:** `gm`, `closings`, `field`, `success`, `legal`, `office`, `lump`.
-
-**Known tension (do not “fix” in Excel):** `people.ts` says Tom is the whole US IT budget (no extra IT FTE). Seeds still have `dept.us.it.fte = 2`. Follow the **seeds**.
-
----
-
-## 15. Source index
-
-| Path | Use |
-|------|-----|
-| `knowledge/thesis/01-thesis.md` | What Tamarindo is |
-| `knowledge/thesis/02-entities.md` | Family map |
-| `knowledge/thesis/03-ten-year-plan.md` | Phases |
-| `knowledge/thesis/04-icp-deals.md` | Home ICPs |
-| `knowledge/thesis/05-fee-engine.md` | Take-rate stack |
-| `knowledge/thesis/06-numbers-explained.md` | How to read the book |
-| `knowledge/thesis/07-markets-legal-math.md` | Market + legal math (open) |
-| `knowledge/thesis/08-nico-voice.md` | Voice — not a number source |
-| `knowledge/thesis/09-ops-capital-assumptions.md` | Named pay, CS, autos |
-| `knowledge/thesis/10-capital-curve.md` | KPI AUM / lines |
-| `knowledge/thesis/11-equity.md` | $6.5M, five partners, half pay |
-| `knowledge/thesis/12-rate-benchmarks.md` | FICO / market rates |
-| `knowledge/thesis/13-deal-waterfall.md` | ICP-1 walk |
-| `knowledge/thesis/14-medellin-cartagena-market.md` | Corridor comps |
-| `knowledge/thesis/15-colombia-living.md` | Lifestyle product context |
-| `knowledge/thesis/16-lease-characterization.md` | Open — do not conclude |
-| `knowledge/thesis/17-end-of-lease-title.md` | Balloon ≠ folio |
-| `knowledge/thesis/18-kyc-aml.md` | KYC process — not personal files |
-| `knowledge/thesis/19-platform-economics.md` | 1% / 75 bps vs WhatsApp |
-| `knowledge/thesis/20-aug-26-decisions.md` | Pilot box |
-| `knowledge/thesis/21-opco-headcount-pl.md` | Lean P&L |
-| `knowledge/thesis/22-fee-schedule.md` | Complete fee book |
-| `docs/nico/12-blue-variables.md` | Blue-lever governance |
-| `lib/nico/people.ts` | Seats |
-| `lib/model/*` | The calculator |
-
-If this file and the code disagree, **the code wins** and this file is
-stale — fix the spec, do not “correct” the engine from memory.
+Thesis `knowledge/thesis/01`–`22` (entities, fees, ICPs, capital curve,
+equity, Aug 26 pilot box). Blue-lever notes: `docs/nico/12-blue-variables.md`.
+Seats: `lib/nico/people.ts`. If this file and a live Nico number
+disagree, treat **Nico’s live seeds** as current and this file as a
+snapshot from 2026-09-02.

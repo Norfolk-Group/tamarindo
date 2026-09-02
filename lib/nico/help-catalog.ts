@@ -164,7 +164,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: "Excel spec",
     family: "statements",
     tip: "Markdown brief for Claude for Excel — the same math as this book.",
-    body: "Downloads tamarindo-excel-spec.md. Paste it into Claude for Excel to rebuild the four statement books. It is the methodology and seed catalog, not a live .xlsx.",
+    body: "Downloads tamarindo-excel-spec.md. Paste it into Claude for Excel as source material for a new model — companies, who pays whom, people, and live seeds. It is not a live .xlsx and not a formula pack.",
   },
   {
     id: "statements.fy1",
