@@ -25,4 +25,9 @@ describe("workbook intent", () => {
       WHOLE_BUSINESS_LABELS,
     );
   });
+
+  it("leaves the Claude-for-Excel spec on the download path", () => {
+    expect(isWorkbookRequest("download the excel spec")).toBe(false);
+    expect(isWorkbookRequest("Claude for Excel spec please")).toBe(false);
+  });
 });

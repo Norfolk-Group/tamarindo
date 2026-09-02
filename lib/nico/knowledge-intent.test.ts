@@ -23,6 +23,10 @@ describe("needsKnowledgeSearch", () => {
     ).toBe(false);
   });
 
+  it("skips the Claude-for-Excel spec download", () => {
+    expect(needsKnowledgeSearch("download the excel spec")).toBe(false);
+  });
+
   it("searches a legal or math question even without the brand name", () => {
     expect(needsKnowledgeSearch("How does comodato work in Colombia?")).toBe(
       true,

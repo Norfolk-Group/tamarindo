@@ -38,7 +38,7 @@ export const HELP_TOPICS: HelpTopic[] = [
     title: "Statements",
     family: "nav",
     tip: "The live cash-flow book — US, Colombia sucursal, consolidated, and the Intervest vehicle.",
-    body: "Opens in the main pane. Numbers are recalculated on the server from your live model. Click a cell to trace its formula. Export Income, Statements, Returns, or Sensitivity to a new tab; from there, PDF (landscape) or CSV.",
+    body: "Opens in the main pane. Numbers are recalculated on the server from your live model. Click a cell to trace its formula. Export Income, Statements, Returns, or Sensitivity to a new tab; from there, PDF (landscape) or CSV. Excel spec downloads the Claude-for-Excel brief.",
   },
   {
     id: "nav.assumptions",
@@ -158,6 +158,13 @@ export const HELP_TOPICS: HelpTopic[] = [
     family: "statements",
     tip: "A workbook spec of the live run — not a stale PNG.",
     body: "Excel is generated from the current live model. It lands as a download, not as the Statements pane.",
+  },
+  {
+    id: "statements.excelSpec",
+    title: "Excel spec",
+    family: "statements",
+    tip: "Markdown brief for Claude for Excel — the same math as this book.",
+    body: "Downloads tamarindo-excel-spec.md. Paste it into Claude for Excel as source material for a new model — companies, who pays whom, people, and live seeds. It is not a live .xlsx and not a formula pack.",
   },
   {
     id: "statements.fy1",
