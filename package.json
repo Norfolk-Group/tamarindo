@@ -44,7 +44,7 @@
     "@radix-ui/react-tooltip": "^1.2.16",
     "@workos-inc/authkit-nextjs": "^4.3.1",
     "@workos-inc/node": "^10.10.0",
-    "agents": "^0.21.0",
+    "agents": "^0.28.1",
     "ai": "^7.0.77",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
